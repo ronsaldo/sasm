@@ -14,6 +14,9 @@ Class {
 		'R_386_PLT32',
 		'R_386_RELATIVE'
 	],
+	#pools : [
+		'SAsmX86Constants'
+	],
 	#category : #'SAsm-Core-X86'
 }
 
@@ -42,6 +45,18 @@ SAsmCompilationTargetX86 class >> initialize [
 	
 ]
 
+{ #category : #'calling conventions' }
+SAsmCompilationTargetX86 >> callingConventionNamed: aCallingConventionName [
+	aCallingConventionName == #naked ifTrue: [ ^ SAsmX86CallingConventionNaked new ].
+	aCallingConventionName == #stdcall ifTrue: [ ^ SAsmX86CallingConventionStdcall new ].
+	aCallingConventionName == #cdecl ifTrue: [ ^ SAsmX86CallingConventionCDecl new ].
+	aCallingConventionName == #smalltalk ifTrue: [ ^ SAsmX86CallingConventionSmalltalk new ].
+	aCallingConventionName == #apicall ifTrue: [
+	].
+
+	self error: 'Unknown calling convention ' , aCallingConventionName
+]
+
 { #category : #'elf relocations' }
 SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
 	| table elfReloc symbolIndex |
@@ -60,9 +75,19 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBu
 	self error: 'Unsupported relocation type.'
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86 >> createInstructionLowerer [
+	^ SAsmX86InstructionLowerer new target: self
+]
+
 { #category : #'elf constants' }
 SAsmCompilationTargetX86 >> elfMachine [
 	^ 3
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86 >> framePointerRegister [
+	^ EBP
 ]
 
 { #category : #accessing }
@@ -73,6 +98,11 @@ SAsmCompilationTargetX86 >> pointerSize [
 { #category : #'as yet unclassified' }
 SAsmCompilationTargetX86 >> setupBinaryObjectWriter: writer [
 	writer cpuMode: #protected
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86 >> stackPointerRegister [
+	^ ESP
 ]
 
 { #category : #accessing }

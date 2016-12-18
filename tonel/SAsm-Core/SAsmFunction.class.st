@@ -3,7 +3,9 @@ Class {
 	#superclass : #SAsmModuleElement,
 	#instVars : [
 		'basicBlocks',
-		'name'
+		'name',
+		'instructionLowerer',
+		'callingConvention'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -13,6 +15,19 @@ SAsmFunction >> addBasicBlock: aBasicBlock [
 	aBasicBlock function: self.
 	basicBlocks add: aBasicBlock.
 	^ aBasicBlock
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmFunction >> allocateRegisterFor: aStreamBuilder [
+	instructionLowerer := target createInstructionLowerer.
+	instructionLowerer function: self;
+		streamBuilder: aStreamBuilder
+	
+]
+
+{ #category : #'calling conventions' }
+SAsmFunction >> apicall [
+	self callingConvention: target apicallCallingConvention
 ]
 
 { #category : #accessing }
@@ -26,7 +41,22 @@ SAsmFunction >> build: aBlock [
 	^ self
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+SAsmFunction >> callingConvention [
+	^ callingConvention
+]
+
+{ #category : #accessing }
+SAsmFunction >> callingConvention: anObject [
+	callingConvention := anObject
+]
+
+{ #category : #'calling conventions' }
+SAsmFunction >> cdecl [
+	self callingConvention: target cdeclCallingConvention
+]
+
+{ #category : #printing }
 SAsmFunction >> fullPrintOn: aStream [
 	aStream putKeyword: 'function'; space; putIdentifier: self validName; nextPutAll:  ' = {'; lf.
 	aStream withExtraIndentationLevel: [
@@ -53,10 +83,19 @@ SAsmFunction >> gtInspectorModuleText: composite [
 SAsmFunction >> initialize [
 	super initialize.
 	basicBlocks := OrderedCollection new.
-	
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'abstract instruction generation' }
+SAsmFunction >> lowerInstruction: instruction writeToStream: aStreamBuilder [
+	instructionLowerer lowerInstruction: instruction writeToStream: aStreamBuilder
+]
+
+{ #category : #'calling conventions' }
+SAsmFunction >> naked [
+	self callingConvention: target nakedCallingConvention
+]
+
+{ #category : #accessing }
 SAsmFunction >> name [
 	^ name
 ]
@@ -66,27 +105,46 @@ SAsmFunction >> name: anObject [
 	name := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #printing }
 SAsmFunction >> prettyPrintOn: aStream [
 	aStream putKeyword: 'function'; space; putIdentifier: self validName
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #printing }
 SAsmFunction >> printOn: aStream [
 	aStream nextPutAll: 'function '; nextPutAll: self validName
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'calling conventions' }
+SAsmFunction >> smalltalk [
+	self callingConvention: target smalltalkCallingConvention
+]
+
+{ #category : #'calling conventions' }
+SAsmFunction >> stdcall [
+	self callingConvention: target stdcallCallingConvention
+]
+
+{ #category : #accessing }
+SAsmFunction >> target: aCompilationTarget [
+	super target: aCompilationTarget.
+	callingConvention := aCompilationTarget defaultCallingConvention.
+]
+
+{ #category : #accessing }
 SAsmFunction >> validName [
 	^ name ifNil: [ #anonymous ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SAsmFunction >> writeToStream: aStreamBuilder [
 	aStreamBuilder withNewLocalScope: [
-		basicBlocks do: [ :bb | bb prepareWriteToStream: aStreamBuilder ].
 		aStreamBuilder textSection.
+		self allocateRegisterFor: aStreamBuilder.
+		basicBlocks do: [ :bb | bb prepareWriteToStream: aStreamBuilder ].
+		
 		aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
+		instructionLowerer enterFrame.
 		basicBlocks do: [ :bb | bb writeToStream: aStreamBuilder ].
 	]
 ]

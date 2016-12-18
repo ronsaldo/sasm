@@ -6,6 +6,9 @@ Class {
 		'localScope',
 		'currentSection'
 	],
+	#pools : [
+		'SAsmTacOperations'
+	],
 	#category : #'SAsm-Core-Builder'
 }
 
@@ -117,6 +120,71 @@ SAsmStreamBuilder >> stream [
 { #category : #accessing }
 SAsmStreamBuilder >> stream: anObject [
 	stream := anObject
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacAdd: left with: right into: result [
+	^ self tacOperation: TacAdd result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacCall: called into: result [
+	^ self tacOperation: TacCall result: result value: called
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacDivide: left with: right into: result [
+	^ self tacOperation: TacDivide result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacMove: source into: destination [
+	^ self tacOperation: TacMove result: destination value: source
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacMultiply: left with: right into: result [
+	^ self tacOperation: TacMultiply result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacOperation: operation [
+	^ self tacOperation: operation result: nil left: nil right: nil
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacOperation: operation result: result left: left right: right [
+	^ self add: (SAsmTacInstruction new
+		operation: operation;
+		result: result asSAsmInstructionOperand;
+		left: left asSAsmInstructionOperand;
+		right: right asSAsmInstructionOperand;
+		yourself)
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacOperation: operation result: result value: value [
+	^ self tacOperation: operation result: result left: value right: nil
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacOperation: operation value: value [
+	^ self tacOperation: operation result: nil left: value right: nil
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacReturn: value [
+	^ self tacOperation: TacReturn value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacReturnVoid [
+	^ self tacOperation: TacReturn
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacSubtract: left with: right into: result [
+	^ self tacOperation: TacSubtract result: result left: left right: right
 ]
 
 { #category : #sections }

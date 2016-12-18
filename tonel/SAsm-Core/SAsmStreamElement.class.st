@@ -46,6 +46,11 @@ SAsmStreamElement >> isSection [
 	^ false
 ]
 
+{ #category : #testing }
+SAsmStreamElement >> isThreeAddressInstruction [
+	^ false
+]
+
 { #category : #accessing }
 SAsmStreamElement >> next [
 	^ next

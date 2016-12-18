@@ -27,7 +27,18 @@ SAsmBasicBlock >> function [
 
 { #category : #accessing }
 SAsmBasicBlock >> function: anObject [
-	function := anObject
+	function := anObject.
+	target := function target.
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBasicBlock >> lowerInstruction: instruction andWriteToStream: aStreamBuilder [
+	instruction isThreeAddressInstruction ifTrue: [ 
+		function lowerInstruction: instruction writeToStream: aStreamBuilder.
+	] ifFalse: [ 
+		instruction writeToStream: aStreamBuilder.
+	].
+	
 ]
 
 { #category : #accessing }
@@ -54,5 +65,7 @@ SAsmBasicBlock >> validName [
 { #category : #'as yet unclassified' }
 SAsmBasicBlock >> writeToStream: aStreamBuilder [
 	aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
-	super writeToStream: aStreamBuilder
+	self do: [ :instruction |
+		self lowerInstruction: instruction andWriteToStream: aStreamBuilder.
+	]
 ]

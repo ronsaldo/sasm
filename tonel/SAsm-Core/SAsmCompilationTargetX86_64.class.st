@@ -36,6 +36,9 @@ Class {
 		'R_X86_64_TPOFF32',
 		'R_X86_64_TPOFF64'
 	],
+	#pools : [
+		'SAsmX86Constants'
+	],
 	#category : #'SAsm-Core-X86'
 }
 
@@ -112,9 +115,19 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section el
 
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86_64 >> createInstructionLowerer [
+	^ SAsmX86InstructionLowerer new target: self
+]
+
 { #category : #'elf constants' }
 SAsmCompilationTargetX86_64 >> elfMachine [
 	^ 16r3E
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86_64 >> framePointerRegister [
+	^ RBP
 ]
 
 { #category : #accessing }
@@ -125,6 +138,11 @@ SAsmCompilationTargetX86_64 >> pointerSize [
 { #category : #'as yet unclassified' }
 SAsmCompilationTargetX86_64 >> setupBinaryObjectWriter: writer [
 	writer cpuMode: #long
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86_64 >> stackPointerRegister [
+	^ RSP
 ]
 
 { #category : #accessing }
