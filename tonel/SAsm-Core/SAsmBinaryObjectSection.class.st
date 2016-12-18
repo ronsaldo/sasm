@@ -1,18 +1,36 @@
 Class {
 	#name : #SAsmBinaryObjectSection,
-	#superclass : #Object,
+	#superclass : #SAsmBinaryFileComponent,
 	#instVars : [
 		'name',
-		'data'
+		'data',
+		'base',
+		'relocations'
 	],
 	#category : #'SAsm-Core-Binary'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #comparing }
 SAsmBinaryObjectSection >> = other [
 	^ self class = other class
 		and: [ name = other name
-		and: [ data = other data ]]
+		and: [ data = other data
+		and: [ relocations = other relocations ]]]
+]
+
+{ #category : #adding }
+SAsmBinaryObjectSection >> addRelocation: aRelocation [
+	relocations add: aRelocation
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSection >> base [
+	^ base
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSection >> base: anObject [
+	base := anObject
 ]
 
 { #category : #accessing }
@@ -23,6 +41,13 @@ SAsmBinaryObjectSection >> data [
 { #category : #accessing }
 SAsmBinaryObjectSection >> data: anObject [
 	data := anObject
+]
+
+{ #category : #initialization }
+SAsmBinaryObjectSection >> initialize [
+	super initialize.
+	base := 0.
+	relocations := OrderedCollection new.
 ]
 
 { #category : #accessing }
@@ -36,11 +61,16 @@ SAsmBinaryObjectSection >> name: anObject [
 ]
 
 { #category : #accessing }
+SAsmBinaryObjectSection >> relocations [
+	^ relocations
+]
+
+{ #category : #accessing }
 SAsmBinaryObjectSection >> size [
 	^ data size
 ]
 
-{ #category : #'as yet unclassified' }
-SAsmBinaryObjectSection >> writeToFileNamed: aFileName [
-	aFileName asFileReference writeStreamDo: [ :out | out binary; nextPutAll: data ]
+{ #category : #writing }
+SAsmBinaryObjectSection >> writeOn: aStream [
+	aStream nextPutAll: data
 ]

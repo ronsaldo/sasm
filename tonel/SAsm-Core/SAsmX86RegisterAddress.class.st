@@ -48,6 +48,12 @@ SAsmX86RegisterAddress >> byte [
 	^ self copy size: 1
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmX86RegisterAddress >> copyWithStreamBuilder: streamBuilder [
+	^ self copy
+		displacement: (streamBuilder findSymbolForObject: displacement ifAbsent: [ displacement ])
+]
+
 { #category : #accessing }
 SAsmX86RegisterAddress >> displacement [
 	^ displacement
@@ -110,9 +116,9 @@ SAsmX86RegisterAddress >> encodeModRMWithOpcode: opcode immediate: immediateSize
 			writer nextPutC8: displacement
 		] ifFalse: [
 			(mod = 0 and: longMode) ifTrue: [ 
-				writer nextPutReloc32: displacement nextIPRelative: immediateSize
+				writer nextPutIPRelativeI32: displacement extraOffset: immediateSize + 4
 			] ifFalse: [ 
-				writer nextPutReloc32: displacement
+				writer nextPutI32: displacement
 			]
 		]
 	].

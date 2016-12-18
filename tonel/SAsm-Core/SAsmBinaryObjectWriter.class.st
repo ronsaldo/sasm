@@ -5,7 +5,9 @@ Class {
 		'sectionDictionary',
 		'sectionList',
 		'currentSection',
-		'cpuMode'
+		'cpuMode',
+		'symbolList',
+		'symbolSet'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -13,6 +15,16 @@ Class {
 { #category : #'as yet unclassified' }
 SAsmBinaryObjectWriter class >> writeStream: aStream [
 	^ self new writeStream: aStream
+]
+
+{ #category : #initialization }
+SAsmBinaryObjectWriter >> addSymbol: aSymbol [
+	aSymbol shouldBeKeep ifFalse: [ ^ self ].
+	
+	(symbolSet includes: aSymbol) ifFalse: [
+		symbolList add: aSymbol.
+		symbolSet add: aSymbol.
+	]
 ]
 
 { #category : #generation }
@@ -70,6 +82,10 @@ SAsmBinaryObjectWriter >> createSectionNamed: name attributes: aBlock [
 SAsmBinaryObjectWriter >> generateStream: aStream [
 	sectionDictionary := Dictionary new.
 	sectionList := OrderedCollection new.
+	symbolList := OrderedCollection new.
+	symbolSet := Set new.
+	
+	aStream target setupBinaryObjectWriter: self.
 	
 	aStream do: [ :instruction |
 		(currentSection isNil and: [ instruction isSection not ]) ifTrue: [ 
@@ -77,14 +93,16 @@ SAsmBinaryObjectWriter >> generateStream: aStream [
 		].
 	
 		currentSection ifNotNil: [
-			instruction position: currentSection size.
+			instruction
+				position: currentSection size;
+				section: currentSection.
 		].
 		
 		instruction accept: self
 	].
 	
 	sectionList do: [ :section | section data: section data contents ].
-	^ SAsmBinaryObject new sections: sectionList asArray.
+	^ SAsmBinaryObject new compilationTarget: aStream target; sections: sectionList asArray; symbols: symbolList asArray.
 ]
 
 { #category : #generation }
@@ -116,6 +134,21 @@ SAsmBinaryObjectWriter >> isShortMode [
 	^ cpuMode == #short
 ]
 
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> needsRelativeRelocation: immediate [
+	| symbol |
+	symbol := immediate symbol.
+	symbol ifNil: [ ^ false ].
+	symbol isUndefined ifTrue: [ ^ true ].
+	symbol sectionName ~~ currentSection name ifTrue: [ ^ true ].
+	^ symbol isPrivate not
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> needsRelocation: immediate [
+	^ immediate symbol isNotNil
+]
+
 { #category : #accessing }
 SAsmBinaryObjectWriter >> nextPut: aByte [
 	currentSection data nextPut: aByte
@@ -126,14 +159,14 @@ SAsmBinaryObjectWriter >> nextPutAll: aByteSequence [
 	currentSection data nextPutAll: aByteSequence
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutC16: anInteger [
 	currentSection data
 		nextPut: anInteger & 16rff;
 		nextPut: (anInteger >> 8) & 16rff.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutC32: anInteger [
 	currentSection data
 		nextPut: anInteger & 16rff;
@@ -142,7 +175,7 @@ SAsmBinaryObjectWriter >> nextPutC32: anInteger [
 		nextPut: (anInteger >> 24) & 16rff
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutC64: anInteger [
 	currentSection data
 		nextPut: anInteger & 16rff;
@@ -155,37 +188,177 @@ SAsmBinaryObjectWriter >> nextPutC64: anInteger [
 		nextPut: (anInteger >> 56) & 16rff
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutC8: anInteger [
 	currentSection data nextPut: anInteger & 16rff
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutI16: anImmediate [
 	| value |
-	value := anImmediate immediateValue.
-	self nextPutC16: value
+	(self needsRelocation: anImmediate) ifTrue: [ 
+		self recordImmediateReloc16: anImmediate.
+		self nextPutC16: 0
+	] ifFalse: [ 
+		value := anImmediate immediateValue.
+		self nextPutC16: value
+	]
+
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutI32: anImmediate [
 	| value |
-	value := anImmediate immediateValue.
-	self nextPutC32: value
+	(self needsRelocation: anImmediate) ifTrue: [ 
+		self recordImmediateReloc32: anImmediate.
+		self nextPutC32: 0
+	] ifFalse: [ 
+		value := anImmediate immediateValue.
+		self nextPutC32: value
+	]
+
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutI64: anImmediate [
 	| value |
-	value := anImmediate immediateValue.
-	self nextPutC64: value
+	(self needsRelocation: anImmediate) ifTrue: [ 
+		self recordImmediateReloc64: anImmediate.
+		self nextPutC64: 0
+	] ifFalse: [ 
+		value := anImmediate immediateValue.
+		self nextPutC64: value
+	]
+
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutI8: anImmediate [
 	| value |
-	value := anImmediate immediateValue.
-	self nextPutC8: value
+	(self needsRelocation: anImmediate) ifTrue: [ 
+		self recordImmediateReloc8: anImmediate.
+		self nextPutC8: 0
+	] ifFalse: [ 
+		value := anImmediate immediateValue.
+		self nextPutC8: value
+	]
+
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelative64: immediate extraOffset: extraOffset [
+	| immediateValue |
+	(self needsRelativeRelocation: immediate) ifTrue: [
+		self recordImmediateRelativeReloc64: immediate extraAddend: extraOffset negated.
+		self nextPutC64: 0.
+	] ifFalse: [
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		self nextPutC64: immediateValue.
+	]
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeI16: immediate [
+	self nextPutIPRelativeI16: immediate extraOffset: 2
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeI16: immediate extraOffset: extraOffset [
+	| immediateValue |
+	(self needsRelativeRelocation: immediate) ifTrue: [
+		self recordImmediateRelativeReloc16: immediate extraAddend: extraOffset negated.
+		self nextPutC16: 0.
+	] ifFalse: [
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		self nextPutC16: immediateValue.
+	]
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeI32: immediate [
+	self nextPutIPRelativeI32: immediate extraOffset: 4
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeI32: immediate extraOffset: extraOffset [
+	| immediateValue |
+	(self needsRelativeRelocation: immediate) ifTrue: [
+		self recordImmediateRelativeReloc32: immediate extraAddend: extraOffset negated.
+		self nextPutC32: 0.
+	] ifFalse: [
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		self nextPutC32: immediateValue.
+	]
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeI8: immediate [
+	self nextPutIPRelativeI8: immediate extraOffset: 1
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeI8: immediate extraOffset: extraOffset [
+	| immediateValue |
+	(self needsRelativeRelocation: immediate) ifTrue: [
+		self recordImmediateRelativeReloc8: immediate extraAddend: extraOffset negated.
+		self nextPutC8: 0.
+	] ifFalse: [
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		self nextPutC8: immediateValue.
+	]
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc16: immediate extraAddend: extraAddend [
+	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+		relativeSOffset16;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32: immediate extraAddend: extraAddend [
+	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+		relativeSOffset32;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc64: immediate extraAddend: extraAddend [
+	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+		relativeSOffset64;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc8: immediate extraAddend: extraAddend [
+	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+		relativeSOffset8;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc: immediate extraAddend: extraAddend [
+	| symbol reloc |
+	symbol := immediate symbol.
+	self assert: symbol isNotNil.
+	
+	reloc := SAsmBinaryObjectSectionRelocation new
+		offset: currentSection size;
+		addend: immediate addend + extraAddend;
+		yourself.
+	symbol shouldBeKeep ifTrue: [
+		reloc symbol: symbol.
+		self addSymbol: symbol.
+	] ifFalse: [
+		self assert: symbol isUndefined not.
+		self assert: symbol section isNotNil.
+		reloc addend: reloc addend + symbol value.
+		reloc section: (self createSectionNamed: symbol sectionName)
+	].
+
+	currentSection addRelocation: reloc.
+	^ reloc
+
 ]
 
 { #category : #visiting }
@@ -203,10 +376,11 @@ SAsmBinaryObjectWriter >> visitInstruction: anInstruction [
 
 { #category : #visiting }
 SAsmBinaryObjectWriter >> visitLabel: aLabel [
+	self addSymbol: aLabel symbol.
 	aLabel symbol
 		section: currentSection;
 		value: aLabel position;
-		yourself
+		yourself.
 ]
 
 { #category : #visiting }
@@ -214,7 +388,9 @@ SAsmBinaryObjectWriter >> visitSection: aSection [
 	currentSection := self createSectionNamed: aSection name attributes: [:attr |
 		self flag: 'Copy the section attributes.'
 	].
-	aSection position: currentSection size.
+	aSection
+		position: currentSection size;
+		section: aSection name.
 	
 ]
 

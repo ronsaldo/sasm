@@ -49,3 +49,8 @@ SAsmLabel >> symbol [
 SAsmLabel >> symbol: anObject [
 	symbol := anObject
 ]
+
+{ #category : #writing }
+SAsmLabel >> writeToStream: aStreamBuilder [
+	aStreamBuilder add: (self copy symbol: (aStreamBuilder findSymbolForObject: symbol))
+]

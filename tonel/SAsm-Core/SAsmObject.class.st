@@ -1,12 +1,29 @@
 Class {
 	#name : #SAsmObject,
 	#superclass : #Object,
+	#classVars : [
+		'DllExportVisibility',
+		'DllImportVisibility',
+		'ExternalVisibility',
+		'PrivateVisibility',
+		'WeakVisibility'
+	],
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #'class initialization' }
+SAsmObject class >> initialize [
+	super initialize.
+	PrivateVisibility := #private.
+	DllExportVisibility := #dllexport.
+	DllImportVisibility := #dllimport.
+	WeakVisibility := #weak.
+	ExternalVisibility := #external.
+]
+
 { #category : #printing }
 SAsmObject >> fullPrintOn: aStream [
-	self printOn: aStream
+	self prettyPrintOn: aStream
 ]
 
 { #category : #printing }
@@ -17,4 +34,9 @@ SAsmObject >> fullPrintString [
 { #category : #printing }
 SAsmObject >> fullPrintText [
 	^ SAsmPrintingTextStream fullPrintString: self
+]
+
+{ #category : #printing }
+SAsmObject >> prettyPrintOn: aStream [
+	self printOn: aStream
 ]

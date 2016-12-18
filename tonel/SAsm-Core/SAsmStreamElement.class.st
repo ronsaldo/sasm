@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'next',
 		'previous',
-		'position'
+		'position',
+		'section'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -83,6 +84,16 @@ SAsmStreamElement >> previous [
 { #category : #accessing }
 SAsmStreamElement >> previous: anObject [
 	previous := anObject
+]
+
+{ #category : #accessing }
+SAsmStreamElement >> section [
+	^ section
+]
+
+{ #category : #accessing }
+SAsmStreamElement >> section: anObject [
+	section := anObject
 ]
 
 { #category : #accessing }

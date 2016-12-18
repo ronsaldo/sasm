@@ -76,7 +76,13 @@ SAsmStreamBuilder >> currentSectionName [
 
 { #category : #symbols }
 SAsmStreamBuilder >> findSymbolForObject: anObject [
+	anObject ifNil: [ ^ nil ].
 	^ localScope findMappedSymbolRecursively: anObject
+]
+
+{ #category : #symbols }
+SAsmStreamBuilder >> findSymbolForObject: anObject ifAbsent: aBlock [
+	^ localScope findMappedSymbolRecursively: anObject ifAbsent: aBlock
 ]
 
 { #category : #initialization }

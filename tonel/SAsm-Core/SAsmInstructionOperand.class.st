@@ -9,6 +9,11 @@ SAsmInstructionOperand >> asSAsmInstructionOperand [
 	^ self
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmInstructionOperand >> copyWithStreamBuilder: streamBuilder [
+	^ self copy
+]
+
 { #category : #testing }
 SAsmInstructionOperand >> isImmediate [
 	^ false

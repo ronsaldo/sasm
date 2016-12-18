@@ -22,5 +22,4 @@ SAsmX86InstructionOpIw >> writeInstruction: instruction with: writer [
 		writer isLongMode ifTrue: [ self assert: instruction arguments first isImmediateS32 ].
 		writer nextPutI32: instruction arguments first
 	]
-	 
 ]

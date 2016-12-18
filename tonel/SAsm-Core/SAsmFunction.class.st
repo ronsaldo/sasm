@@ -67,6 +67,11 @@ SAsmFunction >> name: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SAsmFunction >> prettyPrintOn: aStream [
+	aStream putKeyword: 'function'; space; putIdentifier: self validName
+]
+
+{ #category : #'as yet unclassified' }
 SAsmFunction >> printOn: aStream [
 	aStream nextPutAll: 'function '; nextPutAll: self validName
 ]
@@ -81,6 +86,7 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 	aStreamBuilder withNewLocalScope: [
 		basicBlocks do: [ :bb | bb prepareWriteToStream: aStreamBuilder ].
 		aStreamBuilder textSection.
+		aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
 		basicBlocks do: [ :bb | bb writeToStream: aStreamBuilder ].
 	]
 ]

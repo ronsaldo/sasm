@@ -53,7 +53,6 @@ SAsmBasicBlock >> validName [
 
 { #category : #'as yet unclassified' }
 SAsmBasicBlock >> writeToStream: aStreamBuilder [
-	aStreamBuilder addPrivateSymbol: name for: self.
 	aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
 	super writeToStream: aStreamBuilder
 ]

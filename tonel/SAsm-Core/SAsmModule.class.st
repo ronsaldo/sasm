@@ -2,10 +2,21 @@ Class {
 	#name : #SAsmModule,
 	#superclass : #SAsmObject,
 	#instVars : [
-		'elements'
+		'elements',
+		'target'
 	],
 	#category : #'SAsm-Core-Generic'
 }
+
+{ #category : #construction }
+SAsmModule class >> x86 [
+	^ self new target: SAsmCompilationTargetX86 new
+]
+
+{ #category : #construction }
+SAsmModule class >> x86_64 [
+	^ self new target: SAsmCompilationTargetX86_64 new
+]
 
 { #category : #adding }
 SAsmModule >> addElement: anElement [
@@ -28,8 +39,9 @@ SAsmModule >> asBinaryObject [
 { #category : #converting }
 SAsmModule >> asInstructionStream [
 	| result |
-	result := SAsmStream new.
+	result := SAsmStream new target: target.
 	result build: [ :streamBuilder |
+		elements do: [ :element | element prepareWriteToStream: streamBuilder ].
 		elements do: [ :element | element writeToStream: streamBuilder ].
 	].	
 	^ result
@@ -48,7 +60,7 @@ SAsmModule >> asOptimizedInstructionStream [
 { #category : #building }
 SAsmModule >> build: functionName function: aBlock [
 	| function |
-	function := SAsmFunction new name: functionName.
+	function := SAsmFunction new name: functionName; target: target; yourself.
 	self addElement: function.
 	^ function build: aBlock
 ]
@@ -76,10 +88,10 @@ SAsmModule >> gtInspectorItemsIn: composite [
 
 { #category : #'gt-inspector-extension' }
 SAsmModule >> gtInspectorMachineCode: composite [
-	<gtInspectorPresentationOrder: 4>
+	"<gtInspectorPresentationOrder: 4>
 	^ (composite wrapper)
 		title: 'Machine Code';
-		show: [ :a | self asBinaryObject sections gtInspectorItemsIn: a ]
+		show: [ :a | self asBinaryObject sections gtInspectorItemsIn: a ]"
 ]
 
 { #category : #'gt-inspector-extension' }
@@ -112,4 +124,15 @@ SAsmModule >> gtInspectorStreamText: composite [
 SAsmModule >> initialize [
 	super initialize.
 	elements := OrderedCollection new.
+	target := SAsmCompilationTargetX86 new.
+]
+
+{ #category : #accessing }
+SAsmModule >> target [
+	^ target
+]
+
+{ #category : #accessing }
+SAsmModule >> target: anObject [
+	target := anObject
 ]

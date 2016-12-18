@@ -7,5 +7,5 @@ Integer >> asSAsmConstantExpression [
 
 { #category : #'*SAsm-Core' }
 Integer >> asSAsmInstructionOperand [
-	^ SAsmImmediate new value: self
+	^ SAsmImmediateConstant new value: self
 ]

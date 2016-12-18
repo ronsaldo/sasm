@@ -7,14 +7,14 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SAsmX86InstructionOpRmwRw >> canWriteInstruction: anInstruction [
 	^ anInstruction argumentCount = 2
 		and: [ anInstruction first isRegisterOrRegisterAddress
 		and: [ anInstruction second isRegisterWord ] ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SAsmX86InstructionOpRmwRw >> writeInstruction: instruction with: writer [
 	| register registerAddress operandSize |
 	registerAddress := instruction first.

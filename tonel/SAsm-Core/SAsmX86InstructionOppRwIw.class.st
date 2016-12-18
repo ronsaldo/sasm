@@ -41,7 +41,6 @@ SAsmX86InstructionOppRwIw >> writeInstruction: instruction with: writer [
 		^ writer nextPutI32: value
 	].
 	operandSize = 8 ifTrue: [
-		writer nextPutAll: opcode.
 		self write: writer rexSize: operandSize rm: register.
 		self write: writer opcodePlusRegister: register.
 		^ writer nextPutI32: value

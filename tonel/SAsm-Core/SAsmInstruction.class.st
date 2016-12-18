@@ -45,7 +45,7 @@ SAsmInstruction >> fullPrintOn: aStream [
 	arguments doWithIndex: [ :arg :index |
 		index > 1 ifTrue: [ aStream nextPut: $, ].
 		aStream space.
-		arg fullPrintOn: aStream
+		arg prettyPrintOn: aStream
 	]
 ]
 
@@ -89,4 +89,9 @@ SAsmInstruction >> template: anObject [
 { #category : #accessing }
 SAsmInstruction >> third [
 	^ arguments third
+]
+
+{ #category : #'as yet unclassified' }
+SAsmInstruction >> writeToStream: aStreamBuilder [
+	aStreamBuilder add: (self copy arguments: (arguments collect: [:arg | arg copyWithStreamBuilder: aStreamBuilder]))
 ]

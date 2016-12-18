@@ -92,8 +92,13 @@ SAsmX86InstructionTemplateAlternative >> write: writer rexReg: reg [
 ]
 
 { #category : #writing }
+SAsmX86InstructionTemplateAlternative >> write: writer rexSize: size [
+	self write: writer rexSize: size rm: 0 reg: 0
+]
+
+{ #category : #writing }
 SAsmX86InstructionTemplateAlternative >> write: writer rexSize: size rm: first [
-	self write: writer rexSize: size rm: first reg: 0
+	self write: writer rexSize: size rm: EAX reg: EAX
 ]
 
 { #category : #writing }
@@ -112,7 +117,7 @@ SAsmX86InstructionTemplateAlternative >> write: writer rexSize: size rm: first r
 		]
 	].
 
-	second isRegister ifTrue: [
+	(second isInteger not and: [ second isRegister ]) ifTrue: [
 		rbit := second isHighRegister asBit.
 	].
 

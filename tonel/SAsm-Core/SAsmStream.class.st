@@ -3,7 +3,8 @@ Class {
 	#superclass : #SAsmObject,
 	#instVars : [
 		'first',
-		'last'
+		'last',
+		'target'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -175,6 +176,16 @@ SAsmStream >> select: aBlock thenDo: doBlock [
 	].
 	^ result
 
+]
+
+{ #category : #accessing }
+SAsmStream >> target [
+	^ target
+]
+
+{ #category : #accessing }
+SAsmStream >> target: anObject [
+	target := anObject
 ]
 
 { #category : #writing }
