@@ -28,6 +28,20 @@ SAsmExamples class >> exampleFunctionWithConstants [
 	
 ]
 
+{ #category : #'tac examples' }
+SAsmExamples class >> exampleTacRet0 [
+	<example>
+	| module entry function |
+	module := SAsmModule x86.
+	function := module build: #main function: [ :functionBuilder |
+		entry := functionBuilder basicBlock: #entry build: [ :asm |
+			asm tacReturn: 0
+		]
+	].
+	module inspect
+	
+]
+
 { #category : #'x86 examples' }
 SAsmExamples class >> exampleX86FunctionCall [
 	<example>
@@ -35,6 +49,7 @@ SAsmExamples class >> exampleX86FunctionCall [
 	module := SAsmModule x86.
 
 	add := module build: #add function: [ :functionBuilder |
+		functionBuilder naked.
 		functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: ADD dst: EAX src: EBX;
@@ -61,6 +76,7 @@ SAsmExamples class >> exampleX86FunctionFrame [
 	| module entry function |
 	module := SAsmModule x86.
 	function := module build: #main function: [ :functionBuilder |
+		functionBuilder naked.
 		entry := functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: PUSH with: EBP;
@@ -81,6 +97,7 @@ SAsmExamples class >> exampleX86Ret0 [
 	| module entry function |
 	module := SAsmModule x86.
 	function := module build: #main function: [ :functionBuilder |
+		functionBuilder naked.
 		entry := functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: MOV with: EAX with: 0;
@@ -98,6 +115,7 @@ SAsmExamples class >> exampleX86_64FunctionCall [
 	module := SAsmModule x86_64.
 
 	add := module build: #add function: [ :functionBuilder |
+		functionBuilder naked.
 		functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: ADD dst: RAX src: RBX;
@@ -124,6 +142,7 @@ SAsmExamples class >> exampleX86_64FunctionFrame [
 	| module entry function |
 	module := SAsmModule x86_64.
 	function := module build: #main function: [ :functionBuilder |
+		functionBuilder naked.
 		entry := functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: PUSH with: RBP;
@@ -144,6 +163,7 @@ SAsmExamples class >> exampleX86_64Ret0 [
 	| module entry function |
 	module := SAsmModule x86_64.
 	function := module build: #main function: [ :functionBuilder |
+		functionBuilder naked.
 		entry := functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: MOV with: RAX with: 0;
