@@ -102,3 +102,8 @@ SAsmTacInstruction >> right [
 SAsmTacInstruction >> right: anObject [
 	right := anObject
 ]
+
+{ #category : #accessing }
+SAsmTacInstruction >> value [
+	^ left
+]

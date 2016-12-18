@@ -5,7 +5,8 @@ Class {
 		'basicBlocks',
 		'name',
 		'instructionLowerer',
-		'callingConvention'
+		'callingConvention',
+		'virtualRegisters'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -15,6 +16,13 @@ SAsmFunction >> addBasicBlock: aBasicBlock [
 	aBasicBlock function: self.
 	basicBlocks add: aBasicBlock.
 	^ aBasicBlock
+]
+
+{ #category : #initialization }
+SAsmFunction >> addVirtualRegister: virtualRegister [
+	virtualRegisters add: virtualRegister.
+	virtualRegister index: virtualRegisters size.
+	^ virtualRegister
 ]
 
 { #category : #'abstract instruction generation' }
@@ -83,6 +91,7 @@ SAsmFunction >> gtInspectorModuleText: composite [
 SAsmFunction >> initialize [
 	super initialize.
 	basicBlocks := OrderedCollection new.
+	virtualRegisters := OrderedCollection new.
 ]
 
 { #category : #'abstract instruction generation' }
@@ -103,6 +112,21 @@ SAsmFunction >> name [
 { #category : #accessing }
 SAsmFunction >> name: anObject [
 	name := anObject
+]
+
+{ #category : #initialization }
+SAsmFunction >> newDoubleFloatVirtualRegister [
+	^ self addVirtualRegister: target newDoubleFloatVirtualRegister
+]
+
+{ #category : #initialization }
+SAsmFunction >> newFloatVirtualRegister [
+	^ self addVirtualRegister: target newFloatVirtualRegister
+]
+
+{ #category : #initialization }
+SAsmFunction >> newIntegerVirtualRegister [
+	^ self addVirtualRegister: target newIntegerVirtualRegister
 ]
 
 { #category : #printing }

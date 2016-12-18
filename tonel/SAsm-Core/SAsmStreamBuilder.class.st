@@ -138,6 +138,21 @@ SAsmStreamBuilder >> tacDivide: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacDoubleFloatRegister [
+	^ stream function newDoubleFloatVirtualRegister.
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacFloatRegister [
+	^ stream function newFloatVirtualRegister.
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacIntRegister [
+	^ stream function newIntegerVirtualRegister.
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacMove: source into: destination [
 	^ self tacOperation: TacMove result: destination value: source
 ]

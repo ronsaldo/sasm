@@ -5,6 +5,21 @@ Class {
 }
 
 { #category : #testing }
+SAsmRegister >> isDoubleFloatRegister [
+	^ false
+]
+
+{ #category : #testing }
+SAsmRegister >> isFloatRegister [
+	^ false
+]
+
+{ #category : #testing }
+SAsmRegister >> isIntegerRegister [
+	^ false
+]
+
+{ #category : #testing }
 SAsmRegister >> isRegister [
 	^ true
 ]

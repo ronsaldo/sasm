@@ -5,7 +5,8 @@ Class {
 		'next',
 		'previous',
 		'position',
-		'section'
+		'section',
+		'index'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -17,6 +18,16 @@ SAsmStreamElement >> accept: aVisitor [
 
 { #category : #'as yet unclassified' }
 SAsmStreamElement >> computeMaximalSize [
+]
+
+{ #category : #accessing }
+SAsmStreamElement >> index [
+	^ index
+]
+
+{ #category : #accessing }
+SAsmStreamElement >> index: anObject [
+	index := anObject
 ]
 
 { #category : #initialization }

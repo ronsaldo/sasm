@@ -25,6 +25,11 @@ SAsmX86RegisterInt >> dword [
 ]
 
 { #category : #testing }
+SAsmX86RegisterInt >> isIntegerRegister [
+	^ true
+]
+
+{ #category : #testing }
 SAsmX86RegisterInt >> isRegisterOrRegisterAddressWord [
 	^ self isRegisterI8 not
 ]

@@ -130,6 +130,29 @@ SAsmCompilationTargetX86_64 >> framePointerRegister [
 	^ RBP
 ]
 
+{ #category : #'virtual registers' }
+SAsmCompilationTargetX86_64 >> newDoubleFloatVirtualRegister [
+	^ SAsmFloatVirtualRegister new
+		size: 8;
+		registerClass: SAsmX86RegisterVector;
+		yourself
+]
+
+{ #category : #'virtual registers' }
+SAsmCompilationTargetX86_64 >> newFloatVirtualRegister [
+	^ SAsmFloatVirtualRegister new
+		size: 4;
+		registerClass: SAsmX86RegisterVector;
+		yourself
+]
+
+{ #category : #'virtual registers' }
+SAsmCompilationTargetX86_64 >> newIntegerVirtualRegister [
+	^ SAsmIntegerVirtualRegister new size: 8;
+		registerClass: SAsmX86RegisterInt64;
+		yourself
+]
+
 { #category : #accessing }
 SAsmCompilationTargetX86_64 >> pointerSize [
 	^ 8
