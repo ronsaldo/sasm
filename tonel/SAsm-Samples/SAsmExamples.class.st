@@ -29,6 +29,28 @@ SAsmExamples class >> exampleFunctionWithConstants [
 ]
 
 { #category : #'tac examples' }
+SAsmExamples class >> exampleTacAdd [
+	<example>
+	| module entry function a b result |
+	module := SAsmModule x86.
+	function := module build: #main function: [ :functionBuilder |
+		entry := functionBuilder basicBlock: #entry build: [ :asm |
+			a := asm tacIntRegister.
+			b := asm tacIntRegister.
+			result := asm tacIntRegister.
+			
+			asm
+				tacMove: 1 into: a;
+				tacMove: 2 into: b;
+				tacAdd: a with: b into: result;
+				tacReturn: result
+		]
+	].
+	module inspect
+	
+]
+
+{ #category : #'tac examples' }
 SAsmExamples class >> exampleTacRet0 [
 	<example>
 	| module entry function |
