@@ -131,3 +131,37 @@ SAsmStreamBuilder >> withNewLocalScope: aBlock [
 	localScope  := SAsmStreamBuilderLocalScope parent: localScope.
 	aBlock ensure: [ localScope := oldLocalScope ]
 ]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation [
+	^ self x86: operation withOperands: #()
+]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation dst: operand1 src: operand2 [
+	^ self x86: operation with: operand1 with: operand2
+]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation src: operand1 dst: operand2 [
+	^ self x86: operation with: operand2 with: operand1
+]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation with: operand1 [
+	^ self x86: operation withOperands: { operand1 asSAsmInstructionOperand }
+]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation with: operand1 with: operand2 [
+	^ self x86: operation withOperands: { operand1 asSAsmInstructionOperand . operand2 asSAsmInstructionOperand }
+]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation withOperands: operands [
+	^ self add: (
+		SAsmInstruction new
+			template: operation;
+			arguments: operands;
+			yourself)
+]

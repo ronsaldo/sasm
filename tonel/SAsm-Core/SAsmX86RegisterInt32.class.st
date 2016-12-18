@@ -4,7 +4,12 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
+SAsmX86RegisterInt32 >> isRegisterI32 [
+	^ true
+]
+
+{ #category : #accessing }
 SAsmX86RegisterInt32 >> size [
 	^ 4
 ]

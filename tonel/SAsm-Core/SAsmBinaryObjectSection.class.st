@@ -39,3 +39,8 @@ SAsmBinaryObjectSection >> name: anObject [
 SAsmBinaryObjectSection >> size [
 	^ data size
 ]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSection >> writeToFileNamed: aFileName [
+	aFileName asFileReference writeStreamDo: [ :out | out binary; nextPutAll: data ]
+]

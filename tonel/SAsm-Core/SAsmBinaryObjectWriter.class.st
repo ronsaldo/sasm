@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'sectionDictionary',
 		'sectionList',
-		'currentSection'
+		'currentSection',
+		'cpuMode'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -34,6 +35,16 @@ SAsmBinaryObjectWriter >> computeInitialPositionEstimate: aStream [
 			sectionSize := sectionSize + element size
 		].
 	]
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectWriter >> cpuMode [
+	^ cpuMode
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectWriter >> cpuMode: anObject [
+	cpuMode := anObject
 ]
 
 { #category : #generation }
@@ -92,11 +103,89 @@ SAsmBinaryObjectWriter >> generateUntilConvergence: aStream [
 { #category : #initialization }
 SAsmBinaryObjectWriter >> initialize [
 	super initialize.
+	cpuMode := #normal.
+]
+
+{ #category : #testing }
+SAsmBinaryObjectWriter >> isLongMode [
+	^ cpuMode == #long
+]
+
+{ #category : #testing }
+SAsmBinaryObjectWriter >> isShortMode [
+	^ cpuMode == #short
 ]
 
 { #category : #accessing }
 SAsmBinaryObjectWriter >> nextPut: aByte [
 	currentSection data nextPut: aByte
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectWriter >> nextPutAll: aByteSequence [
+	currentSection data nextPutAll: aByteSequence
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutC16: anInteger [
+	currentSection data
+		nextPut: anInteger & 16rff;
+		nextPut: (anInteger >> 8) & 16rff.
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutC32: anInteger [
+	currentSection data
+		nextPut: anInteger & 16rff;
+		nextPut: (anInteger >> 8) & 16rff;
+		nextPut: (anInteger >> 16) & 16rff;
+		nextPut: (anInteger >> 24) & 16rff
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutC64: anInteger [
+	currentSection data
+		nextPut: anInteger & 16rff;
+		nextPut: (anInteger >> 8) & 16rff;
+		nextPut: (anInteger >> 16) & 16rff;
+		nextPut: (anInteger >> 24) & 16rff;
+		nextPut: (anInteger >> 32) & 16rff;
+		nextPut: (anInteger >> 40) & 16rff;
+		nextPut: (anInteger >> 48) & 16rff;
+		nextPut: (anInteger >> 56) & 16rff
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutC8: anInteger [
+	currentSection data nextPut: anInteger & 16rff
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutI16: anImmediate [
+	| value |
+	value := anImmediate immediateValue.
+	self nextPutC16: value
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutI32: anImmediate [
+	| value |
+	value := anImmediate immediateValue.
+	self nextPutC32: value
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutI64: anImmediate [
+	| value |
+	value := anImmediate immediateValue.
+	self nextPutC64: value
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectWriter >> nextPutI8: anImmediate [
+	| value |
+	value := anImmediate immediateValue.
+	self nextPutC8: value
 ]
 
 { #category : #visiting }
@@ -105,6 +194,11 @@ SAsmBinaryObjectWriter >> visitConstantExpressionValue: aConstantExpressionValue
 	value := aConstantExpressionValue value evaluate.
 	value writeWithSize: aConstantExpressionValue size on: self.
 	self assert: currentSection size = (aConstantExpressionValue position + aConstantExpressionValue size)
+]
+
+{ #category : #visiting }
+SAsmBinaryObjectWriter >> visitInstruction: anInstruction [
+	anInstruction template writeInstruction: anInstruction with: self
 ]
 
 { #category : #visiting }

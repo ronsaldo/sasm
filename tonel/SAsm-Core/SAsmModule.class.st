@@ -75,6 +75,14 @@ SAsmModule >> gtInspectorItemsIn: composite [
 ]
 
 { #category : #'gt-inspector-extension' }
+SAsmModule >> gtInspectorMachineCode: composite [
+	<gtInspectorPresentationOrder: 4>
+	^ (composite wrapper)
+		title: 'Machine Code';
+		show: [ :a | self asBinaryObject sections gtInspectorItemsIn: a ]
+]
+
+{ #category : #'gt-inspector-extension' }
 SAsmModule >> gtInspectorModuleText: composite [
 	<gtInspectorPresentationOrder: 0>  
 	^ (composite text)

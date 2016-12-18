@@ -8,3 +8,8 @@ Class {
 SAsmRegister >> isRegister [
 	^ true
 ]
+
+{ #category : #testing }
+SAsmRegister >> isRegisterOrRegisterAddress [
+	^ true
+]

@@ -5,6 +5,16 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SAsmX86RegisterInt8 >> isRegisterI8 [
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86RegisterInt8 >> isRegisterOrRegisterAddressI8 [
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
 SAsmX86RegisterInt8 >> size [
 	^ 1
 ]

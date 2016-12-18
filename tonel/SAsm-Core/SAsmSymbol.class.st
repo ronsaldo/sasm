@@ -24,6 +24,11 @@ SAsmSymbol >> fullPrintOn: aStream [
 	aStream putIdentifier: self validName
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmSymbol >> immediateValue [
+	^ 0
+]
+
 { #category : #testing }
 SAsmSymbol >> isSymbol [
 	^ true
