@@ -87,6 +87,17 @@ SAsmCompilationTargetX86_64 class >> initializeElfRelocations [
 	R_X86_64_IRELATIVE := 37.
 ]
 
+{ #category : #'calling conventions' }
+SAsmCompilationTargetX86_64 >> callingConventionNamed: aCallingConventionName [
+	aCallingConventionName == #naked ifTrue: [ ^ SAsmX86_64CallingConventionNaked new ].
+	aCallingConventionName == #stdcall ifTrue: [ ^ SAsmX86CallingConventionCDecl new ].
+	aCallingConventionName == #cdecl ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
+	aCallingConventionName == #smalltalk ifTrue: [ ^ SAsmX86_64CallingConventionSmalltalk new ].
+	aCallingConventionName == #apicall ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
+
+	self error: 'Unknown calling convention ' , aCallingConventionName
+]
+
 { #category : #'elf relocations' }
 SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
 	| table elfReloc symbolIndex |

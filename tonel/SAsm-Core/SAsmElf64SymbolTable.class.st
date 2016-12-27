@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmElf64SymbolTable,
-	#superclass : #SLVMElf32SymbolTable,
+	#superclass : #SAsmElf32SymbolTable,
 	#category : #'SAsm-Core-Elf'
 }
 

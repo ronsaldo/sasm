@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmElfRelocationTable,
-	#superclass : #SLVMLirBinaryFileComponent,
+	#superclass : #SAsmBinaryFileComponent,
 	#instVars : [
 		'entries'
 	],

@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmElf64RelocationEntry,
-	#superclass : #SLVMElf32RelocationEntry,
+	#superclass : #SAsmElf32RelocationEntry,
 	#category : #'SAsm-Core-Elf'
 }
 
