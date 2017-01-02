@@ -62,6 +62,10 @@ SAsmStreamElement >> isThreeAddressInstruction [
 	^ false
 ]
 
+{ #category : #'linear scan' }
+SAsmStreamElement >> markVirtualRegisterLiveRanges [
+]
+
 { #category : #accessing }
 SAsmStreamElement >> next [
 	^ next

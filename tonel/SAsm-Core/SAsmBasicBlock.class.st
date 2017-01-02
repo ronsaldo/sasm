@@ -3,7 +3,8 @@ Class {
 	#superclass : #SAsmStream,
 	#instVars : [
 		'function',
-		'name'
+		'name',
+		'index'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -29,6 +30,16 @@ SAsmBasicBlock >> function [
 SAsmBasicBlock >> function: anObject [
 	function := anObject.
 	target := function target.
+]
+
+{ #category : #accessing }
+SAsmBasicBlock >> index [
+	^ index
+]
+
+{ #category : #accessing }
+SAsmBasicBlock >> index: anObject [
+	index := anObject
 ]
 
 { #category : #'as yet unclassified' }

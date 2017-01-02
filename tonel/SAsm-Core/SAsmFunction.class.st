@@ -29,7 +29,8 @@ SAsmFunction >> addVirtualRegister: virtualRegister [
 SAsmFunction >> allocateRegisterFor: aStreamBuilder [
 	instructionLowerer := target createInstructionLowerer.
 	instructionLowerer function: self;
-		streamBuilder: aStreamBuilder
+		streamBuilder: aStreamBuilder;
+		allocateRegisters
 	
 ]
 
@@ -62,6 +63,28 @@ SAsmFunction >> callingConvention: anObject [
 { #category : #'calling conventions' }
 SAsmFunction >> cdecl [
 	self callingConvention: target cdeclCallingConvention
+]
+
+{ #category : #'linear scan' }
+SAsmFunction >> computeVirtualRegisterLiveRanges [
+	virtualRegisters do: #resetRange.
+	self
+		enumerateInstructionPositions;
+		markVirtualRegisterLiveRanges.
+]
+
+{ #category : #'linear scan' }
+SAsmFunction >> enumerateInstructionPositions [
+	| index |
+	index := 1.
+	basicBlocks do: [ :bb |
+		bb index: index.
+		index := index + 1.
+		bb do: [ :instruction |
+			instruction index: index.
+			index := index + 1
+		]
+	].
 ]
 
 { #category : #printing }
@@ -97,6 +120,15 @@ SAsmFunction >> initialize [
 { #category : #'abstract instruction generation' }
 SAsmFunction >> lowerInstruction: instruction writeToStream: aStreamBuilder [
 	instructionLowerer lowerInstruction: instruction writeToStream: aStreamBuilder
+]
+
+{ #category : #'linear scan' }
+SAsmFunction >> markVirtualRegisterLiveRanges [
+	basicBlocks do: [ :bb |
+		bb do: [ :instruction |
+			instruction markVirtualRegisterLiveRanges
+		]
+	]
 ]
 
 { #category : #'calling conventions' }
@@ -158,6 +190,11 @@ SAsmFunction >> target: aCompilationTarget [
 { #category : #accessing }
 SAsmFunction >> validName [
 	^ name ifNil: [ #anonymous ]
+]
+
+{ #category : #accessing }
+SAsmFunction >> virtualRegisters [
+	^ virtualRegisters
 ]
 
 { #category : #writing }

@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SAsmX86RegisterVector class >> canHoldVirtualRegisterData: virtualRegister [
+	^ virtualRegister isFloatRegister and: [ virtualRegister size <= 16 ]
+]
+
+{ #category : #'as yet unclassified' }
 SAsmX86RegisterVector >> isDoubleFloatRegister [
 	^ true
 ]

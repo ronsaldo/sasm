@@ -4,6 +4,11 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #'as yet unclassified' }
+SAsmRegister class >> canHoldVirtualRegisterData: virtualRegister [
+	^ false
+]
+
 { #category : #testing }
 SAsmRegister >> isDoubleFloatRegister [
 	^ false

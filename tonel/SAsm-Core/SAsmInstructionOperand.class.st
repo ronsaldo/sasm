@@ -120,6 +120,15 @@ SAsmInstructionOperand >> isSymbol [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isVariable [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isVirtualRegister [
 	^ false
+]
+
+{ #category : #'as yet unclassified' }
+SAsmInstructionOperand >> markVirtualRegisterLiveRangePosition: liveRangePosition [
 ]

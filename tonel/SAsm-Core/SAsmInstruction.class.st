@@ -61,6 +61,11 @@ SAsmInstruction >> isInstruction [
 	^ true
 ]
 
+{ #category : #'linear scan' }
+SAsmInstruction >> markVirtualRegisterLiveRanges [
+	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: index ]
+]
+
 { #category : #accessing }
 SAsmInstruction >> second [
 	^ arguments second

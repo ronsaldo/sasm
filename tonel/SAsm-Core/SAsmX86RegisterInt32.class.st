@@ -4,6 +4,11 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
+{ #category : #'as yet unclassified' }
+SAsmX86RegisterInt32 class >> canHoldVirtualRegisterData: virtualRegister [
+	^ virtualRegister isInteger and: [virtualRegister size <= 4]
+]
+
 { #category : #testing }
 SAsmX86RegisterInt32 >> isRegisterI32 [
 	^ true

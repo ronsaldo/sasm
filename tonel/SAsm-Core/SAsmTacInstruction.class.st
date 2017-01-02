@@ -33,6 +33,14 @@ SAsmTacInstruction >> left: anObject [
 	left := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmTacInstruction >> markVirtualRegisterLiveRanges [
+	result ifNotNil: [ result markVirtualRegisterLiveRangePosition: index ].
+	left ifNotNil: [ left markVirtualRegisterLiveRangePosition: index ].
+	right ifNotNil: [ right markVirtualRegisterLiveRangePosition: index ].
+
+]
+
 { #category : #accessing }
 SAsmTacInstruction >> operation [
 	^ operation
