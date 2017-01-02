@@ -9,7 +9,8 @@ Class {
 		'size',
 		'register',
 		'spillLocation',
-		'variable'
+		'variable',
+		'dynamicRoot'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -60,6 +61,12 @@ SAsmVirtualRegister >> index [
 { #category : #accessing }
 SAsmVirtualRegister >> index: anObject [
 	index := anObject
+]
+
+{ #category : #initialization }
+SAsmVirtualRegister >> initialize [
+	super initialize.
+	dynamicRoot := false.
 ]
 
 { #category : #testing }
@@ -140,13 +147,13 @@ SAsmVirtualRegister >> spillLocation [
 
 { #category : #accessing }
 SAsmVirtualRegister >> spillLocation: anObject [
-	spillLocation := anObject
+	spillLocation := anObject.
+	spillLocation ifNotNil: [ spillLocation addVirtualRegister: self ]
 ]
 
 { #category : #accessing }
 SAsmVirtualRegister >> spillingClass [
-	"TODO: Use the proper alignment"
-	^ size -> size
+	^ {size . size . dynamicRoot }
 ]
 
 { #category : #accessing }

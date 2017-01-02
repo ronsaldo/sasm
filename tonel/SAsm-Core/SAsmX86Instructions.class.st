@@ -8,11 +8,13 @@ Class {
 		'CALL',
 		'CMP',
 		'IRET',
+		'JA',
 		'JMP',
 		'MOV',
 		'POP',
 		'PUSH',
-		'RET'
+		'RET',
+		'SUB'
 	],
 	#category : #'SAsm-Core-X86'
 }
@@ -95,7 +97,10 @@ SAsmX86Instructions class >> initializeInstructions [
 		(IRET
 			(Op 16rCF)
 		)
-			
+		
+		(JA
+		)
+		
 		(JMP
 			(OpIr8 16rEB)
 			(OpIrw 16rE9)
@@ -130,6 +135,21 @@ SAsmX86Instructions class >> initializeInstructions [
 		(RET
 			(Op 16rC3 )
 			(OpU16 16rC2)
+		)
+		
+		(SUB
+			(OpALI8 16r2C)
+			(OpAXIw 16r2D)
+
+			(OpRmbIb 16r80 5)
+			
+			(OpRmwS8 16r83 5)
+			(OpRmwIw 16r81 5)
+			
+			(OpRmbRb 16r28)
+			(OpRmwRw 16r29)
+			(OpRbRmb 16r2A)
+			(OpRwRmw 16r2B)
 		)
 	)
 ]

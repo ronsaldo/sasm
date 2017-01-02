@@ -9,10 +9,24 @@ Class {
 		'offset',
 		'size',
 		'alignment',
-		'argument'
+		'argument',
+		'dynamicRoot',
+		'virtualRegisters'
 	],
 	#category : #'SAsm-Core-Generic'
 }
+
+{ #category : #testing }
+SAsmVariable >> actuallyUsed [
+	argument ifTrue: [ ^ true ].
+	virtualRegisters do: [ :vr | vr register isNil ifTrue: [ ^ true ] ].
+	^ false
+]
+
+{ #category : #initialization }
+SAsmVariable >> addVirtualRegister: virtualRegister [
+	virtualRegisters := virtualRegisters copyWith: virtualRegister.
+]
 
 { #category : #accessing }
 SAsmVariable >> alignment [
@@ -35,6 +49,16 @@ SAsmVariable >> argument: anObject [
 ]
 
 { #category : #accessing }
+SAsmVariable >> dynamicRoot [
+	^ dynamicRoot
+]
+
+{ #category : #accessing }
+SAsmVariable >> dynamicRoot: anObject [
+	dynamicRoot := anObject
+]
+
+{ #category : #accessing }
 SAsmVariable >> index [
 	^ index
 ]
@@ -51,6 +75,8 @@ SAsmVariable >> initialize [
 	size := 0.
 	index := 0.
 	alignment := 1.
+	dynamicRoot := false.
+	virtualRegisters := #().
 ]
 
 { #category : #testing }
@@ -80,5 +106,15 @@ SAsmVariable >> size: anObject [
 
 { #category : #accessing }
 SAsmVariable >> spillClass [
-	^ size -> alignment
+	^ { size . alignment . dynamicRoot }
+]
+
+{ #category : #accessing }
+SAsmVariable >> virtualRegisters [
+	^ virtualRegisters
+]
+
+{ #category : #accessing }
+SAsmVariable >> virtualRegisters: anObject [
+	virtualRegisters := anObject
 ]

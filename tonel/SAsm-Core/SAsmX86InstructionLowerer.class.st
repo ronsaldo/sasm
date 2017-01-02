@@ -1,70 +1,12 @@
 Class {
 	#name : #SAsmX86InstructionLowerer,
-	#superclass : #SAsmCompilationTarget,
-	#instVars : [
-		'target',
-		'function',
-		'streamBuilder',
-		'allocatableRegisterClasses',
-		'scratchRegisterClases',
-		'usedRegisters',
-		'freeRegisters',
-		'freeSpillLocations'
-	],
+	#superclass : #SAsmInstructionLowerer,
 	#pools : [
 		'SAsmX86Constants',
 		'SAsmX86Instructions'
 	],
 	#category : #'SAsm-Core-X86'
 }
-
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> allocateRegisters [
-	| callingConvention |
-	function computeVirtualRegisterLiveRanges.
-	callingConvention := function callingConvention.
-	allocatableRegisterClasses := self buildRegisterClasses: callingConvention allocatableRegisters.
-	scratchRegisterClases := self buildRegisterClasses: callingConvention scratchRegisters.
-	usedRegisters := Set new.
-	self performLinearScanRegisterAllocation.
-	self buildStackLayout.
-]
-
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> allocateSpillLocationForVirtualRegister: virtualRegister [
-	| spillClass freeLocations spillLocation |
-	spillClass := virtualRegister spillingClass.
-	freeLocations := freeSpillLocations at: spillClass ifAbsentPut: [ OrderedCollection new ].
-	freeLocations ifNotEmpty: [
-		spillLocation := freeLocations last.
-		freeLocations removeLast.
-	] ifEmpty: [
-		spillLocation := self createLocal: spillClass
-	].
-
-	^ spillLocation
-]
-
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> buildRegisterClasses: registers [
-	| registerClasses |
-	registerClasses := Dictionary new.
-	registers do: [ :reg | (registerClasses at: reg class ifAbsentPut: [ OrderedCollection new ]) add: reg ].
-	^ registerClasses
-	
-]
-
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> buildStackLayout [
-]
-
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> createLocal: spillClass [
-	^ SAsmVariable new
-		size: spillClass key;
-		alignment: spillClass value;
-		yourself
-]
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right integer: integerInstruction float: floatInstruction double: doubleInstruction [
@@ -95,6 +37,11 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 ]
 
 { #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitPrologueLoads [
+	self flag: 'TODO'
+]
+
+{ #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> enterFrame [
 	function callingConvention isNaked ifTrue: [ ^ self ].
 	self enterFramefullMethod
@@ -102,31 +49,79 @@ SAsmX86InstructionLowerer >> enterFrame [
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> enterFramefullMethod [
+	"Compute some sizes."
+	| pointerSize dynamicObjectSize callingConvention totalFrameSize nativeSizeToAllocate argumentDescriptor scratchRegister stackSizeRequirement stackCheckedEntry stackLimitTrap nilPointerRegister nilPointer |
+	pointerSize := target pointerSize.
+	callingConvention := function callingConvention.
+	
+	dynamicObjectSize := stackFrameLayout dynamicRootCount * pointerSize.
+	totalFrameSize := stackFrameLayout size + dynamicObjectSize alignedTo: callingConvention stackAlignment.
+	nativeSizeToAllocate := totalFrameSize - dynamicObjectSize - stackFrameLayout reservedLocalsSpace.
+	argumentDescriptor := self computeArgumentDescriptor.
+	
+	scratchRegister := callingConvention scratchRegisters first.
+	
+	"Compute the stack size requirements."
+	callingConvention hasSegmentedStack ifTrue: [
+		stackSizeRequirement := totalFrameSize + maxCallStackSize + (pointerSize * StackSwitchPointerRequired) - ( "Return pointer" pointerSize * 1).
+		stackCheckedEntry := streamBuilder newLabel: #stackCheckedEntry.
+		stackLimitTrap := self stackLimitTrapSymbol.
+		streamBuilder
+			"Check if we have hitten the stack limit."
+			x86: MOV with: scratchRegister with: self stackPointerRegister;
+			x86: AND with: scratchRegister with: StackPageSize - 1;
+			x86: CMP with: scratchRegister with: stackSizeRequirement;
+			x86: JA with: stackCheckedEntry;
+			
+			"We have hit the stack limit, mov the argument description to EAX"
+			x86: MOV with: scratchRegister with: argumentDescriptor;
+			x86: CALL with: stackLimitTrap;
+			
+			addLabel: stackCheckedEntry.
+	].
+	
 	streamBuilder
 		x86: PUSH with: target framePointerRegister;
-		x86: MOV dst: target framePointerRegister src: target stackPointerRegister
-]
+		x86: MOV dst: target framePointerRegister src: target stackPointerRegister.
+		
+	"Fetch the nil pointer"
+	nilPointerRegister := nil.
+	(stackFrameLayout dynamicRootCount ~= 0 or: [callingConvention hasContextMetadata]) ifTrue: [
+		nilPointer := self nilGlobalSymbol.
+		nilPointerRegister := scratchRegister.
+		streamBuilder
+			x86: MOV with: nilPointerRegister with: nilPointer.
+	].
 
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> freeRegister: register [
-	register ifNil: [ ^ self ].
-	(freeRegisters at: register class) add: register
-]
+	"Context meta data"
+	callingConvention hasContextMetadata ifTrue: [
+		self assert: totalFrameSize <= 16rFFFF.
+		self assert: stackFrameLayout dynamicRootCount <= 16rfff.
+		
+		streamBuilder
+			x86: PUSH with: (self compiledMethodMetaData);
+			x86: PUSH with: nilPointerRegister;
+			x86: PUSH with: argumentDescriptor;
+			x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (registersToPreserve size << 12))
+	].
 
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> freeSpillLocation: spillLocation [
-	spillLocation ifNil: [ ^ self ].
-	(freeSpillLocations at: spillLocation spillClass) add: spillLocation.
-]
+	"Initialize the object variables with nil."
+	1 to: stackFrameLayout dynamicRootCount do: [ :i |
+		streamBuilder x86: PUSH with: nilPointerRegister
+	].
 
-{ #category : #accessing }
-SAsmX86InstructionLowerer >> function [
-	^ function
-]
+	"Store the registers that have to be preserved."
+	registersToPreserve do: [ :register |
+		streamBuilder x86: PUSH with: register
+	].
 
-{ #category : #accessing }
-SAsmX86InstructionLowerer >> function: anObject [
-	function := anObject
+	"Allocate the native size."
+	nativeSizeToAllocate ~= 0 ifTrue: [
+		streamBuilder x86: SUB with: target stackPointerRegister with: nativeSizeToAllocate.
+	].
+
+	"Emit the argument loads."
+	self emitPrologueLoads
 ]
 
 { #category : #'abstract instruction generation' }
@@ -140,16 +135,6 @@ SAsmX86InstructionLowerer >> leaveFramefullMethod [
 	streamBuilder
 		x86: MOV dst: target stackPointerRegister src: target framePointerRegister;
 		x86: POP with: target framePointerRegister.
-]
-
-{ #category : #'abstract instruction generation' }
-SAsmX86InstructionLowerer >> lowerInstruction: instruction writeToStream: aStreamBuilder [
-	streamBuilder := aStreamBuilder.
-	instruction operation acceptInstruction: instruction with: self
-]
-
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> mapVirtualRegister: virtualRegister toSpillLocation: spillLocation [
 ]
 
 { #category : #'abstract instruction generation' }
@@ -177,78 +162,6 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 	
 ]
 
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> performLinearScanRegisterAllocation [
-	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange |
-	freeSpillLocations := Dictionary new.
-	freeRegisters := Dictionary new.
-	allocatableRegisterClasses keysAndValuesDo: [ :key :value |
-		freeRegisters at: key put: value copy
-	].
-
-	activeMemoryRanges := SortedCollection sortBlock: [ :a :b | a end < b end ].
-	activeRangeClasses := Dictionary new.
-	sortedLiveRanges := function virtualRegisters select: #hasValidLiveRange.
-	sortedLiveRanges sort.
-	
-	sortedLiveRanges do: [ :virtualRegister |
-		"Spill location allocation"
-		virtualRegister variable ifNotNil: [
-			virtualRegister spillLocation: virtualRegister variable copy
-		] ifNil: [ 
-			self removeExpiredRangesUntil: virtualRegister start from: activeMemoryRanges do: [:expiredRange |
-				self freeSpillLocation: expiredRange spillLocation.
-			].
-			virtualRegister spillLocation: (self allocateSpillLocationForVirtualRegister: virtualRegister).
-			self mapVirtualRegister: virtualRegister toSpillLocation: virtualRegister spillLocation.
-			activeMemoryRanges add: virtualRegister.
-		].
-	
-		"Allocate the register"
-		registerClass := virtualRegister registerClass.
-		registerClass ifNotNil: [ 
-			activeRangeClasses valuesDo: [ :activeRanges |
-				self removeExpiredRangesUntil: virtualRegister firstUsage from: activeRanges do: [:expiredRange |
-					self freeRegister: expiredRange register.
-				].
-			].
-		
-			currentActiveRanges := activeRangeClasses at: registerClass ifAbsentPut: [
-				SortedCollection sortBlock: [ :a :b | a end < b end ]
-			].
-			
-			availableRegisters := freeRegisters at: registerClass.
-			availableRegisters ifEmpty: [
-				"Spill here."
-				spilledRange := currentActiveRanges last.
-				spilledRange end > virtualRegister end ifTrue: [ 
-					"range spillRange: spilledRange."
-					virtualRegister register: spilledRange register.
-					spilledRange register: nil.
-					currentActiveRanges removeLast.
-					currentActiveRanges add: virtualRegister.
-				] ifFalse: [
-					"Range is spilled. Nothing required."
-				]
-			] ifNotEmpty: [
-				virtualRegister register: availableRegisters last.
-				availableRegisters removeLast.
-				usedRegisters add: virtualRegister register.
-				currentActiveRanges add: virtualRegister.
-			]
-		]
-	].
-	
-]
-
-{ #category : #'register allocation' }
-SAsmX86InstructionLowerer >> removeExpiredRangesUntil: date from: rangeList do: aBlock [
-	[rangeList isNotEmpty and: [ rangeList first end < date]] whileTrue: [
-		aBlock value: rangeList first.
-		rangeList removeFirst
-	]
-]
-
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> returnValue: value [
 	value ifNil: [ ^ self ].
@@ -264,33 +177,6 @@ SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 		self moveValue: value toRegister: function callingConvention resultInt2Register
 	]
 	
-]
-
-{ #category : #accessing }
-SAsmX86InstructionLowerer >> streamBuilder [
-	^ streamBuilder
-]
-
-{ #category : #accessing }
-SAsmX86InstructionLowerer >> streamBuilder: anObject [
-	streamBuilder := anObject
-]
-
-{ #category : #accessing }
-SAsmX86InstructionLowerer >> target [
-	^ target
-]
-
-{ #category : #accessing }
-SAsmX86InstructionLowerer >> target: anObject [
-	target := anObject
-]
-
-{ #category : #'abstract instruction generation' }
-SAsmX86InstructionLowerer >> virtualToPhysical: register [
-	register isVirtualRegister ifFalse: [ ^ register ].
-	register register ifNotNil: [ ^ register register ].
-	^ register spillLocation
 ]
 
 { #category : #visiting }

@@ -80,6 +80,11 @@ SAsmX86_64CallingConventionCDecl >> stackAlignment [
 	^ 16
 ]
 
+{ #category : #stack }
+SAsmX86_64CallingConventionCDecl >> stackArgumentAlignment [
+	^ 4
+]
+
 { #category : #'register allocation' }
 SAsmX86_64CallingConventionCDecl >> usableRegisters [
 	^ {

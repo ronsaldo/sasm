@@ -6,7 +6,8 @@ Class {
 		'name',
 		'instructionLowerer',
 		'callingConvention',
-		'virtualRegisters'
+		'virtualRegisters',
+		'stackFrameLayout'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -115,6 +116,7 @@ SAsmFunction >> initialize [
 	super initialize.
 	basicBlocks := OrderedCollection new.
 	virtualRegisters := OrderedCollection new.
+	stackFrameLayout := SAsmStackFrameLayout new.
 ]
 
 { #category : #'abstract instruction generation' }
@@ -174,6 +176,11 @@ SAsmFunction >> printOn: aStream [
 { #category : #'calling conventions' }
 SAsmFunction >> smalltalk [
 	self callingConvention: target smalltalkCallingConvention
+]
+
+{ #category : #accessing }
+SAsmFunction >> stackFrameLayout [
+	^ stackFrameLayout
 ]
 
 { #category : #'calling conventions' }

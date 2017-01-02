@@ -99,6 +99,11 @@ SAsmCallingConvention >> stackAlignment [
 	self subclassResponsibility
 ]
 
+{ #category : #stack }
+SAsmCallingConvention >> stackArgumentAlignment [
+	self subclassResponsibility
+]
+
 { #category : #'register allocation' }
 SAsmCallingConvention >> usableRegisters [
 	^ #()
