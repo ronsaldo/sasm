@@ -69,6 +69,16 @@ SAsmBasicBlock >> prepareWriteToStream: aStreamBuilder [
 ]
 
 { #category : #'as yet unclassified' }
+SAsmBasicBlock >> prettyPrintOn: aStream [
+	aStream putIdentifier: self validName
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBasicBlock >> printOn: aStream [
+	aStream nextPutAll: self validName
+]
+
+{ #category : #'as yet unclassified' }
 SAsmBasicBlock >> validName [
 	^ name ifNil: [ #unnamed ].
 ]

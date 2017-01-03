@@ -242,7 +242,33 @@ SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 ]
 
 { #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacBranchInstruction: branch [
+	| conditionRegister trueDestination falseDestination |
+	conditionRegister := self virtualToPhysical: branch condition.
+	conditionRegister isRegisterAddress ifTrue: [
+		conditionRegister := self moveMemory: conditionRegister toScratchIndex: 1.
+	].
+
+	trueDestination := streamBuilder findSymbolForObject: branch trueDestination.
+	falseDestination := streamBuilder findSymbolForObject: branch falseDestination.
+	
+	streamBuilder
+		x86: TEST with: conditionRegister with: conditionRegister;
+		x86: JZ with: falseDestination;
+		x86: JMP with: trueDestination.
+]
+
+{ #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacCall: callInstruction [
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacJumpInstruction: branch [
+	| destination |
+	destination := streamBuilder findSymbolForObject: branch falseDestination.
+	
+	streamBuilder
+		x86: JMP with: destination.
 ]
 
 { #category : #visiting }

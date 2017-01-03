@@ -19,11 +19,14 @@ Class {
 		'JLE',
 		'JMP',
 		'JNE',
+		'JNZ',
+		'JZ',
 		'MOV',
 		'POP',
 		'PUSH',
 		'RET',
-		'SUB'
+		'SUB',
+		'TEST'
 	],
 	#category : #'SAsm-Core-X86'
 }
@@ -124,9 +127,15 @@ SAsmX86Instructions class >> initializeInstructions [
 		)
 		(JGE
 		)
+
 		(JE
 		)
+		(JZ
+		)
+
 		(JNE
+		)
+		(JNZ
 		)
 		
 		(JMP
@@ -178,6 +187,19 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRmwRw 16r29)
 			(OpRbRmb 16r2A)
 			(OpRwRmw 16r2B)
+		)
+		
+		(TEST
+			(OpALI8 16rA8)
+			(OpAXIw 16rA9)
+
+			(OpRmbIb 16rF6 0)
+			(OpRmwIw 16rF7 0)
+			
+			(OpRmbRb 16r84)
+			(OpRmwRw 16r85)
+			(OpRbRmb 16r84)
+			(OpRwRmw 16r85)
 		)
 	)
 ]

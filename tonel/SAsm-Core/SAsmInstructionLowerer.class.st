@@ -143,7 +143,7 @@ SAsmInstructionLowerer >> function: anObject [
 { #category : #'abstract instruction generation' }
 SAsmInstructionLowerer >> lowerInstruction: instruction writeToStream: aStreamBuilder [
 	streamBuilder := aStreamBuilder.
-	instruction operation acceptInstruction: instruction with: self
+	instruction accept: self
 ]
 
 { #category : #'register allocation' }
@@ -269,4 +269,9 @@ SAsmInstructionLowerer >> virtualToPhysical: register [
 	register isVirtualRegister ifFalse: [ ^ register ].
 	register register ifNotNil: [ ^ register register ].
 	^ self virtualRegisterLocationToPhysicalLocation: register
+]
+
+{ #category : #'as yet unclassified' }
+SAsmInstructionLowerer >> visitTacInstruction: instruction [
+	instruction operation acceptInstruction: instruction with: self
 ]

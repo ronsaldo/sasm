@@ -136,6 +136,15 @@ SAsmStreamBuilder >> tacAdd: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacBranch: condition true: trueDestination false: falseDestintion [
+	^ self add: (SAsmTacBranchInstruction new
+		condition: condition;
+		trueDestination: trueDestination;
+		falseDestination: falseDestintion;
+		yourself)
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacCall: called into: result [
 	^ self tacOperation: TacCall result: result value: called
 ]
@@ -158,6 +167,13 @@ SAsmStreamBuilder >> tacFloatRegister [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacIntRegister [
 	^ stream function newIntegerVirtualRegister.
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacJump: destination [
+	^ self add: (SAsmTacJumpInstruction new
+		destination: destination;
+		yourself)
 ]
 
 { #category : #'three address code' }
