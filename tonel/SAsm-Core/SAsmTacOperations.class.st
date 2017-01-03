@@ -5,8 +5,14 @@ Class {
 		'TacAdd',
 		'TacCall',
 		'TacDivide',
+		'TacEqual',
+		'TacGreater',
+		'TacGreaterOrEqual',
+		'TacLess',
+		'TacLessOrEqual',
 		'TacMove',
 		'TacMultiply',
+		'TacNotEqual',
 		'TacReturn',
 		'TacSubtract'
 	],
@@ -25,4 +31,11 @@ SAsmTacOperations class >> initialize [
 	TacCall := SAsmTacCallOperation new.
 	TacMove := SAsmTacMoveOperation new.
 	TacReturn := SAsmTacReturnOperation new.
+
+	TacEqual := SAsmTacComparisonOperationEqual new.
+	TacNotEqual := SAsmTacComparisonOperationNotEqual new.
+	TacGreater := SAsmTacComparisonOperationGreater new.
+	TacGreaterOrEqual := SAsmTacComparisonOperationGreaterOrEqual new.	
+	TacLess := SAsmTacComparisonOperationLess new.
+	TacLessOrEqual := SAsmTacComparisonOperationLessOrEqual new.
 ]

@@ -158,10 +158,22 @@ SAsmCompilationTargetX86_64 >> newFloatVirtualRegister [
 ]
 
 { #category : #'virtual registers' }
+SAsmCompilationTargetX86_64 >> newFloatVirtualRegistersForSize: size [
+	size = 4 ifTrue: [ ^ { self newFloatVirtualRegister } ].
+	size = 8 ifTrue: [ ^ { self newDoubleFloatVirtualRegister } ].
+	self error: 'Unsupported float register type'
+]
+
+{ #category : #'virtual registers' }
 SAsmCompilationTargetX86_64 >> newIntegerVirtualRegister [
 	^ SAsmIntegerVirtualRegister new size: 8;
 		registerClass: SAsmX86RegisterInt64;
 		yourself
+]
+
+{ #category : #'virtual registers' }
+SAsmCompilationTargetX86_64 >> newIntegerVirtualRegistersForSize: size [
+	^ (1 to: size + 7 // 8) collect: [ :i | self newIntegerVirtualRegister ]
 ]
 
 { #category : #accessing }

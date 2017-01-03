@@ -10,6 +10,7 @@ Class {
 		'register',
 		'spillLocation',
 		'variable',
+		'variableOffset',
 		'dynamicRoot'
 	],
 	#category : #'SAsm-Core-Generic'
@@ -67,6 +68,7 @@ SAsmVirtualRegister >> index: anObject [
 SAsmVirtualRegister >> initialize [
 	super initialize.
 	dynamicRoot := false.
+	variableOffset := 0.
 ]
 
 { #category : #testing }
@@ -169,4 +171,14 @@ SAsmVirtualRegister >> variable [
 { #category : #accessing }
 SAsmVirtualRegister >> variable: anObject [
 	variable := anObject
+]
+
+{ #category : #accessing }
+SAsmVirtualRegister >> variableOffset [
+	^ variableOffset
+]
+
+{ #category : #accessing }
+SAsmVirtualRegister >> variableOffset: anObject [
+	variableOffset := anObject
 ]

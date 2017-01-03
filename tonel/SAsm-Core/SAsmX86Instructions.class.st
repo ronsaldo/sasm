@@ -9,7 +9,16 @@ Class {
 		'CMP',
 		'IRET',
 		'JA',
+		'JAE',
+		'JB',
+		'JBE',
+		'JE',
+		'JG',
+		'JGE',
+		'JL',
+		'JLE',
 		'JMP',
+		'JNE',
 		'MOV',
 		'POP',
 		'PUSH',
@@ -99,6 +108,25 @@ SAsmX86Instructions class >> initializeInstructions [
 		)
 		
 		(JA
+		)
+		(JAE
+		)
+		(JB
+		)
+		(JBE
+		)
+		
+		(JL
+		)
+		(JLE
+		)
+		(JG
+		)
+		(JGE
+		)
+		(JE
+		)
+		(JNE
 		)
 		
 		(JMP

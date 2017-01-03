@@ -37,8 +37,50 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 ]
 
 { #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitComparisonInto: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse [
+	| resultPhysical rightPhysical rightRegister leftPhysical cmpResult |
+	self assert: result isRegisterOrRegisterAddress.
+
+	leftPhysical := self virtualToPhysical: left.
+	rightPhysical := self virtualToPhysical: right.
+	
+	rightRegister := rightPhysical.
+	(leftPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
+		rightRegister := self moveMemory: rightPhysical toScratchIndex: 0
+	].
+
+	resultPhysical := self virtualToPhysical: result.
+	streamBuilder x86: MOV dst: resultPhysical src: 1.
+	
+	left isIntegerRegister ifTrue: [
+		streamBuilder x86: CMP with: leftPhysical with: rightRegister.
+	].
+	
+	left isDoubleFloatRegister ifTrue: [
+		self halt.
+		"streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister."
+	].
+	left isFloatRegister ifTrue: [ 
+		self halt.
+		"streamBuilder x86: doubleInstruction with: resultPhysical with: rightRegister."
+	].
+
+	cmpResult := streamBuilder newPrivateSymbol: #cmpResult.
+	streamBuilder
+		x86: branchTrue with: cmpResult;
+		x86: MOV dst: resultPhysical src: 0;
+		label: cmpResult
+
+]
+
+{ #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitPrologueLoads [
-	self flag: 'TODO'
+	self flag: 'TODO: Support parameters passed in arguments.'.
+	stackFrameLayout arguments doWithIndex: [:arg :index |
+		arg virtualRegisters do: [ :virtualRegister |
+			self unspillVirtualRegister: virtualRegister
+		]
+	].
 ]
 
 { #category : #'abstract instruction generation' }
@@ -179,6 +221,20 @@ SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 	
 ]
 
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> unspillVirtualRegister: virtualRegister [
+	virtualRegister register ifNil: [ ^ self ].
+	
+	virtualRegister register isIntegerRegister ifTrue: [ 
+		streamBuilder x86: MOV dst: virtualRegister register src: (self virtualRegisterLocationToPhysicalLocation: virtualRegister)
+	]
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualRegister [
+	^ (target framePointerRegister asPointerOfSize: virtualRegister size) + (virtualRegister variable offset + virtualRegister variableOffset)
+]
+
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
@@ -187,6 +243,12 @@ SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacCall: callInstruction [
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacLess: instruction [
+	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JL branchFalse: JGE
 ]
 
 { #category : #visiting }

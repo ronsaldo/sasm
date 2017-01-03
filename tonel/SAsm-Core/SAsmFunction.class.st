@@ -19,11 +19,17 @@ SAsmFunction >> addBasicBlock: aBasicBlock [
 	^ aBasicBlock
 ]
 
-{ #category : #initialization }
+{ #category : #'abstract instruction generation' }
 SAsmFunction >> addVirtualRegister: virtualRegister [
 	virtualRegisters add: virtualRegister.
 	virtualRegister index: virtualRegisters size.
 	^ virtualRegister
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmFunction >> addVirtualRegisters: newVirtualRegisters [
+	newVirtualRegisters do: [ :reg | self addVirtualRegister: reg ].
+	^ newVirtualRegisters
 ]
 
 { #category : #'abstract instruction generation' }
@@ -59,6 +65,11 @@ SAsmFunction >> callingConvention [
 { #category : #accessing }
 SAsmFunction >> callingConvention: anObject [
 	callingConvention := anObject
+]
+
+{ #category : #accessing }
+SAsmFunction >> callingConventionNamed: aName [
+	self callingConvention: (target callingConventionNamed: aName)
 ]
 
 { #category : #'calling conventions' }

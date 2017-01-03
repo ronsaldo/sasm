@@ -97,10 +97,10 @@ SAsmInstructionLowerer >> computeArgumentDescriptor [
 	nativeArgumentsSize := 0.
 	callingConvention := function callingConvention.
 	stackFrameLayout arguments doWithIndex: [ :arg :index |
-		arg type isDynamicObjectType ifTrue: [
+		arg dynamicRoot ifTrue: [
 			oopArgumentCount := oopArgumentCount + 1
 		] ifFalse: [
-			nativeArgumentsSize := nativeArgumentsSize + (arg type size alignedTo: callingConvention stackArgumentAlignment)
+			nativeArgumentsSize := nativeArgumentsSize + (arg size alignedTo: (arg alignment max: callingConvention stackArgumentAlignment))
 		]
 	].
 
@@ -260,8 +260,13 @@ SAsmInstructionLowerer >> target: anObject [
 ]
 
 { #category : #'abstract instruction generation' }
+SAsmInstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualRegister [
+	self subclassResponsibility
+]
+
+{ #category : #'abstract instruction generation' }
 SAsmInstructionLowerer >> virtualToPhysical: register [
 	register isVirtualRegister ifFalse: [ ^ register ].
 	register register ifNotNil: [ ^ register register ].
-	^ register spillLocation
+	^ self virtualRegisterLocationToPhysicalLocation: register
 ]

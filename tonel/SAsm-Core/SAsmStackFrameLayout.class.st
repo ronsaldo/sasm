@@ -95,13 +95,19 @@ SAsmStackFrameLayout >> buildLocalLayout [
 
 ]
 
+{ #category : #'register allocation' }
+SAsmStackFrameLayout >> createArgument: spillingClass [
+	^ self createArgument: spillingClass first alignment: spillingClass second dynamicRoot: spillingClass third
+]
+
 { #category : #'as yet unclassified' }
-SAsmStackFrameLayout >> createArgument: argSize alignment: argAlignment [
+SAsmStackFrameLayout >> createArgument: argSize alignment: argAlignment dynamicRoot: dynamicRoot [
 	| result |
 	result := SAsmVariable new
 		index: arguments size + 1;
 		size: argSize;
 		alignment: argAlignment;
+		dynamicRoot: dynamicRoot;
 		argument: true;
 		yourself.
 	arguments add: result.

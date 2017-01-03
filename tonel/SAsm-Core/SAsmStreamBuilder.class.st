@@ -104,6 +104,14 @@ SAsmStreamBuilder >> localScope [
 	^ localScope
 ]
 
+{ #category : #symbols }
+SAsmStreamBuilder >> newPrivateSymbol: name [
+	^ SAsmSymbol new
+		name: name;
+		makePrivate;
+		yourself
+]
+
 { #category : #sections }
 SAsmStreamBuilder >> startSection: sectionName attributes: aBlock [
 	self currentSectionName = sectionName ifTrue: [ ^ currentSection ].

@@ -6,22 +6,22 @@ Class {
 
 { #category : #converting }
 SAsmX86RegisterInt >> asPointer [
-	^ SLVMLirX86RegisterAddress new base: self; size: self size
+	^ SAsmX86RegisterAddress new base: self; size: self size
 ]
 
 { #category : #converting }
 SAsmX86RegisterInt >> asPointerOfSize: size [
-	^ SLVMLirX86RegisterAddress new base: self; size: size
+	^ SAsmX86RegisterAddress new base: self; size: size
 ]
 
 { #category : #converting }
 SAsmX86RegisterInt >> byte [
-	^ SLVMLirX86RegisterAddress new base: self; size: 1
+	^ SAsmX86RegisterAddress new base: self; size: 1
 ]
 
 { #category : #converting }
 SAsmX86RegisterInt >> dword [
-	^ SLVMLirX86RegisterAddress new base: self; size: 4
+	^ SAsmX86RegisterAddress new base: self; size: 4
 ]
 
 { #category : #testing }
@@ -41,10 +41,10 @@ SAsmX86RegisterInt >> isRegisterWord [
 
 { #category : #converting }
 SAsmX86RegisterInt >> qword [
-	^ SLVMLirX86RegisterAddress new base: self; size: 8
+	^ SAsmX86RegisterAddress new base: self; size: 8
 ]
 
 { #category : #converting }
 SAsmX86RegisterInt >> word [
-	^ SLVMLirX86RegisterAddress new base: self; size: 2
+	^ SAsmX86RegisterAddress new base: self; size: 2
 ]
