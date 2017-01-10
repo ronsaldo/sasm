@@ -38,6 +38,11 @@ SAsmStreamElement >> initialize [
 ]
 
 { #category : #testing }
+SAsmStreamElement >> isConditionalJump [
+	^ false
+]
+
+{ #category : #testing }
 SAsmStreamElement >> isConstantExpressionValue [
 	^ false
 ]

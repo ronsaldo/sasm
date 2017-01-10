@@ -3,3 +3,8 @@ Class {
 	#superclass : #SAsmTacOperation,
 	#category : #'SAsm-Core-TAC'
 }
+
+{ #category : #'as yet unclassified' }
+SAsmTacComparisonOperation >> isCondition [
+	^ true
+]

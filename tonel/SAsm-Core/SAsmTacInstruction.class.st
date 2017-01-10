@@ -19,6 +19,11 @@ SAsmTacInstruction >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SAsmTacInstruction >> isCondition [
+	^ operation isCondition
+]
+
+{ #category : #testing }
 SAsmTacInstruction >> isThreeAddressInstruction [
 	^ true
 ]
@@ -33,7 +38,7 @@ SAsmTacInstruction >> left: anObject [
 	left := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'linear scan' }
 SAsmTacInstruction >> markVirtualRegisterLiveRanges [
 	result ifNotNil: [ result markVirtualRegisterLiveRangePosition: index ].
 	left ifNotNil: [ left markVirtualRegisterLiveRangePosition: index ].

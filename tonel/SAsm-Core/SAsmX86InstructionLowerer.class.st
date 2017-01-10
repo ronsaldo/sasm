@@ -37,6 +37,46 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 ]
 
 { #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitComparison: instruction left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination [
+	| rightPhysical rightRegister leftPhysical falseLabel trueLabel |
+	leftPhysical := self virtualToPhysical: left.
+	rightPhysical := self virtualToPhysical: right.
+	
+	rightRegister := rightPhysical.
+	(leftPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
+		rightRegister := self moveMemory: rightPhysical toScratchIndex: 0
+	].
+
+	left isIntegerRegister ifTrue: [
+		streamBuilder x86: CMP with: leftPhysical with: rightRegister.
+	].
+	
+	left isDoubleFloatRegister ifTrue: [
+		self halt.
+		"streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister."
+	].
+	left isFloatRegister ifTrue: [ 
+		self halt.
+		"streamBuilder x86: doubleInstruction with: resultPhysical with: rightRegister."
+	].
+
+	falseLabel := streamBuilder findSymbolForObject: falseDestination.
+	trueLabel := streamBuilder findSymbolForObject: trueDestination.
+	
+	instruction trueDestination index = (instruction index + 1) ifTrue: [ 
+		"Fallthrough to the true destination"
+		streamBuilder
+			x86: branchFalse with: falseLabel;
+			x86: JMP with: trueLabel.
+	] ifFalse: [ 
+		"Fallthrough to the false destination"
+		streamBuilder
+			x86: branchTrue with: trueLabel;
+			x86: JMP with: falseLabel.
+	]
+]
+
+{ #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitComparisonInto: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse [
 	| resultPhysical rightPhysical rightRegister leftPhysical cmpResult |
 	self assert: result isRegisterOrRegisterAddress.
@@ -179,6 +219,11 @@ SAsmX86InstructionLowerer >> leaveFramefullMethod [
 		x86: POP with: target framePointerRegister.
 ]
 
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> lowerConditional: condition branch: branch [
+	condition operation acceptCondition: condition withBranch: branch asConditionWith: self 
+]
+
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> moveMemory: rightPhysical toScratchIndex: scratchIndex [
 	self halt
@@ -275,6 +320,12 @@ SAsmX86InstructionLowerer >> visitTacJumpInstruction: branch [
 SAsmX86InstructionLowerer >> visitTacLess: instruction [
 	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
 			branchTrue: JL branchFalse: JGE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacLess: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JL destination: branch trueDestination branchFalse: JGE destination: branch falseDestination
 ]
 
 { #category : #visiting }

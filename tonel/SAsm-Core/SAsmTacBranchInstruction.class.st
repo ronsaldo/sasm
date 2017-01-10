@@ -35,6 +35,11 @@ SAsmTacBranchInstruction >> falseDestination: anObject [
 ]
 
 { #category : #testing }
+SAsmTacBranchInstruction >> isConditionalJump [
+	^ true
+]
+
+{ #category : #testing }
 SAsmTacBranchInstruction >> isThreeAddressInstruction [
 	^ true
 ]

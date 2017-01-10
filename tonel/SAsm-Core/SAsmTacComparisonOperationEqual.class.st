@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SAsmTacComparisonOperationEqual >> acceptCondition: aCondition withBranch: aBranch asConditionWith: aVisitor [
+	^ aVisitor visitTacEqual: aCondition withBranch: aBranch
+]
+
+{ #category : #'as yet unclassified' }
 SAsmTacComparisonOperationEqual >> acceptInstruction: anInstruction with: aVisitor [
 	^ aVisitor visitTacEqual: anInstruction
 ]

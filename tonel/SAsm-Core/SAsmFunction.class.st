@@ -132,7 +132,7 @@ SAsmFunction >> initialize [
 
 { #category : #'abstract instruction generation' }
 SAsmFunction >> lowerInstruction: instruction writeToStream: aStreamBuilder [
-	instructionLowerer lowerInstruction: instruction writeToStream: aStreamBuilder
+	^ instructionLowerer lowerInstruction: instruction writeToStream: aStreamBuilder
 ]
 
 { #category : #'linear scan' }

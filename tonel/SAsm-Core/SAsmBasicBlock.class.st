@@ -9,7 +9,7 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #printing }
 SAsmBasicBlock >> fullPrintOn: aStream [
 	aStream putIdentifier: self validName; nextPutAll: ' {'; lf.
 	aStream withExtraIndentationLevel: [ 
@@ -42,12 +42,13 @@ SAsmBasicBlock >> index: anObject [
 	index := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'instruction lowering' }
 SAsmBasicBlock >> lowerInstruction: instruction andWriteToStream: aStreamBuilder [
 	instruction isThreeAddressInstruction ifTrue: [ 
-		function lowerInstruction: instruction writeToStream: aStreamBuilder.
+		^ function lowerInstruction: instruction writeToStream: aStreamBuilder.
 	] ifFalse: [ 
 		instruction writeToStream: aStreamBuilder.
+		^ instruction next
 	].
 	
 ]
@@ -62,31 +63,33 @@ SAsmBasicBlock >> name: anObject [
 	name := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SAsmBasicBlock >> prepareWriteToStream: aStreamBuilder [
 	aStreamBuilder addPrivateSymbol: name for: self.
 	super prepareWriteToStream: aStreamBuilder
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #printing }
 SAsmBasicBlock >> prettyPrintOn: aStream [
 	aStream putIdentifier: self validName
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #printing }
 SAsmBasicBlock >> printOn: aStream [
 	aStream nextPutAll: self validName
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SAsmBasicBlock >> validName [
 	^ name ifNil: [ #unnamed ].
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SAsmBasicBlock >> writeToStream: aStreamBuilder [
+	| nextInstruction |
 	aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
-	self do: [ :instruction |
-		self lowerInstruction: instruction andWriteToStream: aStreamBuilder.
+	nextInstruction := first.
+	[nextInstruction] whileNotNil: [ 
+		nextInstruction := self lowerInstruction: nextInstruction andWriteToStream: aStreamBuilder.
 	]
 ]
