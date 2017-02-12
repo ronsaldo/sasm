@@ -277,7 +277,7 @@ SAsmX86InstructionLowerer >> unspillVirtualRegister: virtualRegister [
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualRegister [
-	^ (target framePointerRegister asPointerOfSize: virtualRegister size) + (virtualRegister variable offset + virtualRegister variableOffset)
+	^ (target framePointerRegister asPointerOfSize: virtualRegister size) + (virtualRegister spillLocation offset + virtualRegister variableOffset)
 ]
 
 { #category : #visiting }
@@ -308,6 +308,42 @@ SAsmX86InstructionLowerer >> visitTacCall: callInstruction [
 ]
 
 { #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacEqual: instruction [
+	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JE branchFalse: JNE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacEqual: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JE destination: branch trueDestination branchFalse: JNE destination: branch falseDestination
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacGreater: instruction [
+	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JG branchFalse: JLE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacGreater: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JG destination: branch trueDestination branchFalse: JLE destination: branch falseDestination
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacGreaterOrEqual: instruction [
+	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JGE branchFalse: JL
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacGreaterOrEqual: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JGE destination: branch trueDestination branchFalse: JL destination: branch falseDestination
+]
+
+{ #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacJumpInstruction: branch [
 	| destination |
 	destination := streamBuilder findSymbolForObject: branch falseDestination.
@@ -329,11 +365,35 @@ SAsmX86InstructionLowerer >> visitTacLess: instruction withBranch: branch [
 ]
 
 { #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacLessOrEqual: instruction [
+	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JLE branchFalse: JE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacLessOrEqual: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JLE destination: branch trueDestination branchFalse: JG destination: branch falseDestination
+]
+
+{ #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacMove: moveInstruction [
 	| result value |
 	result := moveInstruction result.
 	value := moveInstruction value.
 	^ self moveValue: value toRegister: result
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacNotEqual: instruction [
+	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JNE branchFalse: JE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacNotEqual: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JNE destination: branch trueDestination branchFalse: JE destination: branch falseDestination
 ]
 
 { #category : #visiting }

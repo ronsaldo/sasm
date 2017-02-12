@@ -125,6 +125,11 @@ SAsmX86RegisterAddress >> encodeModRMWithOpcode: opcode immediate: immediateSize
 
 ]
 
+{ #category : #testing }
+SAsmX86RegisterAddress >> hasSmallDisplacement [
+	^ displacement isInteger and: [ displacement between: -128 and: 128 ]
+]
+
 { #category : #accessing }
 SAsmX86RegisterAddress >> index [
 	^ index

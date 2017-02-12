@@ -167,6 +167,7 @@ SAsmInstructionLowerer >> lowerInstruction: instruction writeToStream: aStreamBu
 
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> mapVirtualRegister: virtualRegister toSpillLocation: spillLocation [
+	self flag: 'TODO: add a mapping entry for debugging.'
 ]
 
 { #category : #'runtime functions' }
@@ -188,6 +189,7 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 	activeRangeClasses := Dictionary new.
 	sortedLiveRanges := function virtualRegisters select: #hasValidLiveRange.
 	sortedLiveRanges sort.
+	sortedLiveRanges do: [ :range | range spillLocation: nil ].
 	
 	sortedLiveRanges do: [ :virtualRegister |
 		"Spill location allocation"

@@ -52,3 +52,18 @@ SAsmFunctionBuilder >> smalltalk [
 SAsmFunctionBuilder >> stdcall [
 	function stdcall
 ]
+
+{ #category : #'three address code' }
+SAsmFunctionBuilder >> tacDoubleFloatArgument: argumentName [
+	^ function newDoubleFloatArgument: argumentName
+]
+
+{ #category : #'three address code' }
+SAsmFunctionBuilder >> tacFloatArgument: argumentName [
+	^ function newFloatArgument: argumentName
+]
+
+{ #category : #'three address code' }
+SAsmFunctionBuilder >> tacIntArgument: argumentName [
+	^ function newIntegerArgument: argumentName
+]

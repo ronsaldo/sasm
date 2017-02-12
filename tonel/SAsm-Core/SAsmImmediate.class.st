@@ -25,6 +25,7 @@ SAsmImmediate >> isImmediate [
 { #category : #testing }
 SAsmImmediate >> isImmediateS8RelativeTo: anInstruction position: immediateWritePosition offset: relativeCheck [
 	| relValue |
+	anInstruction section ifNil: [ ^ false ].
 	relValue := self immediateValueRelativeTo: anInstruction section position: immediateWritePosition offset: relativeCheck.
 	^ relValue between: -128 and: 127
 	

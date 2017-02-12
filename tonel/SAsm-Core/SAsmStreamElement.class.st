@@ -122,6 +122,11 @@ SAsmStreamElement >> section: anObject [
 ]
 
 { #category : #accessing }
+SAsmStreamElement >> sectionName [
+	^ section ifNotNil: [ section name ]
+]
+
+{ #category : #accessing }
 SAsmStreamElement >> size [
 	self subclassResponsibility
 ]

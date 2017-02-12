@@ -6,5 +6,5 @@ Class {
 
 { #category : #factory }
 SAsmElf64SymbolTable >> symbolEntryClass [
-	^ SLVMElf64SymbolTableEntry
+	^ SAsmElf64SymbolTableEntry
 ]

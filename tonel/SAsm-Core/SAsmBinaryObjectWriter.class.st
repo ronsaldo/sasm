@@ -7,7 +7,8 @@ Class {
 		'currentSection',
 		'cpuMode',
 		'symbolList',
-		'symbolSet'
+		'symbolSet',
+		'pendingLocalSymbolRelocations'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -102,6 +103,7 @@ SAsmBinaryObjectWriter >> generateStream: aStream [
 	].
 	
 	sectionList do: [ :section | section data: section data contents ].
+	pendingLocalSymbolRelocations ifNotEmpty: [ self error: 'Undefined local symbols' ].
 	^ SAsmBinaryObject new compilationTarget: aStream target; sections: sectionList asArray; symbols: symbolList asArray.
 ]
 
@@ -122,6 +124,7 @@ SAsmBinaryObjectWriter >> generateUntilConvergence: aStream [
 SAsmBinaryObjectWriter >> initialize [
 	super initialize.
 	cpuMode := #normal.
+	pendingLocalSymbolRelocations := IdentityDictionary new.
 ]
 
 { #category : #testing }
@@ -132,6 +135,16 @@ SAsmBinaryObjectWriter >> isLongMode [
 { #category : #testing }
 SAsmBinaryObjectWriter >> isShortMode [
 	^ cpuMode == #short
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> localSymbol: symbol buildRelocation: relocationBlock [
+	symbol isUndefined ifFalse: [ 
+		^ relocationBlock value
+	].
+
+	(pendingLocalSymbolRelocations at: symbol ifAbsentPut: [ OrderedCollection new ])
+		add: relocationBlock
 ]
 
 { #category : #'byte writing' }
@@ -350,10 +363,12 @@ SAsmBinaryObjectWriter >> recordImmediateRelativeReloc: immediate extraAddend: e
 		reloc symbol: symbol.
 		self addSymbol: symbol.
 	] ifFalse: [
-		self assert: symbol isUndefined not.
-		self assert: symbol section isNotNil.
-		reloc addend: reloc addend + symbol value.
-		reloc section: (self createSectionNamed: symbol sectionName)
+		self localSymbol: symbol buildRelocation: [ 
+			self assert: symbol isUndefined not.
+			self assert: symbol section isNotNil.
+			reloc addend: reloc addend + symbol value.
+			reloc section: (self createSectionNamed: symbol sectionName)
+		]
 	].
 
 	currentSection addRelocation: reloc.
@@ -381,6 +396,10 @@ SAsmBinaryObjectWriter >> visitLabel: aLabel [
 		section: currentSection;
 		value: aLabel position;
 		yourself.
+	pendingLocalSymbolRelocations at: aLabel symbol ifPresent: [ :pendingRelocations |
+		pendingRelocations do: #value.
+		pendingLocalSymbolRelocations removeKey: aLabel symbol
+	]
 ]
 
 { #category : #visiting }

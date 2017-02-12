@@ -12,6 +12,14 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #'abstract instruction adding' }
+SAsmFunction >> addArgumentVirtualRegister: virtualRegister name: argumentName [
+	| variable |
+	variable := stackFrameLayout createArgument: virtualRegister size alignment: virtualRegister alignment dynamicRoot: false.
+	virtualRegister variable: variable.
+	^ virtualRegister
+]
+
 { #category : #adding }
 SAsmFunction >> addBasicBlock: aBasicBlock [
 	aBasicBlock function: self.
@@ -19,14 +27,14 @@ SAsmFunction >> addBasicBlock: aBasicBlock [
 	^ aBasicBlock
 ]
 
-{ #category : #'abstract instruction generation' }
+{ #category : #'abstract instruction adding' }
 SAsmFunction >> addVirtualRegister: virtualRegister [
 	virtualRegisters add: virtualRegister.
 	virtualRegister index: virtualRegisters size.
 	^ virtualRegister
 ]
 
-{ #category : #'abstract instruction generation' }
+{ #category : #'abstract instruction adding' }
 SAsmFunction >> addVirtualRegisters: newVirtualRegisters [
 	newVirtualRegisters do: [ :reg | self addVirtualRegister: reg ].
 	^ newVirtualRegisters
@@ -159,17 +167,32 @@ SAsmFunction >> name: anObject [
 	name := anObject
 ]
 
-{ #category : #initialization }
+{ #category : #'abstract instruction adding' }
+SAsmFunction >> newDoubleFloatArgument: argumentName [
+	^ self addArgumentVirtualRegister: self newDoubleFloatVirtualRegister name: argumentName
+]
+
+{ #category : #'abstract instruction adding' }
 SAsmFunction >> newDoubleFloatVirtualRegister [
 	^ self addVirtualRegister: target newDoubleFloatVirtualRegister
 ]
 
-{ #category : #initialization }
+{ #category : #'abstract instruction adding' }
+SAsmFunction >> newFloatArgument: argumentName [
+	^ self addArgumentVirtualRegister: self newFloatVirtualRegister name: argumentName
+]
+
+{ #category : #'abstract instruction adding' }
 SAsmFunction >> newFloatVirtualRegister [
 	^ self addVirtualRegister: target newFloatVirtualRegister
 ]
 
-{ #category : #initialization }
+{ #category : #'abstract instruction adding' }
+SAsmFunction >> newIntegerArgument: argumentName [
+	^ self addArgumentVirtualRegister: self newIntegerVirtualRegister name: argumentName
+]
+
+{ #category : #'abstract instruction adding' }
 SAsmFunction >> newIntegerVirtualRegister [
 	^ self addVirtualRegister: target newIntegerVirtualRegister
 ]

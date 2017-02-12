@@ -98,8 +98,8 @@ SAsmImmediateSymbolWithAddend >> isImmediateS8 [
 
 { #category : #'as yet unclassified' }
 SAsmImmediateSymbolWithAddend >> isImmediateS8RelativeTo: anInstruction position: immediateWritePosition offset: relativeCheck [
-	(anInstruction section name ~= symbol sectionName) ifTrue: [ ^ false ].
-	^ super isImmediateS8RelativeTo: anInstruction section position: immediateWritePosition offset: relativeCheck
+	(anInstruction sectionName ~= symbol sectionName) ifTrue: [ ^ false ].
+	^ super isImmediateS8RelativeTo: anInstruction position: immediateWritePosition offset: relativeCheck
 ]
 
 { #category : #accessing }

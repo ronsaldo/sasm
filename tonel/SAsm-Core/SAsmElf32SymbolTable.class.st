@@ -83,7 +83,7 @@ SAsmElf32SymbolTable >> size [
 
 { #category : #factory }
 SAsmElf32SymbolTable >> symbolEntryClass [
-	^ SLVMElf32SymbolTableEntry
+	^ SAsmElf32SymbolTableEntry
 ]
 
 { #category : #writing }

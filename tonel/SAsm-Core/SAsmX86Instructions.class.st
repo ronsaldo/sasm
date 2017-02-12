@@ -12,14 +12,18 @@ Class {
 		'JAE',
 		'JB',
 		'JBE',
+		'JC',
 		'JE',
 		'JG',
 		'JGE',
 		'JL',
 		'JLE',
 		'JMP',
+		'JNC',
 		'JNE',
+		'JNO',
 		'JNZ',
+		'JO',
 		'JZ',
 		'MOV',
 		'POP',
@@ -110,32 +114,72 @@ SAsmX86Instructions class >> initializeInstructions [
 			(Op 16rCF)
 		)
 		
+		(JO
+			(OpIr8 16r70)
+			(OpIrw #(16r0F 16r80))
+		)
+		(JNO
+			(OpIr8 16r71)
+			(OpIrw #(16r0F 16r81))
+		)
+		(JC
+			(OpIr8 16r72)
+			(OpIrw #(16r0F 16r82))
+		)
+		(JNC
+			(OpIr8 16r73)
+			(OpIrw #(16r0F 16r83))
+		)
 		(JA
+			(OpIr8 16r77)
+			(OpIrw #(16r0F 16r87))
 		)
 		(JAE
+			(OpIr8 16r73)
+			(OpIrw #(16r0F 16r83))
 		)
 		(JB
+			(OpIr8 16r72)
+			(OpIrw #(16r0F 16r82))
 		)
 		(JBE
+			(OpIr8 16r76)
+			(OpIrw #(16r0F 16r86))
 		)
 		
 		(JL
+			(OpIr8 16r7C)
+			(OpIrw #(16r0F 16r8C))
 		)
 		(JLE
+			(OpIr8 16r7E)
+			(OpIrw #(16r0F 16r8E))
 		)
 		(JG
+			(OpIr8 16r7F)
+			(OpIrw #(16r0F 16r8F))
 		)
 		(JGE
+			(OpIr8 16r7D)
+			(OpIrw #(16r0F 16r8D))
 		)
 
 		(JE
+			(OpIr8 16r74)
+			(OpIrw #(16r0F 16r84))
 		)
 		(JZ
+			(OpIr8 16r74)
+			(OpIrw #(16r0F 16r84))
 		)
 
 		(JNE
+			(OpIr8 16r75)
+			(OpIrw #(16r0F 16r85))
 		)
 		(JNZ
+			(OpIr8 16r75)
+			(OpIrw #(16r0F 16r85))
 		)
 		
 		(JMP

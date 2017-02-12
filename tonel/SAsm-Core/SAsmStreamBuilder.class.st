@@ -136,6 +136,11 @@ SAsmStreamBuilder >> tacAdd: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacBoolRegister [
+	^ stream function newIntegerVirtualRegister.
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacBranch: condition true: trueDestination false: falseDestintion [
 	^ self add: (SAsmTacBranchInstruction new
 		condition: condition;
@@ -160,8 +165,23 @@ SAsmStreamBuilder >> tacDoubleFloatRegister [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacEqual: left with: right into: result [
+	^ self tacOperation: TacEqual result: result left: left right: right
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacFloatRegister [
 	^ stream function newFloatVirtualRegister.
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacGreater: left with: right into: result [
+	^ self tacOperation: TacGreater result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacGreaterOrEqual: left with: right into: result [
+	^ self tacOperation: TacGreaterOrEqual result: result left: left right: right
 ]
 
 { #category : #'three address code' }
@@ -177,6 +197,16 @@ SAsmStreamBuilder >> tacJump: destination [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacLess: left with: right into: result [
+	^ self tacOperation: TacLess result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLessOrEqual: left with: right into: result [
+	^ self tacOperation: TacLessOrEqual result: result left: left right: right
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacMove: source into: destination [
 	^ self tacOperation: TacMove result: destination value: source
 ]
@@ -184,6 +214,11 @@ SAsmStreamBuilder >> tacMove: source into: destination [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacMultiply: left with: right into: result [
 	^ self tacOperation: TacMultiply result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacNotEqual: left with: right into: result [
+	^ self tacOperation: TacNotEqual result: result left: left right: right
 ]
 
 { #category : #'three address code' }

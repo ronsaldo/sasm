@@ -35,6 +35,11 @@ SAsmVirtualRegister >> <= other [
 ]
 
 { #category : #accessing }
+SAsmVirtualRegister >> alignment [
+	^ size
+]
+
+{ #category : #accessing }
 SAsmVirtualRegister >> end [
 	^ lastUsage
 ]
