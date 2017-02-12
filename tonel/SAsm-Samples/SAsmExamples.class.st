@@ -51,6 +51,64 @@ SAsmExamples class >> exampleTacAdd [
 ]
 
 { #category : #'tac examples' }
+SAsmExamples class >> exampleTacMax [
+	<example>
+	| module function a b condition returnA returnB |
+	module := SAsmModule x86.
+	function := module build: #max function: [ :functionBuilder |
+		a := functionBuilder tacIntArgument: #a.
+		b := functionBuilder tacIntArgument: #b.
+
+		functionBuilder basicBlock: #entry build: [ :asm |
+			condition := asm tacBoolRegister.
+			returnA := functionBuilder basicBlock: #returnA.
+			returnB := functionBuilder basicBlock: #returnB.
+			asm
+				tacGreater: a with: b into: condition;
+				tacBranch: condition true: returnA false: returnB
+		].
+
+		returnA build: [ :asm |
+			asm tacReturn: a
+		].
+		returnB build: [ :asm |
+			asm tacReturn: b
+		].
+	].
+	module inspect
+	
+]
+
+{ #category : #'tac examples' }
+SAsmExamples class >> exampleTacMin [
+	<example>
+	| module function a b condition returnA returnB |
+	module := SAsmModule x86.
+	function := module build: #min function: [ :functionBuilder |
+		a := functionBuilder tacIntArgument: #a.
+		b := functionBuilder tacIntArgument: #b.
+
+		functionBuilder basicBlock: #entry build: [ :asm |
+			condition := asm tacBoolRegister.
+			returnA := functionBuilder basicBlock: #returnA.
+			returnB := functionBuilder basicBlock: #returnB.
+			asm
+				tacLess: a with: b into: condition;
+				tacBranch: condition true: returnA false: returnB
+		].
+
+		returnA build: [ :asm |
+			asm tacReturn: a
+		].
+		returnB build: [ :asm |
+			asm tacReturn: b
+		].
+	].
+	module inspect
+	
+]
+
+{ #category : #'tac examples' }
 SAsmExamples class >> exampleTacRet0 [
 	<example>
 	| module entry function |
@@ -80,6 +138,7 @@ SAsmExamples class >> exampleX86FunctionCall [
 	].
 	
 	main := module build: #main function: [ :functionBuilder |
+		functionBuilder naked.
 		functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: MOV dst: EAX src: 2;
@@ -146,6 +205,7 @@ SAsmExamples class >> exampleX86_64FunctionCall [
 	].
 	
 	main := module build: #main function: [ :functionBuilder |
+		functionBuilder naked.
 		functionBuilder basicBlock: #entry build: [ :asm |
 			asm
 				x86: MOV dst: RAX src: 2;
