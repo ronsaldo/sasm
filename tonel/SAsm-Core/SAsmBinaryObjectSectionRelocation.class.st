@@ -84,6 +84,22 @@ SAsmBinaryObjectSectionRelocation >> addend: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SAsmBinaryObjectSectionRelocation >> applyFullRelocationIn: targetSection [
+	| data base |	
+	data := targetSection data.
+	base := section ifNotNil: [ section base ] ifNil: [ 0 ].
+	
+	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 ]) ifTrue: [ 
+		data unsignedLongLongAt: offset + 1 put: (base + addend bitAnd: 16rFFFFFFFFFFFFFFFF)
+	].
+
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 ]) ifTrue: [
+		data unsignedLongAt: offset + 1 put: (addend + (targetSection base - base) bitAnd: 16rFFFFFFFF)
+	].
+
+]
+
+{ #category : #'as yet unclassified' }
 SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection [
 	| data |	
 	data := targetSection data.

@@ -5,7 +5,8 @@ Class {
 		'name',
 		'data',
 		'base',
-		'relocations'
+		'relocations',
+		'alignment'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -21,6 +22,23 @@ SAsmBinaryObjectSection >> = other [
 { #category : #adding }
 SAsmBinaryObjectSection >> addRelocation: aRelocation [
 	relocations add: aRelocation
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSection >> alignment [
+	^ alignment
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSection >> alignment: anObject [
+	alignment := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSection >> applyRelocations [
+	relocations do: [ :reloc |
+		reloc applyFullRelocationIn: self
+	]
 ]
 
 { #category : #accessing }
@@ -48,6 +66,7 @@ SAsmBinaryObjectSection >> initialize [
 	super initialize.
 	base := 0.
 	relocations := OrderedCollection new.
+	alignment := 1.
 ]
 
 { #category : #accessing }

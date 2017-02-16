@@ -70,6 +70,14 @@ SAsmBinaryObject >> compilationTarget: anObject [
 ]
 
 { #category : #writing }
+SAsmBinaryObject >> generateBinaryWithBase: baseAddress [
+	| stream |
+	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
+	self writeBinaryWithBase: baseAddress toStream: stream.
+	^ stream contents
+]
+
+{ #category : #writing }
 SAsmBinaryObject >> generateElf32 [
 	| stream |
 	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
@@ -121,6 +129,41 @@ SAsmBinaryObject >> symbols [
 { #category : #accessing }
 SAsmBinaryObject >> symbols: anObject [
 	symbols := anObject
+]
+
+{ #category : #writing }
+SAsmBinaryObject >> writeBinaryBase: baseAddress toFileNamed: fileName [
+	fileName asFileReference writeStreamDo: [ :out |
+		out truncate; binary.
+		out nextPutAll: (self generateBinaryWithBase: baseAddress)
+	]
+]
+
+{ #category : #writing }
+SAsmBinaryObject >> writeBinaryToFileNamed: fileName [
+	^ self writeBinaryBase: 0 toFileNamed: fileName
+]
+
+{ #category : #writing }
+SAsmBinaryObject >> writeBinaryWithBase: baseAddress toStream: aStream [
+	"Set the section base addresses"
+	| destAddress padding |
+	destAddress := baseAddress.
+	sections do: [ :section |
+		section base: (destAddress alignedTo: section alignment).
+		destAddress := destAddress + section size.
+	].
+
+	"Apply the relocations"
+	sections do: #applyRelocations.
+	
+	"Write the sections."
+	sections do: [ :section |
+		padding := (aStream position + baseAddress alignedTo: section alignment) - baseAddress.
+		1 to: padding do: [ :i | aStream nextPut: 0 ].
+		aStream nextPutAll: section data
+	]
+
 ]
 
 { #category : #writing }
