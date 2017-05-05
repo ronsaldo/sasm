@@ -109,6 +109,12 @@ SAsmFunction >> enumerateInstructionPositions [
 
 { #category : #printing }
 SAsmFunction >> fullPrintOn: aStream [
+	self isEmpty ifTrue: [
+		self prettyPrintOn: aStream.
+		aStream nextPut: $;; lf.
+		^ self
+	].
+
 	aStream putKeyword: 'function'; space; putIdentifier: self validName; nextPutAll:  ' = {'; lf.
 	aStream withExtraIndentationLevel: [
 		basicBlocks do: [ :bb | bb fullPrintOn: aStream ]
@@ -136,6 +142,11 @@ SAsmFunction >> initialize [
 	basicBlocks := OrderedCollection new.
 	virtualRegisters := OrderedCollection new.
 	stackFrameLayout := SAsmStackFrameLayout new.
+]
+
+{ #category : #testing }
+SAsmFunction >> isEmpty [
+	^ basicBlocks isEmpty
 ]
 
 { #category : #'abstract instruction generation' }
@@ -240,6 +251,8 @@ SAsmFunction >> virtualRegisters [
 
 { #category : #writing }
 SAsmFunction >> writeToStream: aStreamBuilder [
+	self isEmpty ifTrue: [ ^ self ].
+	
 	aStreamBuilder withNewLocalScope: [
 		aStreamBuilder textSection.
 		self allocateRegisterFor: aStreamBuilder.

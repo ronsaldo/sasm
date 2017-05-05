@@ -39,6 +39,17 @@ SAsmStreamBuilder >> addSymbolCopy: aSymbol [
 	]
 ]
 
+{ #category : #sections }
+SAsmStreamBuilder >> bssSection [
+	^ self startSection: #'.bss' attributes: [ :section |
+		section 
+			loaded: false;
+			executable: false;
+			readable: true;
+			writeable: true
+	]
+]
+
 { #category : #constants }
 SAsmStreamBuilder >> constI16: value [
 	^ self add: (SAsmConstantExpressionValue new
@@ -77,6 +88,17 @@ SAsmStreamBuilder >> currentSectionName [
 	^ currentSection name
 ]
 
+{ #category : #sections }
+SAsmStreamBuilder >> dataSection [
+	^ self startSection: #'.data' attributes: [ :section |
+		section 
+			loaded: true;
+			executable: false;
+			readable: true;
+			writeable: true
+	]
+]
+
 { #category : #symbols }
 SAsmStreamBuilder >> findSymbolForObject: anObject [
 	anObject ifNil: [ ^ nil ].
@@ -110,6 +132,17 @@ SAsmStreamBuilder >> newPrivateSymbol: name [
 		name: name;
 		makePrivate;
 		yourself
+]
+
+{ #category : #sections }
+SAsmStreamBuilder >> rodataSection [
+	^ self startSection: #'.rodata' attributes: [ :section |
+		section 
+			loaded: true;
+			executable: false;
+			readable: true;
+			writeable: false
+	]
 ]
 
 { #category : #sections }
