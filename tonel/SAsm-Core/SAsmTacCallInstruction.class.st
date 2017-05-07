@@ -60,6 +60,13 @@ SAsmTacCallInstruction >> isThreeAddressInstruction [
 	^ true
 ]
 
+{ #category : #'linear scan' }
+SAsmTacCallInstruction >> markVirtualRegisterLiveRanges [
+	called markVirtualRegisterLiveRangePosition: index.
+	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: index ].
+	result do: [ :res | res markVirtualRegisterLiveRangePosition: index ].
+]
+
 { #category : #printing }
 SAsmTacCallInstruction >> prettyPrintOn: aStream [
 	result do: [ :el | el prettyPrintOn: aStream. aStream space ].

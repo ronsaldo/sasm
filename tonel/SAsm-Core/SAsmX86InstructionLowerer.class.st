@@ -146,7 +146,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	"Compute the stack size requirements."
 	callingConvention hasSegmentedStack ifTrue: [
 		stackSizeRequirement := totalFrameSize + maxCallStackSize + (pointerSize * StackSwitchPointerRequired) - ( "Return pointer" pointerSize * 1).
-		stackCheckedEntry := streamBuilder newLabel: #stackCheckedEntry.
+		stackCheckedEntry := streamBuilder newPrivateSymbol: #stackCheckedEntry.
 		stackLimitTrap := self stackLimitTrapSymbol.
 		streamBuilder
 			"Check if we have hitten the stack limit."
@@ -159,7 +159,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 			x86: MOV with: scratchRegister with: argumentDescriptor;
 			x86: CALL with: stackLimitTrap;
 			
-			addLabel: stackCheckedEntry.
+			label: stackCheckedEntry.
 	].
 	
 	streamBuilder
@@ -307,7 +307,7 @@ SAsmX86InstructionLowerer >> visitTacBranchInstruction: branch [
 SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	| calledFunction |
 	self flag: 'TODO: Support the different calling conventions'.
-	callInstruction arguments do: [ :arg |
+	callInstruction arguments reverseDo: [ :arg |
 		streamBuilder x86: PUSH with: (self virtualToPhysical: arg).
 	].
 	
