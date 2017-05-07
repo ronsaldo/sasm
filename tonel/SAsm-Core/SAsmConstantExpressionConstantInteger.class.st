@@ -1,14 +1,28 @@
 Class {
 	#name : #SAsmConstantExpressionConstantInteger,
 	#superclass : #SAsmConstantExpressionConstant,
+	#instVars : [
+		'size'
+	],
 	#category : #'SAsm-Core-Generic'
 }
 
-{ #category : #'as yet unclassified' }
-SAsmConstantExpressionConstantInteger >> writeWithSize: size on: writer [
+{ #category : #accessing }
+SAsmConstantExpressionConstantInteger >> size [
+	^ size
+]
+
+{ #category : #accessing }
+SAsmConstantExpressionConstantInteger >> size: anObject [
+	size := anObject
+]
+
+{ #category : #writing }
+SAsmConstantExpressionConstantInteger >> writeWithSize: targetSize on: writer [
 	| temp |
+	self assert: (size isNil or: [targetSize = size]).
 	temp := value.
-	1 to: size do: [ :i |
+	1 to: targetSize do: [ :i |
 		writer nextPut: temp & 16rff.
 		temp := temp >> 8
 	].

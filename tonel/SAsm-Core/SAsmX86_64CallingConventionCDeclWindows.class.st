@@ -13,3 +13,8 @@ SAsmX86_64CallingConventionCDeclWindows >> floatArgumentRegisters [
 SAsmX86_64CallingConventionCDeclWindows >> integerArgumentRegisters [
 	^ { RCX . RDX . R8 . R9 }
 ]
+
+{ #category : #accessing }
+SAsmX86_64CallingConventionCDeclWindows >> name [
+	^ #cdecl_win64
+]

@@ -287,7 +287,7 @@ SAsmInstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualRegi
 
 { #category : #'abstract instruction generation' }
 SAsmInstructionLowerer >> virtualToPhysical: register [
-	register isVirtualRegister ifFalse: [ ^ register ].
+	register isVirtualRegister ifFalse: [ ^ register copyWithStreamBuilder: streamBuilder ].
 	register register ifNotNil: [ ^ register register ].
 	^ self virtualRegisterLocationToPhysicalLocation: register
 ]

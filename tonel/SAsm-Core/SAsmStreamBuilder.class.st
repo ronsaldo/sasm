@@ -176,15 +176,20 @@ SAsmStreamBuilder >> tacBoolRegister [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacBranch: condition true: trueDestination false: falseDestintion [
 	^ self add: (SAsmTacBranchInstruction new
-		condition: condition;
-		trueDestination: trueDestination;
-		falseDestination: falseDestintion;
+		condition: condition asSAsmInstructionOperand;
+		trueDestination: trueDestination asSAsmInstructionOperand;
+		falseDestination: falseDestintion asSAsmInstructionOperand;
 		yourself)
 ]
 
 { #category : #'three address code' }
-SAsmStreamBuilder >> tacCall: called into: result [
-	^ self tacOperation: TacCall result: result value: called
+SAsmStreamBuilder >> tacCall: called arguments: arguments into: result convention: convention [
+	^ self add: (SAsmTacCallInstruction new
+		called: called asSAsmInstructionOperand;
+		arguments: (arguments collect: #asSAsmInstructionOperand);
+		result: (result collect: #asSAsmInstructionOperand);
+		calledConvention: convention;
+		yourself)
 ]
 
 { #category : #'three address code' }

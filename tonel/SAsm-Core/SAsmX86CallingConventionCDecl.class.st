@@ -36,6 +36,11 @@ SAsmX86CallingConventionCDecl >> isStackCleanedByCaller [
 	^ true
 ]
 
+{ #category : #accessing }
+SAsmX86CallingConventionCDecl >> name [
+	^ #cdecl
+]
+
 { #category : #'return value passing' }
 SAsmX86CallingConventionCDecl >> resultFloatRegister [
 	^ nil

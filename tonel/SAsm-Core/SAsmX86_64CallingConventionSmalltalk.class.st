@@ -41,3 +41,8 @@ SAsmX86_64CallingConventionSmalltalk >> integerArgumentRegisters [
 SAsmX86_64CallingConventionSmalltalk >> isStackCleanedByCaller [
 	^ false
 ]
+
+{ #category : #accessing }
+SAsmX86_64CallingConventionSmalltalk >> name [
+	^ #smalltalk
+]

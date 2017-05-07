@@ -210,7 +210,7 @@ SAsmBinaryObjectWriter >> nextPutC8: anInteger [
 SAsmBinaryObjectWriter >> nextPutI16: anImmediate [
 	| value |
 	(self needsRelocation: anImmediate) ifTrue: [ 
-		self recordImmediateReloc16: anImmediate.
+		self recordImmediateReloc16: anImmediate extraAddend: 0.
 		self nextPutC16: 0
 	] ifFalse: [ 
 		value := anImmediate immediateValue.
@@ -223,7 +223,7 @@ SAsmBinaryObjectWriter >> nextPutI16: anImmediate [
 SAsmBinaryObjectWriter >> nextPutI32: anImmediate [
 	| value |
 	(self needsRelocation: anImmediate) ifTrue: [ 
-		self recordImmediateReloc32: anImmediate.
+		self recordImmediateReloc32: anImmediate extraAddend: 0.
 		self nextPutC32: 0
 	] ifFalse: [ 
 		value := anImmediate immediateValue.
@@ -236,7 +236,7 @@ SAsmBinaryObjectWriter >> nextPutI32: anImmediate [
 SAsmBinaryObjectWriter >> nextPutI64: anImmediate [
 	| value |
 	(self needsRelocation: anImmediate) ifTrue: [ 
-		self recordImmediateReloc64: anImmediate.
+		self recordImmediateReloc64: anImmediate extraAddend: 0.
 		self nextPutC64: 0
 	] ifFalse: [ 
 		value := anImmediate immediateValue.
@@ -249,7 +249,7 @@ SAsmBinaryObjectWriter >> nextPutI64: anImmediate [
 SAsmBinaryObjectWriter >> nextPutI8: anImmediate [
 	| value |
 	(self needsRelocation: anImmediate) ifTrue: [ 
-		self recordImmediateReloc8: anImmediate.
+		self recordImmediateReloc8: anImmediate extraAddend: 0.
 		self nextPutC8: 0
 	] ifFalse: [ 
 		value := anImmediate immediateValue.
@@ -323,34 +323,62 @@ SAsmBinaryObjectWriter >> nextPutIPRelativeI8: immediate extraOffset: extraOffse
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc16: immediate extraAddend: extraAddend [
-	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		relativeSOffset16;
 		yourself
 ]
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32: immediate extraAddend: extraAddend [
-	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		relativeSOffset32;
 		yourself
 ]
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc64: immediate extraAddend: extraAddend [
-	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		relativeSOffset64;
 		yourself
 ]
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc8: immediate extraAddend: extraAddend [
-	^ (self recordImmediateRelativeReloc: immediate extraAddend: extraAddend)
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		relativeSOffset8;
 		yourself
 ]
 
 { #category : #relocations }
-SAsmBinaryObjectWriter >> recordImmediateRelativeReloc: immediate extraAddend: extraAddend [
+SAsmBinaryObjectWriter >> recordImmediateReloc16: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		absoluteOffset16;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateReloc32: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		absoluteOffset32;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateReloc64: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		absoluteOffset64;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateReloc8: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		absoluteOffset8;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateReloc: immediate extraAddend: extraAddend [
 	| symbol reloc |
 	symbol := immediate symbol.
 	self assert: symbol isNotNil.

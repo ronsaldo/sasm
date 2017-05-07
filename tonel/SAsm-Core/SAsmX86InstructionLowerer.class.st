@@ -304,7 +304,18 @@ SAsmX86InstructionLowerer >> visitTacBranchInstruction: branch [
 ]
 
 { #category : #visiting }
-SAsmX86InstructionLowerer >> visitTacCall: callInstruction [
+SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
+	| calledFunction |
+	self flag: 'TODO: Support the different calling conventions'.
+	callInstruction arguments do: [ :arg |
+		streamBuilder x86: PUSH with: (self virtualToPhysical: arg).
+	].
+	
+	calledFunction := self virtualToPhysical: callInstruction called.
+	streamBuilder
+		x86: CALL with: calledFunction;
+		x86: ADD dst: target stackPointerRegister src: callInstruction arguments size * target pointerSize.
+	
 ]
 
 { #category : #visiting }
@@ -346,7 +357,7 @@ SAsmX86InstructionLowerer >> visitTacGreaterOrEqual: instruction withBranch: bra
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacJumpInstruction: branch [
 	| destination |
-	destination := streamBuilder findSymbolForObject: branch falseDestination.
+	destination := streamBuilder findSymbolForObject: branch destination.
 	
 	streamBuilder
 		x86: JMP with: destination.

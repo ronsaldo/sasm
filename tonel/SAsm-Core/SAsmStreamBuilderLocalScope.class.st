@@ -34,7 +34,7 @@ SAsmStreamBuilderLocalScope >> findMappedSymbolRecursively: anObject [
 SAsmStreamBuilderLocalScope >> findMappedSymbolRecursively: anObject ifAbsent: absentBlock [
 	^ table at: anObject ifAbsent: [
 		parent ifNil: [ ^ absentBlock value ].
-		^ parent findMappedSymbolRecursively: anObject
+		^ parent findMappedSymbolRecursively: anObject ifAbsent: absentBlock
 	]
 ]
 

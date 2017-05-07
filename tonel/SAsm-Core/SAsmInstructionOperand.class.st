@@ -65,6 +65,11 @@ SAsmInstructionOperand >> isImmediateU8 [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isInstructionOperand [
+	^ true
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isRegister [
 	^ false
 ]

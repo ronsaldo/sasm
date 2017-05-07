@@ -19,11 +19,6 @@ SAsmTacInstruction >> accept: aVisitor [
 ]
 
 { #category : #testing }
-SAsmTacInstruction >> isCondition [
-	^ operation isCondition
-]
-
-{ #category : #testing }
 SAsmTacInstruction >> isThreeAddressInstruction [
 	^ true
 ]
@@ -71,8 +66,10 @@ SAsmTacInstruction >> prettyPrintOn: aStream [
 		right prettyPrintOn: aStream.
 	] ifNil: [ 
 		operation prettyPrintOn: aStream.
-		aStream space.
-		left prettyPrintOn: aStream.
+		left ifNotNil: [ 
+			aStream space.
+			left prettyPrintOn: aStream.
+		]
 	]
 
 

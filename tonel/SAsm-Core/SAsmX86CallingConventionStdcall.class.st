@@ -8,3 +8,8 @@ Class {
 SAsmX86CallingConventionStdcall >> isStackCleanedByCaller [
 	^ false
 ]
+
+{ #category : #accessing }
+SAsmX86CallingConventionStdcall >> name [
+	^ #stdcall
+]

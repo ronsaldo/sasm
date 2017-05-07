@@ -7,7 +7,9 @@ Class {
 		'instructionLowerer',
 		'callingConvention',
 		'virtualRegisters',
-		'stackFrameLayout'
+		'stackFrameLayout',
+		'constantZone',
+		'constantZoneBuilder'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -93,6 +95,16 @@ SAsmFunction >> computeVirtualRegisterLiveRanges [
 		markVirtualRegisterLiveRanges.
 ]
 
+{ #category : #accessing }
+SAsmFunction >> constantZone [
+	^ constantZone ifNil: [ constantZone := SAsmStream new target: target; yourself]
+]
+
+{ #category : #accessing }
+SAsmFunction >> constantZoneBuilder [
+	^ constantZoneBuilder ifNil: [ constantZoneBuilder := SAsmStreamBuilder new stream: self constantZone ]
+]
+
 { #category : #'linear scan' }
 SAsmFunction >> enumerateInstructionPositions [
 	| index |
@@ -117,7 +129,9 @@ SAsmFunction >> fullPrintOn: aStream [
 
 	aStream putKeyword: 'function'; space; putIdentifier: self validName; nextPutAll:  ' = {'; lf.
 	aStream withExtraIndentationLevel: [
-		basicBlocks do: [ :bb | bb fullPrintOn: aStream ]
+		basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
+		
+		constantZone ifNotNil: [ constantZone fullPrintOn: aStream ].
 	].
 	aStream nextPutAll: '}'; lf
 ]
@@ -257,9 +271,15 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 		aStreamBuilder textSection.
 		self allocateRegisterFor: aStreamBuilder.
 		basicBlocks do: [ :bb | bb prepareWriteToStream: aStreamBuilder ].
+		constantZone ifNotNil: [ constantZone prepareWriteToStream: aStreamBuilder ].
 		
 		aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
 		instructionLowerer enterFrame.
 		basicBlocks do: [ :bb | bb writeToStream: aStreamBuilder ].
+		
+		constantZone ifNotNil: [
+			aStreamBuilder rodataSection.
+			constantZone writeToStream: aStreamBuilder
+		].
 	]
 ]

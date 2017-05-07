@@ -38,6 +38,16 @@ SAsmStreamElement >> initialize [
 ]
 
 { #category : #testing }
+SAsmStreamElement >> isCallInstruction [
+	^ false
+]
+
+{ #category : #testing }
+SAsmStreamElement >> isCondition [
+	^ operation isCondition
+]
+
+{ #category : #testing }
 SAsmStreamElement >> isConditionalJump [
 	^ false
 ]

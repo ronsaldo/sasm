@@ -8,3 +8,8 @@ Class {
 SAsmX86_64CallingConventionNaked >> isNaked [
 	^ true
 ]
+
+{ #category : #accessing }
+SAsmX86_64CallingConventionNaked >> name [
+	^ #naked
+]

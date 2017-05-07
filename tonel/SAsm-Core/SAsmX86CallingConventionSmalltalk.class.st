@@ -31,6 +31,11 @@ SAsmX86CallingConventionSmalltalk >> isStackCleanedByCaller [
 	^ false
 ]
 
+{ #category : #accessing }
+SAsmX86CallingConventionSmalltalk >> name [
+	^ #smalltalk
+]
+
 { #category : #'return value passing' }
 SAsmX86CallingConventionSmalltalk >> resultFloatRegister [
 	^ XMM0

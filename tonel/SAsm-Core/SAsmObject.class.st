@@ -36,6 +36,16 @@ SAsmObject >> fullPrintText [
 	^ SAsmPrintingTextStream fullPrintString: self
 ]
 
+{ #category : #testing }
+SAsmObject >> isInstructionOperand [
+	^ false
+]
+
+{ #category : #testing }
+SAsmObject >> isVirtualRegister [
+	^ false
+]
+
 { #category : #printing }
 SAsmObject >> prettyPrintOn: aStream [
 	self printOn: aStream

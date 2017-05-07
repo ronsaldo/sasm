@@ -2,14 +2,25 @@ Class {
 	#name : #SAsmGlobalVariable,
 	#superclass : #SAsmModuleElement,
 	#instVars : [
-		'name'
+		'name',
+		'content'
 	],
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #accessing }
+SAsmGlobalVariable >> content [
+	^ content
+]
+
+{ #category : #accessing }
+SAsmGlobalVariable >> content: anObject [
+	content := anObject
+]
+
 { #category : #printing }
 SAsmGlobalVariable >> fullPrintOn: aStream [
-	self isExternal ifTrue: [
+	self isEmpty ifTrue: [
 		self prettyPrintOn: aStream.
 		aStream nextPut: $;; lf.
 		^ self
@@ -17,9 +28,14 @@ SAsmGlobalVariable >> fullPrintOn: aStream [
 
 	aStream putKeyword: 'variable'; space; putIdentifier: self validName; nextPutAll:  ' = {'; lf.
 	aStream withExtraIndentationLevel: [
-		self flag: 'TODO: Print the content of the variable.'.
+		content fullPrintOn: aStream.
 	].
 	aStream nextPutAll: '}'; lf
+]
+
+{ #category : #testing }
+SAsmGlobalVariable >> isEmpty [
+	^ content isNil
 ]
 
 { #category : #accessing }
@@ -49,12 +65,12 @@ SAsmGlobalVariable >> validName [
 
 { #category : #writing }
 SAsmGlobalVariable >> writeToStream: aStreamBuilder [
-	self isExternal ifTrue: [ ^ self ].
+	self isEmpty ifTrue: [ ^ self ].
 	
 	aStreamBuilder withNewLocalScope: [
 		aStreamBuilder dataSection.
 		aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
 		
-		self flag: 'emit the content of the variable'
+		content writeToStream: aStreamBuilder.
 	]
 ]

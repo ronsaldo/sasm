@@ -37,7 +37,7 @@ SAsmElf32SymbolTable >> addSymbol: symbol stringTable: stringTable sectionDictio
 
 	elfSymbol := self symbolEntryClass new
 		name: (symbol isPrivate ifTrue: [ 0 ] ifFalse: [ stringTable addString: symbol name ]);
-		value: symbol value;
+		value: (symbol value ifNil: [0]);
 		size: symbol size;
 		info: binding << 4 | (type bitAnd: 16rf);
 		sectionHeaderIndex: (symbol section ifNil: [0] ifNotNil: [sectionIndexDictionary at: symbol section]).
