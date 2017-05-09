@@ -44,9 +44,9 @@ SAsmTacBranchInstruction >> isThreeAddressInstruction [
 	^ true
 ]
 
-{ #category : #'as yet unclassified' }
-SAsmTacBranchInstruction >> markVirtualRegisterLiveRanges [
-	condition ifNotNil: [ condition markVirtualRegisterLiveRangePosition: index ].
+{ #category : #accessing }
+SAsmTacBranchInstruction >> markVirtualRegisterLiveAt: livePosition [
+	condition ifNotNil: [ condition markVirtualRegisterLiveRangePosition: livePosition ].
 ]
 
 { #category : #'as yet unclassified' }

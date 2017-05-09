@@ -61,10 +61,10 @@ SAsmTacCallInstruction >> isThreeAddressInstruction [
 ]
 
 { #category : #'linear scan' }
-SAsmTacCallInstruction >> markVirtualRegisterLiveRanges [
-	called markVirtualRegisterLiveRangePosition: index.
-	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: index ].
-	result do: [ :res | res markVirtualRegisterLiveRangePosition: index ].
+SAsmTacCallInstruction >> markVirtualRegisterLiveAt: livePosition [
+	called markVirtualRegisterLiveRangePosition: livePosition.
+	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: livePosition ].
+	result do: [ :res | res markVirtualRegisterLiveRangePosition: livePosition ].
 ]
 
 { #category : #printing }

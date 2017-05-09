@@ -111,12 +111,15 @@ SAsmFunction >> enumerateInstructionPositions [
 	index := 1.
 	basicBlocks do: [ :bb |
 		bb index: index.
+		bb maxPredecessorIndex: -1.
 		index := index + 1.
 		bb do: [ :instruction |
 			instruction index: index.
 			index := index + 1
 		]
 	].
+
+			
 ]
 
 { #category : #printing }
@@ -172,7 +175,7 @@ SAsmFunction >> lowerInstruction: instruction writeToStream: aStreamBuilder [
 SAsmFunction >> markVirtualRegisterLiveRanges [
 	basicBlocks do: [ :bb |
 		bb do: [ :instruction |
-			instruction markVirtualRegisterLiveRanges
+			instruction markVirtualRegisterLiveAt: instruction index
 		]
 	]
 ]

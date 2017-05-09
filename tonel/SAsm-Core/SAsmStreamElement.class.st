@@ -44,7 +44,7 @@ SAsmStreamElement >> isCallInstruction [
 
 { #category : #testing }
 SAsmStreamElement >> isCondition [
-	^ operation isCondition
+	^ false
 ]
 
 { #category : #testing }
@@ -78,7 +78,7 @@ SAsmStreamElement >> isThreeAddressInstruction [
 ]
 
 { #category : #'linear scan' }
-SAsmStreamElement >> markVirtualRegisterLiveRanges [
+SAsmStreamElement >> markVirtualRegisterLiveAt: livePosition [
 ]
 
 { #category : #accessing }

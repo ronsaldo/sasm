@@ -174,11 +174,11 @@ SAsmStreamBuilder >> tacBoolRegister [
 ]
 
 { #category : #'three address code' }
-SAsmStreamBuilder >> tacBranch: condition true: trueDestination false: falseDestintion [
+SAsmStreamBuilder >> tacBranch: condition true: trueDestination false: falseDestination [
 	^ self add: (SAsmTacBranchInstruction new
 		condition: condition asSAsmInstructionOperand;
 		trueDestination: trueDestination asSAsmInstructionOperand;
-		falseDestination: falseDestintion asSAsmInstructionOperand;
+		falseDestination: falseDestination asSAsmInstructionOperand;
 		yourself)
 ]
 
@@ -245,6 +245,51 @@ SAsmStreamBuilder >> tacLessOrEqual: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacLoad: pointer into: result [
+	^ self tacOperation: TacLoad result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadDouble: pointer into: result [
+	^ self tacOperation: TacLoadDouble result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadFloat: pointer into: result [
+	^ self tacOperation: TacLoadFloat result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadSignExtend16: pointer into: result [
+	^ self tacOperation: TacLoadSignExtend16 result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadSignExtend32: pointer into: result [
+	^ self tacOperation: TacLoadSignExtend32 result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadSignExtend8: pointer into: result [
+	^ self tacOperation: TacLoadSignExtend8 result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadZeroExtend16: pointer into: result [
+	^ self tacOperation: TacLoadZeroExtend16 result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadZeroExtend32: pointer into: result [
+	^ self tacOperation: TacLoadZeroExtend32 result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadZeroExtend8: pointer into: result [
+	^ self tacOperation: TacLoadZeroExtend8 result: result value: pointer
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacMove: source into: destination [
 	^ self tacOperation: TacMove result: destination value: source
 ]
@@ -262,6 +307,11 @@ SAsmStreamBuilder >> tacNotEqual: left with: right into: result [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacOperation: operation [
 	^ self tacOperation: operation result: nil left: nil right: nil
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacOperation: operation left: left right: right [
+	^ self tacOperation: operation result: nil left: left right: right
 ]
 
 { #category : #'three address code' }
@@ -292,6 +342,36 @@ SAsmStreamBuilder >> tacReturn: value [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacReturnVoid [
 	^ self tacOperation: TacReturn
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacStore: value into: pointer [
+	^ self tacOperation: TacStore left: value right: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacStoreDouble: value into: pointer [
+	^ self tacOperation: TacStoreDouble left: value right: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacStoreFloat: value into: pointer [
+	^ self tacOperation: TacStoreFloat left: value right: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacStoreTruncate16: value into: pointer [
+	^ self tacOperation: TacStoreTruncate16 left: value right: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacStoreTruncate32: value into: pointer [
+	^ self tacOperation: TacStoreTruncate32 left: value right: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacStoreTruncate8: value into: pointer [
+	^ self tacOperation: TacStoreTruncate8 left: value right: pointer
 ]
 
 { #category : #'three address code' }
@@ -341,6 +421,11 @@ SAsmStreamBuilder >> x86: operation with: operand1 [
 { #category : #x86 }
 SAsmStreamBuilder >> x86: operation with: operand1 with: operand2 [
 	^ self x86: operation withOperands: { operand1 asSAsmInstructionOperand . operand2 asSAsmInstructionOperand }
+]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation with: operand1 with: operand2 with: operand3 [
+	^ self x86: operation withOperands: { operand1 asSAsmInstructionOperand . operand2 asSAsmInstructionOperand . operand3 asSAsmInstructionOperand }
 ]
 
 { #category : #x86 }

@@ -34,10 +34,10 @@ SAsmTacInstruction >> left: anObject [
 ]
 
 { #category : #'linear scan' }
-SAsmTacInstruction >> markVirtualRegisterLiveRanges [
-	result ifNotNil: [ result markVirtualRegisterLiveRangePosition: index ].
-	left ifNotNil: [ left markVirtualRegisterLiveRangePosition: index ].
-	right ifNotNil: [ right markVirtualRegisterLiveRangePosition: index ].
+SAsmTacInstruction >> markVirtualRegisterLiveAt: livePosition [
+	result ifNotNil: [ result markVirtualRegisterLiveRangePosition: livePosition ].
+	left ifNotNil: [ left markVirtualRegisterLiveRangePosition: livePosition ].
+	right ifNotNil: [ right markVirtualRegisterLiveRangePosition: livePosition ].
 
 ]
 
@@ -58,10 +58,10 @@ SAsmTacInstruction >> prettyPrintOn: aStream [
 		aStream nextPutAll: ' := '
 	].
 	
-	right ifNotNil: [ 
-		left prettyPrintOn: aStream.
-		aStream space.
+	right ifNotNil: [
 		operation prettyPrintOn: aStream.
+		aStream space.
+		left prettyPrintOn: aStream.
 		aStream space.
 		right prettyPrintOn: aStream.
 	] ifNil: [ 
@@ -83,9 +83,9 @@ SAsmTacInstruction >> printOn: aStream [
 	].
 	
 	right ifNotNil: [ 
-		left printOn: aStream.
-		aStream space.
 		operation printOn: aStream.
+		aStream space.
+		left printOn: aStream.
 		aStream space.
 		right printOn: aStream.
 	]

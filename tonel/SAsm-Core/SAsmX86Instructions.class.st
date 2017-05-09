@@ -7,6 +7,7 @@ Class {
 		'AND',
 		'CALL',
 		'CMP',
+		'IMUL',
 		'IRET',
 		'JA',
 		'JAE',
@@ -108,6 +109,12 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRmwRw 16r39)
 			(OpRbRmb 16r3A)
 			(OpRwRmw 16r3B)
+		)
+		
+		(IMUL
+			(OpRwRmw #(16r0F 16rAF))
+			(OpRwRmwI8 16r6B)
+			(OpRwRmwIw 16r69)
 		)
 		
 		(IRET

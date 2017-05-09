@@ -4,10 +4,16 @@ Class {
 	#instVars : [
 		'function',
 		'name',
-		'index'
+		'index',
+		'maxPredecessorIndex'
 	],
 	#category : #'SAsm-Core-Generic'
 }
+
+{ #category : #converting }
+SAsmBasicBlock >> asSAsmInstructionOperand [
+	^ self
+]
 
 { #category : #printing }
 SAsmBasicBlock >> fullPrintOn: aStream [
@@ -54,6 +60,16 @@ SAsmBasicBlock >> lowerInstruction: instruction andWriteToStream: aStreamBuilder
 ]
 
 { #category : #accessing }
+SAsmBasicBlock >> maxPredecessorIndex [
+	^ maxPredecessorIndex
+]
+
+{ #category : #accessing }
+SAsmBasicBlock >> maxPredecessorIndex: anObject [
+	maxPredecessorIndex := anObject
+]
+
+{ #category : #accessing }
 SAsmBasicBlock >> name [
 	^ name
 ]
@@ -77,6 +93,11 @@ SAsmBasicBlock >> prettyPrintOn: aStream [
 { #category : #printing }
 SAsmBasicBlock >> printOn: aStream [
 	aStream nextPutAll: self validName
+]
+
+{ #category : #enumerating }
+SAsmBasicBlock >> successorsDo: aBlock [
+	
 ]
 
 { #category : #accessing }

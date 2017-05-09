@@ -19,6 +19,16 @@ SAsmCompilationTarget >> defaultCallingConvention [
 	^ self cdeclCallingConvention
 ]
 
+{ #category : #testing }
+SAsmCompilationTarget >> isBigEndian [
+	^ self isLittleEndian not
+]
+
+{ #category : #testing }
+SAsmCompilationTarget >> isLittleEndian [
+	^ true
+]
+
 { #category : #'calling conventions' }
 SAsmCompilationTarget >> nakedCallingConvention [
 	^ self callingConventionNamed: #naked

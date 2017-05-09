@@ -83,7 +83,7 @@ SAsmX86InstructionLowerer >> emitComparisonInto: result left: left right: right 
 
 	leftPhysical := self virtualToPhysical: left.
 	rightPhysical := self virtualToPhysical: right.
-	
+
 	rightRegister := rightPhysical.
 	(leftPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
 		rightRegister := self moveMemory: rightPhysical toScratchIndex: 0
@@ -280,7 +280,7 @@ SAsmX86InstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualR
 	^ (target framePointerRegister asPointerOfSize: virtualRegister size) + (virtualRegister spillLocation offset + virtualRegister variableOffset)
 ]
 
-{ #category : #visiting }
+{ #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
 			integer: ADD float: ADD double: ADD
@@ -387,12 +387,67 @@ SAsmX86InstructionLowerer >> visitTacLessOrEqual: instruction withBranch: branch
 			branchTrue: JLE destination: branch trueDestination branchFalse: JG destination: branch falseDestination
 ]
 
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacLoad: instruction [
+	| value pointer |
+	value := self virtualToPhysical: instruction result.
+	pointer := (self virtualToPhysical: instruction left) asPointerOfSize: target pointerSize.
+	value isRegisterAddress ifTrue: [ 
+		self halt.
+	] ifFalse: [ 
+		self assert: value isRegister.
+		streamBuilder x86: MOV dst: value src: pointer
+	]
+	
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacLoadSignExtend32: instruction [
+	target pointerSize = 4 ifTrue: [ ^ self visitTacLoad: instruction ].
+	self halt.
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacLoadZeroExtend32: instruction [
+	target pointerSize = 4 ifTrue: [ ^ self visitTacLoad: instruction ].
+	self halt.
+]
+
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacMove: moveInstruction [
 	| result value |
 	result := moveInstruction result.
 	value := moveInstruction value.
 	^ self moveValue: value toRegister: result
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacMultiply: instruction [
+	| resultPhysical rightPhysical resultTemp |
+	self assert: instruction result isRegisterOrRegisterAddress.
+
+	instruction left ~= instruction result ifTrue: [
+		self moveValue: instruction left toRegister: instruction result.
+	].
+
+	resultPhysical := self virtualToPhysical: instruction result.
+	rightPhysical := self virtualToPhysical: instruction right.
+	
+	resultTemp := resultPhysical.
+	resultPhysical isRegisterAddress ifTrue: [
+		resultTemp := self moveMemory: resultPhysical toScratchIndex: 0.
+	].
+
+	rightPhysical isImmediate ifTrue: [ 
+		streamBuilder x86: IMUL with: resultTemp with: resultTemp with: rightPhysical
+	] ifFalse: [
+		streamBuilder x86: IMUL with: resultTemp with: rightPhysical
+	].
+	
+	resultPhysical ~= resultTemp ifTrue: [ 
+		streamBuilder x86: MOV dst: resultPhysical src: resultTemp
+	].
+
 ]
 
 { #category : #visiting }
@@ -412,4 +467,30 @@ SAsmX86InstructionLowerer >> visitTacReturn: returnInstruction [
 	self returnValue: returnInstruction left valueHigh: returnInstruction right.
 	self leaveFrame.
 	streamBuilder x86: RET
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacStore: instruction [
+	| value pointer |
+	value := self virtualToPhysical: instruction left.
+	pointer := (self virtualToPhysical: instruction right) asPointerOfSize: target pointerSize.
+	value isRegisterAddress ifTrue: [ 
+		self halt.
+	] ifFalse: [ 
+		self assert: value isRegister.
+		streamBuilder x86: MOV dst: pointer src: value
+	]
+	
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacStoreTruncate32: instruction [
+	target pointerSize = 4 ifTrue: [ ^ self visitTacStore: instruction ].
+	self halt.
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacSubtract: instruction [
+	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
+			integer: SUB float: SUB double: SUB
 ]

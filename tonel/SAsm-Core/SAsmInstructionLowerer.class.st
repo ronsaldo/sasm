@@ -219,6 +219,7 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 			
 			availableRegisters := freeRegisters at: registerClass.
 			availableRegisters ifEmpty: [
+				self halt.
 				"Spill here."
 				spilledRange := currentActiveRanges last.
 				spilledRange end > virtualRegister end ifTrue: [ 
