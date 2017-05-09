@@ -5,7 +5,8 @@ Class {
 		'result',
 		'called',
 		'arguments',
-		'calledConvention'
+		'calledConvention',
+		'activeRegisters'
 	],
 	#category : #'SAsm-Core-TAC'
 }
@@ -13,6 +14,16 @@ Class {
 { #category : #visiting }
 SAsmTacCallInstruction >> accept: aVisitor [
 	^ aVisitor visitTacCallInstruction: self
+]
+
+{ #category : #accessing }
+SAsmTacCallInstruction >> activeRegisters [
+	^ activeRegisters
+]
+
+{ #category : #accessing }
+SAsmTacCallInstruction >> activeRegisters: anObject [
+	activeRegisters := anObject
 ]
 
 { #category : #accessing }
@@ -45,6 +56,12 @@ SAsmTacCallInstruction >> calledConvention: anObject [
 	calledConvention := anObject
 ]
 
+{ #category : #initialization }
+SAsmTacCallInstruction >> initialize [
+	super initialize.
+	activeRegisters := #()
+]
+
 { #category : #testing }
 SAsmTacCallInstruction >> isCallInstruction [
 	^ true
@@ -61,10 +78,15 @@ SAsmTacCallInstruction >> isThreeAddressInstruction [
 ]
 
 { #category : #'linear scan' }
-SAsmTacCallInstruction >> markVirtualRegisterLiveAt: livePosition [
-	called markVirtualRegisterLiveRangePosition: livePosition.
-	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: livePosition ].
-	result do: [ :res | res markVirtualRegisterLiveRangePosition: livePosition ].
+SAsmTacCallInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
+	called markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex.
+	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex].
+	result do: [ :res | res markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex].
+]
+
+{ #category : #testing }
+SAsmTacCallInstruction >> needsToSpill [
+	^ true
 ]
 
 { #category : #printing }

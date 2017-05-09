@@ -92,13 +92,16 @@ SAsmVirtualRegister >> lastUsage: anObject [
 ]
 
 { #category : #'live ranges' }
-SAsmVirtualRegister >> markVirtualRegisterLiveRangePosition: position [
+SAsmVirtualRegister >> markVirtualRegisterLiveRangePosition: position blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
 	firstUsage ifNil: [
 		firstUsage := position.
 		lastUsage := position.
 	] ifNotNil: [
 		firstUsage := firstUsage min: position.
-		lastUsage := lastUsage max: position
+		lastUsage := lastUsage max: position.
+		(blockIndex <= predecessorBlockIndex and: [ firstUsage < blockIndex ]) ifTrue: [
+			lastUsage := lastUsage max: predecessorBlockIndex
+		]
 	]
 ]
 

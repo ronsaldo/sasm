@@ -14,6 +14,12 @@ SAsmTacBranchInstruction >> accept: aVisitor [
 	^ aVisitor visitTacBranchInstruction: self
 ]
 
+{ #category : #enumerating }
+SAsmTacBranchInstruction >> blockSuccessorsDo: aBlock [
+	aBlock value: trueDestination.
+	aBlock value: falseDestination.
+]
+
 { #category : #accessing }
 SAsmTacBranchInstruction >> condition [
 	^ condition
@@ -45,8 +51,8 @@ SAsmTacBranchInstruction >> isThreeAddressInstruction [
 ]
 
 { #category : #accessing }
-SAsmTacBranchInstruction >> markVirtualRegisterLiveAt: livePosition [
-	condition ifNotNil: [ condition markVirtualRegisterLiveRangePosition: livePosition ].
+SAsmTacBranchInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
+	condition ifNotNil: [ condition markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex ].
 ]
 
 { #category : #'as yet unclassified' }

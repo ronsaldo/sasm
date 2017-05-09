@@ -97,7 +97,8 @@ SAsmBasicBlock >> printOn: aStream [
 
 { #category : #enumerating }
 SAsmBasicBlock >> successorsDo: aBlock [
-	
+	last ifNil: [ ^ false ].
+	last blockSuccessorsDo: aBlock
 ]
 
 { #category : #accessing }

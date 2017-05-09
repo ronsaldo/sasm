@@ -33,3 +33,8 @@ SAsmRegister >> isRegister [
 SAsmRegister >> isRegisterOrRegisterAddress [
 	^ true
 ]
+
+{ #category : #testing }
+SAsmRegister >> isVectorRegister [
+	^ false
+]

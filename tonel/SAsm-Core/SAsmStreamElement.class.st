@@ -16,6 +16,10 @@ SAsmStreamElement >> accept: aVisitor [
 	self subclassResponsibility
 ]
 
+{ #category : #successors }
+SAsmStreamElement >> blockSuccessorsDo: aBlock [
+]
+
 { #category : #'as yet unclassified' }
 SAsmStreamElement >> computeMaximalSize [
 ]
@@ -78,7 +82,12 @@ SAsmStreamElement >> isThreeAddressInstruction [
 ]
 
 { #category : #'linear scan' }
-SAsmStreamElement >> markVirtualRegisterLiveAt: livePosition [
+SAsmStreamElement >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
+]
+
+{ #category : #testing }
+SAsmStreamElement >> needsToSpill [
+	^ false
 ]
 
 { #category : #accessing }

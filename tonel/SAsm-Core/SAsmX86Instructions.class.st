@@ -27,6 +27,9 @@ Class {
 		'JO',
 		'JZ',
 		'MOV',
+		'MOVSX',
+		'MOVSXD',
+		'MOVZX',
 		'POP',
 		'PUSH',
 		'RET',
@@ -206,6 +209,18 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRmwRw 16r89)
 			(OpRbRmb 16r8A)
 			(OpRwRmw 16r8B)
+		)
+		
+		(MOVSX
+			(OpRwRmb #(16r0F 16rBE))
+			(OpRwRmw #(16r0F 16rBF))
+		)
+		(MOVSXD
+			(OpRwRmw 16r63)
+		)
+		(MOVZX
+			(OpRwRmb #(16r0F 16rB6))
+			(OpRwRmw #(16r0F 16rB7))
 		)
 		
 		(POP

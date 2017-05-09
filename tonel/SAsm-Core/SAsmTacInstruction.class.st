@@ -34,10 +34,10 @@ SAsmTacInstruction >> left: anObject [
 ]
 
 { #category : #'linear scan' }
-SAsmTacInstruction >> markVirtualRegisterLiveAt: livePosition [
-	result ifNotNil: [ result markVirtualRegisterLiveRangePosition: livePosition ].
-	left ifNotNil: [ left markVirtualRegisterLiveRangePosition: livePosition ].
-	right ifNotNil: [ right markVirtualRegisterLiveRangePosition: livePosition ].
+SAsmTacInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
+	result ifNotNil: [ result markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex].
+	left ifNotNil: [ left markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex].
+	right ifNotNil: [ right markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex].
 
 ]
 

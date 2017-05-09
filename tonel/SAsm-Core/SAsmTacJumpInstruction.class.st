@@ -12,6 +12,11 @@ SAsmTacJumpInstruction >> accept: aVisitor [
 	^ aVisitor visitTacJumpInstruction: self
 ]
 
+{ #category : #enumerating }
+SAsmTacJumpInstruction >> blockSuccessorsDo: aBlock [
+	aBlock value: destination.
+]
+
 { #category : #accessing }
 SAsmTacJumpInstruction >> destination [
 	^ destination

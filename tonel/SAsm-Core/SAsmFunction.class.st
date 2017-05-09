@@ -88,10 +88,37 @@ SAsmFunction >> cdecl [
 ]
 
 { #category : #'linear scan' }
+SAsmFunction >> computeMaxPredecessorIndex [
+	| pendingBlocks block newPredecessorIndex |
+	basicBlocks do: [ :bb | bb maxPredecessorIndex: -1 ].
+		
+	pendingBlocks := Set new.
+	pendingBlocks addAll: basicBlocks.
+	[ pendingBlocks isNotEmpty ] whileTrue: [
+		block := pendingBlocks anyOne.
+		pendingBlocks remove: block.
+		
+		newPredecessorIndex := block index max: block maxPredecessorIndex.
+		block last ifNotNil: [ :lastElement |
+			newPredecessorIndex := newPredecessorIndex max: lastElement index
+		].
+	
+		block successorsDo: [ :succ |
+			succ maxPredecessorIndex < newPredecessorIndex ifTrue: [
+				succ maxPredecessorIndex: newPredecessorIndex.
+				pendingBlocks add: succ
+			]
+		]
+	].
+
+]
+
+{ #category : #'linear scan' }
 SAsmFunction >> computeVirtualRegisterLiveRanges [
 	virtualRegisters do: #resetRange.
 	self
 		enumerateInstructionPositions;
+		computeMaxPredecessorIndex;
 		markVirtualRegisterLiveRanges.
 ]
 
@@ -111,7 +138,6 @@ SAsmFunction >> enumerateInstructionPositions [
 	index := 1.
 	basicBlocks do: [ :bb |
 		bb index: index.
-		bb maxPredecessorIndex: -1.
 		index := index + 1.
 		bb do: [ :instruction |
 			instruction index: index.
@@ -119,7 +145,6 @@ SAsmFunction >> enumerateInstructionPositions [
 		]
 	].
 
-			
 ]
 
 { #category : #printing }
@@ -173,11 +198,21 @@ SAsmFunction >> lowerInstruction: instruction writeToStream: aStreamBuilder [
 
 { #category : #'linear scan' }
 SAsmFunction >> markVirtualRegisterLiveRanges [
+	"Mark the arguments as alive in the entry block."
+	virtualRegisters do: [ :reg |
+		(reg variable isNotNil and: [ reg variable argument ]) ifTrue: [
+			reg markVirtualRegisterLiveRangePosition: 1
+		]
+	].
+
+	"We use the basic block index and its max predecessor index to detect loops, and
+	 avoiding to compute the full live range sets."
 	basicBlocks do: [ :bb |
 		bb do: [ :instruction |
-			instruction markVirtualRegisterLiveAt: instruction index
+			instruction markVirtualRegisterLiveAt: instruction index blockIndex: bb index predecessorBlockIndex: bb maxPredecessorIndex
 		]
-	]
+	].
+
 ]
 
 { #category : #'calling conventions' }

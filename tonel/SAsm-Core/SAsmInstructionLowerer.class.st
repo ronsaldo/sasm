@@ -178,12 +178,22 @@ SAsmInstructionLowerer >> nilGlobalSymbol [
 
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
-	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange |
+	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange spillingPoints finalActiveRanges |
 	freeSpillLocations := Dictionary new.
 	freeRegisters := Dictionary new.
 	allocatableRegisterClasses keysAndValuesDo: [ :key :value |
 		freeRegisters at: key put: value copy
 	].
+
+	spillingPoints := OrderedCollection new.
+	function basicBlocks do: [ :bb |
+		bb do: [ :instruction |
+			instruction needsToSpill ifTrue: [ 
+				spillingPoints add: instruction
+			]
+		]
+	].
+	spillingPoints sort: [ :a :b |  a index < b index ].
 
 	activeMemoryRanges := SortedCollection sortBlock: [ :a :b | a end < b end ].
 	activeRangeClasses := Dictionary new.
@@ -219,7 +229,6 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 			
 			availableRegisters := freeRegisters at: registerClass.
 			availableRegisters ifEmpty: [
-				self halt.
 				"Spill here."
 				spilledRange := currentActiveRanges last.
 				spilledRange end > virtualRegister end ifTrue: [ 
@@ -237,9 +246,18 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 				usedRegisters add: virtualRegister register.
 				currentActiveRanges add: virtualRegister.
 			]
+		].
+	
+		[spillingPoints isNotEmpty and: [spillingPoints first index <= virtualRegister firstUsage]] whileTrue: [
+			spillingPoints first activeRegisters: currentActiveRanges asArray.
+			spillingPoints removeFirst
 		]
 	].
-	
+
+	finalActiveRanges := currentActiveRanges asArray.
+	spillingPoints do: [ :point |
+		point activeRegisters: finalActiveRanges.
+	]
 ]
 
 { #category : #'register allocation' }

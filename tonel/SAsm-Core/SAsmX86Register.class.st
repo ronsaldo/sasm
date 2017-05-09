@@ -49,6 +49,11 @@ SAsmX86Register >> printOn: aStream [
 ]
 
 { #category : #accessing }
+SAsmX86Register >> registerClass [
+	^ self class
+]
+
+{ #category : #accessing }
 SAsmX86Register >> size [
 	^ self subclassResponsibility
 ]

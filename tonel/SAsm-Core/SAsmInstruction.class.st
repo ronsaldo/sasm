@@ -62,8 +62,8 @@ SAsmInstruction >> isInstruction [
 ]
 
 { #category : #'linear scan' }
-SAsmInstruction >> markVirtualRegisterLiveAt: livePosition [
-	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: livePosition ]
+SAsmInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
+	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex]
 ]
 
 { #category : #accessing }

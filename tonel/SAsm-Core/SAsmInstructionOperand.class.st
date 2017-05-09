@@ -134,6 +134,11 @@ SAsmInstructionOperand >> isVirtualRegister [
 	^ false
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'live ranges' }
 SAsmInstructionOperand >> markVirtualRegisterLiveRangePosition: liveRangePosition [
+	self markVirtualRegisterLiveRangePosition: liveRangePosition blockIndex: -1 predecessorBlockIndex: -1
+]
+
+{ #category : #'live ranges' }
+SAsmInstructionOperand >> markVirtualRegisterLiveRangePosition: liveRangePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
 ]
