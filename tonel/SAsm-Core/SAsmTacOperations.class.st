@@ -3,6 +3,11 @@ Class {
 	#superclass : #SharedPool,
 	#classVars : [
 		'TacAdd',
+		'TacArithmeticShiftRight',
+		'TacBitAnd',
+		'TacBitNot',
+		'TacBitOr',
+		'TacBitXor',
 		'TacDivide',
 		'TacEqual',
 		'TacGreater',
@@ -18,6 +23,8 @@ Class {
 		'TacLoadZeroExtend16',
 		'TacLoadZeroExtend32',
 		'TacLoadZeroExtend8',
+		'TacLogicalShiftLeft',
+		'TacLogicalShiftRight',
 		'TacMove',
 		'TacMultiply',
 		'TacNotEqual',
@@ -48,6 +55,14 @@ SAsmTacOperations class >> initialize [
 	TacRemainder := SAsmTacOperationRemainder new.
 	TacURemainder := SAsmTacOperationURemainder new.
 	
+	TacBitAnd := SAsmTacBitAnd new.
+	TacBitOr := SAsmTacBitOr new.
+	TacBitXor := SAsmTacBitXor new.
+	TacBitNot := SAsmTacBitNot new.
+	TacLogicalShiftLeft := SAsmTacLogicalShiftLeft new.
+	TacLogicalShiftRight := SAsmTacLogicalShiftRight new.
+	TacArithmeticShiftRight := SAsmTacArithmeticShiftRight new.
+		
 	TacMove := SAsmTacMoveOperation new.
 	TacReturn := SAsmTacReturnOperation new.
 

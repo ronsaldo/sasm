@@ -37,6 +37,34 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 ]
 
 { #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitBitwiseInto: result left: left right: right integer: integerInstruction float: floatInstruction double: doubleInstruction [
+	| resultPhysical rightPhysical rightRegister |
+	self assert: result isRegisterOrRegisterAddress.
+
+	left ~= result ifTrue: [
+		self moveValue: left toRegister: result.
+	].
+
+	resultPhysical := self virtualToPhysical: result.
+	rightPhysical := self virtualToPhysical: right.
+	rightRegister := rightPhysical.
+	(resultPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
+		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
+	].
+
+	result isIntegerRegister ifTrue: [
+		streamBuilder x86: integerInstruction with: resultPhysical with: rightRegister.
+	].
+	result isDoubleFloatRegister ifTrue: [
+		streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister.
+	].
+	result isFloatRegister ifTrue: [ 
+		streamBuilder x86: doubleInstruction with: resultPhysical with: rightRegister.
+	]
+
+]
+
+{ #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitComparison: instruction left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination [
 	| rightPhysical rightRegister leftPhysical falseLabel trueLabel |
 	leftPhysical := self virtualToPhysical: left.
@@ -368,6 +396,12 @@ SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister pointerOfSize: p
 SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
 			integer: ADD float: ADD double: ADD
+]
+
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacBitAnd: instruction [
+	^ self emitBitwiseInto: instruction result left: instruction left right: instruction right 
+			integer: AND float: AND double: AND
 ]
 
 { #category : #visiting }

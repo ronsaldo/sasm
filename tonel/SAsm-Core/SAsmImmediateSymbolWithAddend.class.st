@@ -31,6 +31,11 @@ SAsmImmediateSymbolWithAddend >> addend: anObject [
 	addend := anObject
 ]
 
+{ #category : #converting }
+SAsmImmediateSymbolWithAddend >> asPointerOfSize: pointerSize [
+	^ self copy size: pointerSize
+]
+
 { #category : #'as yet unclassified' }
 SAsmImmediateSymbolWithAddend >> copyWithStreamBuilder: streamBuilder [
 	^ self copy symbol: (streamBuilder findSymbolForObject: symbol)
