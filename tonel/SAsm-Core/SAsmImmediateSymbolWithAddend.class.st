@@ -32,8 +32,8 @@ SAsmImmediateSymbolWithAddend >> addend: anObject [
 ]
 
 { #category : #converting }
-SAsmImmediateSymbolWithAddend >> asPointerOfSize: pointerSize [
-	^ self copy size: pointerSize
+SAsmImmediateSymbolWithAddend >> asX86PointerOfSize: pointerSize withBuilder: streamBuilder [
+	^ SAsmX86RegisterAddress new size: pointerSize; displacement: (self copyWithStreamBuilder: streamBuilder)
 ]
 
 { #category : #'as yet unclassified' }

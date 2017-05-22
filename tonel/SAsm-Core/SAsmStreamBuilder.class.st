@@ -39,6 +39,13 @@ SAsmStreamBuilder >> addSymbolCopy: aSymbol [
 	]
 ]
 
+{ #category : #constants }
+SAsmStreamBuilder >> align: alignment [
+	^ self add: (SAsmAlignInstruction new
+		alignment: alignment;
+		yourself).
+]
+
 { #category : #sections }
 SAsmStreamBuilder >> bssSection [
 	^ self startSection: #'.bss' attributes: [ :section |
@@ -169,6 +176,26 @@ SAsmStreamBuilder >> tacAdd: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacAtomicCompareAndSwap: left with: right into: result [
+	^ self tacOperation: TacAtomicCompareAndSwap result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacAtomicFetchAndAdd: left with: right into: result [
+	^ self tacOperation: TacAtomicFetchAndAdd result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacAtomicSwap: left with: right into: result [
+	^ self tacOperation: TacAtomicSwap result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacBitNot: value into: result [
+	^ self tacOperation: TacBitNot result: result value: value
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacBoolRegister [
 	^ stream function newIntegerVirtualRegister.
 ]
@@ -189,6 +216,16 @@ SAsmStreamBuilder >> tacCall: called arguments: arguments into: result conventio
 		arguments: (arguments collect: #asSAsmInstructionOperand);
 		result: (result collect: #asSAsmInstructionOperand);
 		calledConvention: convention;
+		yourself)
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacCopy: source to: destination size: size alignment: alignment [
+	^ self add: (SAsmTacCopyInstruction new
+		source: source asSAsmInstructionOperand;
+		destination: destination asSAsmInstructionOperand;
+		size: size asSAsmInstructionOperand;
+		alignment: alignment;
 		yourself)
 ]
 
@@ -300,6 +337,11 @@ SAsmStreamBuilder >> tacMultiply: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacNegate: value into: result [
+	^ self tacOperation: TacNegate result: result value: value
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacNotEqual: left with: right into: result [
 	^ self tacOperation: TacNotEqual result: result left: left right: right
 ]
@@ -345,6 +387,21 @@ SAsmStreamBuilder >> tacReturnVoid [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacSignExtend16: value into: result [
+	^ self tacOperation: TacSignExtend16 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacSignExtend32: value into: result [
+	^ self tacOperation: TacSignExtend32 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacSignExtend8: value into: result [
+	^ self tacOperation: TacSignExtend8 result: result value: value
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacStore: value into: pointer [
 	^ self tacOperation: TacStore left: value right: pointer
 ]
@@ -377,6 +434,36 @@ SAsmStreamBuilder >> tacStoreTruncate8: value into: pointer [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacSubtract: left with: right into: result [
 	^ self tacOperation: TacSubtract result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacTruncate16: value into: result [
+	^ self tacOperation: TacTruncate16 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacTruncate32: value into: result [
+	^ self tacOperation: TacTruncate32 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacTruncate8: value into: result [
+	^ self tacOperation: TacTruncate8 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacZeroExtend16: value into: result [
+	^ self tacOperation: TacZeroExtend16 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacZeroExtend32: value into: result [
+	^ self tacOperation: TacZeroExtend32 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacZeroExtend8: value into: result [
+	^ self tacOperation: TacZeroExtend8 result: result value: value
 ]
 
 { #category : #sections }
@@ -435,4 +522,11 @@ SAsmStreamBuilder >> x86: operation withOperands: operands [
 			template: operation;
 			arguments: operands;
 			yourself)
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> zeros: size [
+	^ self add: (SAsmConstantZeros new
+		size: size;
+		yourself).
 ]

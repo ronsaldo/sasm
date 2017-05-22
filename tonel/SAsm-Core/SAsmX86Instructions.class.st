@@ -6,7 +6,9 @@ Class {
 		'ADD',
 		'AND',
 		'CALL',
+		'CLD',
 		'CMP',
+		'CMPXCHG',
 		'IMUL',
 		'IRET',
 		'JA',
@@ -26,15 +28,25 @@ Class {
 		'JNZ',
 		'JO',
 		'JZ',
+		'LEA',
+		'LOCK',
 		'MOV',
 		'MOVSX',
 		'MOVSXD',
+		'MOVS_B',
+		'MOVS_D',
+		'MOVS_Q',
 		'MOVZX',
+		'NEG',
+		'NOT',
 		'POP',
 		'PUSH',
+		'REP',
 		'RET',
 		'SUB',
-		'TEST'
+		'TEST',
+		'XADD',
+		'XCHG'
 	],
 	#category : #'SAsm-Core-X86'
 }
@@ -99,6 +111,10 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRm 16rFF 2)
 		)
 
+		(CLD
+			(Op 16rFC)
+		)
+
 		(CMP
 			(OpALI8 16r3C)
 			(OpAXIw 16r3D)
@@ -112,6 +128,11 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRmwRw 16r39)
 			(OpRbRmb 16r3A)
 			(OpRwRmw 16r3B)
+		)
+		
+		(CMPXCHG
+			(OpRmbRb (16r0F 16rB0))
+			(OpRmwRw (16r0F 16rB1))
 		)
 		
 		(IMUL
@@ -197,6 +218,14 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpIrw 16rE9)
 			(OpRm 16rFF 4)
 		)
+		
+		(LEA
+			(OpRwRmw 16r8D)
+		)
+		
+		(LOCK
+			(Op 16rF0)
+		)
 
 		(MOV
 			(OppRbIb 16rB0 0)
@@ -223,6 +252,26 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRwRmw #(16r0F 16rB7))
 		)
 		
+		(MOVS_B
+			(Op 16rA4)
+		)
+		(MOVS_D
+			(Op 16rA5)
+		)
+		(MOVS_Q
+			(RexWOp 16rA5)
+		)
+		
+		(NEG
+			(OpRmbOp 16rF6 3)
+			(OpRmwOp 16rF7 3)
+		)
+
+		(NOT
+			(OpRmbOp 16rF6 2)
+			(OpRmwOp 16rF7 2)
+		)
+		
 		(POP
 			(OppR 16r58)
 			(OpRm 16r8F 0)
@@ -235,6 +284,10 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpIw 16r68)
 		)
 		
+		(REP
+			(Op 16rF3)
+		)
+				
 		(RET
 			(Op 16rC3 )
 			(OpU16 16rC2)
@@ -267,6 +320,21 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRbRmb 16r84)
 			(OpRwRmw 16r85)
 		)
+		
+		(XADD
+			(OpRmbRb (16r0F 16rC0))
+			(OpRmwRw (16r0F 16rC1))
+		)
+		
+		(XCHG
+			(OppR 16r90)
+			(OpRmbRb 16r86)
+			(OpRmwRw 16r87)
+
+			(OpRbRmb 16r86)
+			(OpRwRmw 16r87)
+		)
+
 	)
 ]
 

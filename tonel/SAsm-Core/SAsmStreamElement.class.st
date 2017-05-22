@@ -42,6 +42,11 @@ SAsmStreamElement >> initialize [
 ]
 
 { #category : #testing }
+SAsmStreamElement >> isAlignInstruction [
+	^ false
+]
+
+{ #category : #testing }
 SAsmStreamElement >> isCallInstruction [
 	^ false
 ]
@@ -58,6 +63,11 @@ SAsmStreamElement >> isConditionalJump [
 
 { #category : #testing }
 SAsmStreamElement >> isConstantExpressionValue [
+	^ false
+]
+
+{ #category : #testing }
+SAsmStreamElement >> isConstantZeros [
 	^ false
 ]
 

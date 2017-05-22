@@ -260,6 +260,11 @@ SAsmFunction >> newIntegerVirtualRegister [
 	^ self addVirtualRegister: target newIntegerVirtualRegister
 ]
 
+{ #category : #'abstract instruction adding' }
+SAsmFunction >> newLocal: size alignment: alignment dynamicRoot: dynamicRoot [
+	^ stackFrameLayout createLocalSize: size alignment: alignment dynamicRoot: dynamicRoot
+]
+
 { #category : #printing }
 SAsmFunction >> prettyPrintOn: aStream [
 	aStream putKeyword: 'function'; space; putIdentifier: self validName

@@ -27,7 +27,7 @@ SAsmElf32SymbolTable >> addRelocationSectionSymbol: section [
 { #category : #adding }
 SAsmElf32SymbolTable >> addSymbol: symbol stringTable: stringTable sectionDictionary: sectionIndexDictionary [
 	| elfSymbol binding type |
-	binding := symbol isExternal
+	binding := (symbol isExternal or: [ symbol isPublic ])
 		ifTrue: [ 1 ]
 		ifFalse: [ symbol isWeak ifTrue: [ 2 ] ifFalse: [ 0 ] ].
 	type := 0.

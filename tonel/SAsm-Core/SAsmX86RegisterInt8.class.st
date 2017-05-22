@@ -4,6 +4,11 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
+{ #category : #converting }
+SAsmX86RegisterInt8 >> byte [
+	^ self
+]
+
 { #category : #'as yet unclassified' }
 SAsmX86RegisterInt8 >> isRegisterI8 [
 	^ true

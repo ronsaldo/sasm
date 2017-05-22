@@ -25,6 +25,7 @@ SAsmStreamBuilderLocalScope >> addMapToObject: anObject symbol: symbol [
 
 { #category : #'as yet unclassified' }
 SAsmStreamBuilderLocalScope >> findMappedSymbolRecursively: anObject [
+	anObject isSAsmSymbol ifTrue: [ ^ anObject ].
 	^ self findMappedSymbolRecursively: anObject ifAbsent: [ 
 		self error: 'Failed to find symbol for object ' , anObject printString
 	]

@@ -4,6 +4,9 @@ Class {
 	#classVars : [
 		'TacAdd',
 		'TacArithmeticShiftRight',
+		'TacAtomicCompareAndSwap',
+		'TacAtomicFetchAndAdd',
+		'TacAtomicSwap',
 		'TacBitAnd',
 		'TacBitNot',
 		'TacBitOr',
@@ -27,9 +30,13 @@ Class {
 		'TacLogicalShiftRight',
 		'TacMove',
 		'TacMultiply',
+		'TacNegate',
 		'TacNotEqual',
 		'TacRemainder',
 		'TacReturn',
+		'TacSignExtend16',
+		'TacSignExtend32',
+		'TacSignExtend8',
 		'TacStore',
 		'TacStoreDouble',
 		'TacStoreFloat',
@@ -37,8 +44,14 @@ Class {
 		'TacStoreTruncate32',
 		'TacStoreTruncate8',
 		'TacSubtract',
+		'TacTruncate16',
+		'TacTruncate32',
+		'TacTruncate8',
 		'TacUDivide',
-		'TacURemainder'
+		'TacURemainder',
+		'TacZeroExtend16',
+		'TacZeroExtend32',
+		'TacZeroExtend8'
 	],
 	#category : #'SAsm-Core-TAC'
 }
@@ -54,6 +67,7 @@ SAsmTacOperations class >> initialize [
 	TacUDivide := SAsmTacOperationUDivide new.
 	TacRemainder := SAsmTacOperationRemainder new.
 	TacURemainder := SAsmTacOperationURemainder new.
+	TacNegate := SAsmTacOperationNegate new.
 	
 	TacBitAnd := SAsmTacBitAnd new.
 	TacBitOr := SAsmTacBitOr new.
@@ -89,4 +103,19 @@ SAsmTacOperations class >> initialize [
 	TacStoreTruncate8 := SAsmTacStoreTruncate8Operation new.
 	TacStoreTruncate16 := SAsmTacStoreTruncate16Operation new.
 	TacStoreTruncate32 := SAsmTacStoreTruncate32Operation new.
+	
+	TacSignExtend8 := SAsmTacSignExtend8Operation new.
+	TacSignExtend16 := SAsmTacSignExtend16Operation new.
+	TacSignExtend32 := SAsmTacSignExtend32Operation new.
+	TacZeroExtend8 := SAsmTacZeroExtend8Operation new.
+	TacZeroExtend16 := SAsmTacZeroExtend16Operation new.
+	TacZeroExtend32 := SAsmTacZeroExtend32Operation new.
+	TacTruncate8 := SAsmTacTruncate8Operation new.
+	TacTruncate16 := SAsmTacTruncate16Operation new.
+	TacTruncate32 := SAsmTacTruncate32Operation new.
+	
+	
+	TacAtomicCompareAndSwap := SAsmTacAtomicCompareAndSwap new.
+	TacAtomicFetchAndAdd := SAsmTacAtomicFetchAndAdd new.
+	TacAtomicSwap := SAsmTacAtomicSwap new.
 ]

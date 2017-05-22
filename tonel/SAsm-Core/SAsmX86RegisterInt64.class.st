@@ -14,6 +14,11 @@ SAsmX86RegisterInt64 >> isRegisterI64 [
 	^ true
 ]
 
+{ #category : #converting }
+SAsmX86RegisterInt64 >> qword [
+	^ self
+]
+
 { #category : #accessing }
 SAsmX86RegisterInt64 >> size [
 	^ 8

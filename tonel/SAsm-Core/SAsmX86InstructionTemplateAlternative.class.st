@@ -131,7 +131,7 @@ SAsmX86InstructionTemplateAlternative >> write: writer rexSize: size rm: first r
 { #category : #writing }
 SAsmX86InstructionTemplateAlternative >> write: writer sizeOverrideIf: aBoolean [
 	aBoolean ifTrue: [
-		writer putInt8: 16r66
+		writer nextPut: 16r66
 	]
 ]
 

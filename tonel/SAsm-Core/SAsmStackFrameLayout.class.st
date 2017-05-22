@@ -11,7 +11,8 @@ Class {
 		'frameLessMethod',
 		'argumentsSize',
 		'dynamicRootCount',
-		'reservedLocalsSpace'
+		'reservedLocalsSpace',
+		'optimizedLocalVariables'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -66,7 +67,7 @@ SAsmStackFrameLayout >> buildLayout [
 
 { #category : #'as yet unclassified' }
 SAsmStackFrameLayout >> buildLocalLayout [
-	localVariables sort: [ :a :b |
+	optimizedLocalVariables sort: [ :a :b |
 		a dynamicRoot ~= b dynamicRoot ifTrue: [ 
 			a dynamicRoot asBit > b dynamicRoot asBit
 		] ifFalse: [ 
@@ -77,7 +78,7 @@ SAsmStackFrameLayout >> buildLocalLayout [
 	alignment := 1.
 	size := reservedLocalsSpace.
 	dynamicRootCount := 0.
-	localVariables do: [ :var |
+	optimizedLocalVariables do: [ :var |
 		var dynamicRoot ifTrue: [ 
 			dynamicRootCount := dynamicRootCount + 1.
 		].
@@ -183,7 +184,7 @@ SAsmStackFrameLayout >> localsBaseOffset: anObject [
 
 { #category : #optimizing }
 SAsmStackFrameLayout >> optimize [
-	localVariables := localVariables select: #actuallyUsed
+	optimizedLocalVariables := localVariables select: #actuallyUsed
 ]
 
 { #category : #'as yet unclassified' }
@@ -191,6 +192,11 @@ SAsmStackFrameLayout >> optimizeAndBuildLayout [
 	self
 		optimize;
 		buildLayout
+]
+
+{ #category : #accessing }
+SAsmStackFrameLayout >> optimizedLocalVariables [
+	^ optimizedLocalVariables
 ]
 
 { #category : #copying }

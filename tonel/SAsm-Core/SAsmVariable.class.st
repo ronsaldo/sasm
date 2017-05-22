@@ -11,7 +11,8 @@ Class {
 		'alignment',
 		'argument',
 		'dynamicRoot',
-		'virtualRegisters'
+		'virtualRegisters',
+		'usedDirectly'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -20,7 +21,7 @@ Class {
 SAsmVariable >> actuallyUsed [
 	argument ifTrue: [ ^ true ].
 	virtualRegisters do: [ :vr | vr register isNil ifTrue: [ ^ true ] ].
-	^ false
+	^ usedDirectly
 ]
 
 { #category : #initialization }
@@ -76,12 +77,18 @@ SAsmVariable >> initialize [
 	index := 0.
 	alignment := 1.
 	dynamicRoot := false.
+	usedDirectly := false.
 	virtualRegisters := #().
 ]
 
 { #category : #testing }
 SAsmVariable >> isVariable [
 	^ true
+]
+
+{ #category : #'live ranges' }
+SAsmVariable >> markVirtualRegisterLiveRangePosition: liveRangePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
+	usedDirectly := true
 ]
 
 { #category : #accessing }

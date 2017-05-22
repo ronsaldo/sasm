@@ -27,6 +27,11 @@ TSAsmVisibility >> isPrivate [
 ]
 
 { #category : #testing }
+TSAsmVisibility >> isPublic [
+	^ self visibility == #public
+]
+
+{ #category : #testing }
 TSAsmVisibility >> isWeak [
 	^ self visibility == #weak
 ]
@@ -49,6 +54,11 @@ TSAsmVisibility >> makeExternal [
 { #category : #visibility }
 TSAsmVisibility >> makePrivate [
 	self visibility: #private
+]
+
+{ #category : #visibility }
+TSAsmVisibility >> makePublic [
+	self visibility: #public
 ]
 
 { #category : #visibility }

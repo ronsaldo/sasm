@@ -8,14 +8,15 @@ Class {
 		'cpuMode',
 		'symbolList',
 		'symbolSet',
-		'pendingLocalSymbolRelocations'
+		'pendingLocalSymbolRelocations',
+		'compilationTarget'
 	],
 	#category : #'SAsm-Core-Binary'
 }
 
 { #category : #'as yet unclassified' }
-SAsmBinaryObjectWriter class >> writeStream: aStream [
-	^ self new writeStream: aStream
+SAsmBinaryObjectWriter class >> target: aCompilationTarget writeStream: aStream [
+	^ self new target: aCompilationTarget; writeStream: aStream
 ]
 
 { #category : #initialization }
@@ -67,16 +68,22 @@ SAsmBinaryObjectWriter >> createSectionNamed: name [
 
 { #category : #generation }
 SAsmBinaryObjectWriter >> createSectionNamed: name attributes: aBlock [
+	^ self createSectionNamed: name loaded: true attributes: aBlock
+]
+
+{ #category : #generation }
+SAsmBinaryObjectWriter >> createSectionNamed: name loaded: isLoaded attributes: aBlock [
 	| result |
-	^ sectionDictionary at: name ifAbsentPut: [
+	result := sectionDictionary at: name ifAbsentPut: [
 		result := SAsmBinaryObjectSection new
 			name: name;
-			data: (WriteStream on: (ByteArray new:128));
+			data: (isLoaded ifTrue: [WriteStream on: (ByteArray new:128)] ifFalse: [SAsmByteNullStream new]);
 			yourself.
-		aBlock value: result.
 		sectionList add: result.
-		result
-	]
+	].
+
+	aBlock value: result.
+	^ result
 ]
 
 { #category : #generation }
@@ -88,6 +95,7 @@ SAsmBinaryObjectWriter >> generateStream: aStream [
 	
 	aStream target setupBinaryObjectWriter: self.
 	
+	currentSection := nil.
 	aStream do: [ :instruction |
 		(currentSection isNil and: [ instruction isSection not ]) ifTrue: [ 
 			currentSection := self createSectionNamed: #'..nil..'.
@@ -95,14 +103,17 @@ SAsmBinaryObjectWriter >> generateStream: aStream [
 	
 		currentSection ifNotNil: [
 			instruction
-				position: currentSection size;
+				position: currentSection currentDataSize;
 				section: currentSection.
 		].
 		
 		instruction accept: self
 	].
 	
-	sectionList do: [ :section | section data: section data contents ].
+	sectionList do: [ :section |
+		section size: section currentDataSize.
+		section data: section data contents
+	].
 	pendingLocalSymbolRelocations ifNotEmpty: [ self error: 'Undefined local symbols' ].
 	^ SAsmBinaryObject new compilationTarget: aStream target; sections: sectionList asArray; symbols: symbolList asArray.
 ]
@@ -265,7 +276,7 @@ SAsmBinaryObjectWriter >> nextPutIPRelative64: immediate extraOffset: extraOffse
 		self recordImmediateRelativeReloc64: immediate extraAddend: extraOffset negated.
 		self nextPutC64: 0.
 	] ifFalse: [
-		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
 		self nextPutC64: immediateValue.
 	]
 ]
@@ -282,7 +293,7 @@ SAsmBinaryObjectWriter >> nextPutIPRelativeI16: immediate extraOffset: extraOffs
 		self recordImmediateRelativeReloc16: immediate extraAddend: extraOffset negated.
 		self nextPutC16: 0.
 	] ifFalse: [
-		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
 		self nextPutC16: immediateValue.
 	]
 ]
@@ -299,7 +310,7 @@ SAsmBinaryObjectWriter >> nextPutIPRelativeI32: immediate extraOffset: extraOffs
 		self recordImmediateRelativeReloc32: immediate extraAddend: extraOffset negated.
 		self nextPutC32: 0.
 	] ifFalse: [
-		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
 		self nextPutC32: immediateValue.
 	]
 ]
@@ -316,9 +327,14 @@ SAsmBinaryObjectWriter >> nextPutIPRelativeI8: immediate extraOffset: extraOffse
 		self recordImmediateRelativeReloc8: immediate extraAddend: extraOffset negated.
 		self nextPutC8: 0.
 	] ifFalse: [
-		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection size offset: extraOffset.
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
 		self nextPutC8: immediateValue.
 	]
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutZeros: size [
+	currentSection nextPutZeros: size
 ]
 
 { #category : #relocations }
@@ -384,7 +400,7 @@ SAsmBinaryObjectWriter >> recordImmediateReloc: immediate extraAddend: extraAdde
 	self assert: symbol isNotNil.
 	
 	reloc := SAsmBinaryObjectSectionRelocation new
-		offset: currentSection size;
+		offset: currentSection currentDataSize;
 		addend: immediate addend + extraAddend;
 		yourself.
 	symbol shouldBeKeep ifTrue: [
@@ -404,12 +420,31 @@ SAsmBinaryObjectWriter >> recordImmediateReloc: immediate extraAddend: extraAdde
 
 ]
 
+{ #category : #accessing }
+SAsmBinaryObjectWriter >> target: aCompilationTarget [
+	compilationTarget := aCompilationTarget
+]
+
+{ #category : #visiting }
+SAsmBinaryObjectWriter >> visitAlignInstruction: alignInstruction [
+	| alignment paddingSize |
+	alignment := alignInstruction alignment.
+	currentSection alignment: (currentSection alignment max: alignment).
+	paddingSize := alignInstruction size.
+	self nextPutZeros: paddingSize.
+]
+
 { #category : #visiting }
 SAsmBinaryObjectWriter >> visitConstantExpressionValue: aConstantExpressionValue [
 	| value |
 	value := aConstantExpressionValue value evaluate.
 	value writeWithSize: aConstantExpressionValue size on: self.
-	self assert: currentSection size = (aConstantExpressionValue position + aConstantExpressionValue size)
+	self assert: currentSection currentDataSize = (aConstantExpressionValue position + aConstantExpressionValue size)
+]
+
+{ #category : #visiting }
+SAsmBinaryObjectWriter >> visitConstantZeros: zeros [
+	self nextPutZeros: zeros size
 ]
 
 { #category : #visiting }
@@ -432,11 +467,15 @@ SAsmBinaryObjectWriter >> visitLabel: aLabel [
 
 { #category : #visiting }
 SAsmBinaryObjectWriter >> visitSection: aSection [
-	currentSection := self createSectionNamed: aSection name attributes: [:attr |
-		self flag: 'Copy the section attributes.'
+	currentSection := self createSectionNamed: aSection name loaded: aSection loaded attributes: [:attr |
+		attr loaded: aSection loaded.
+		attr executable: aSection executable.
+		attr readable: aSection readable.
+		attr writeable: aSection writeable.
 	].
+
 	aSection
-		position: currentSection size;
+		position: currentSection currentDataSize;
 		section: aSection name.
 	
 ]

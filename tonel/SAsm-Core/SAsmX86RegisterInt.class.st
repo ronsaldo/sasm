@@ -5,13 +5,18 @@ Class {
 }
 
 { #category : #converting }
-SAsmX86RegisterInt >> asPointer [
-	^ SAsmX86RegisterAddress new base: self; size: self size
+SAsmX86RegisterInt >> asX86PointerOfSize: size [
+	^ self asX86PointerOfSize: size vectorRegister: false
 ]
 
 { #category : #converting }
-SAsmX86RegisterInt >> asPointerOfSize: size [
-	^ SAsmX86RegisterAddress new base: self; size: size
+SAsmX86RegisterInt >> asX86PointerOfSize: size vectorRegister: vectorRegister [
+	^ SAsmX86RegisterAddress new base: self; size: size; vectorRegister: vectorRegister
+]
+
+{ #category : #converting }
+SAsmX86RegisterInt >> asX86PointerOfSize: size withBuilder: streamBuilder [
+	^ self asX86PointerOfSize: size vectorRegister: false
 ]
 
 { #category : #converting }
@@ -42,6 +47,16 @@ SAsmX86RegisterInt >> isRegisterWord [
 { #category : #converting }
 SAsmX86RegisterInt >> qword [
 	^ SAsmX86RegisterAddress new base: self; size: 8
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86RegisterInt >> withSize: aSize [
+	aSize = 1 ifTrue: [ ^ self byte ].
+	aSize = 2 ifTrue: [ ^ self word ].
+	aSize = 4 ifTrue: [ ^ self dword ].
+	aSize = 8 ifTrue: [ ^ self qword ].
+	self error: 'unsupported size'
+	
 ]
 
 { #category : #converting }

@@ -15,6 +15,16 @@ SAsmInstructionOperand >> copyWithStreamBuilder: streamBuilder [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isDoubleFloatRegister [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isFloatRegister [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isImmediate [
 	^ false
 ]
@@ -67,6 +77,11 @@ SAsmInstructionOperand >> isImmediateU8 [
 { #category : #testing }
 SAsmInstructionOperand >> isInstructionOperand [
 	^ true
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isIntegerRegister [
+	^ false
 ]
 
 { #category : #testing }
@@ -126,6 +141,11 @@ SAsmInstructionOperand >> isSymbol [
 
 { #category : #testing }
 SAsmInstructionOperand >> isVariable [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isVectorRegister [
 	^ false
 ]
 

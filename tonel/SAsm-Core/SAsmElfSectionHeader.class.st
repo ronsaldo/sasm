@@ -28,7 +28,7 @@ SAsmElfSectionHeader >> index: anObject [
 	index := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SAsmElfSectionHeader >> prepareForWritingToFile [
 	content ifNil: [ ^ self ].
 	

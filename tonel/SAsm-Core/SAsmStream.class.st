@@ -52,7 +52,7 @@ SAsmStream >> addLast: element [
 
 { #category : #converting }
 SAsmStream >> asBinaryObject [
-	^ SAsmBinaryObjectWriter writeStream: self
+	^ SAsmBinaryObjectWriter target: target writeStream: self
 ]
 
 { #category : #building }

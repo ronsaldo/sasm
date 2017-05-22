@@ -6,16 +6,28 @@ Class {
 		'base',
 		'index',
 		'scale',
-		'displacement'
+		'displacement',
+		'vectorRegister'
 	],
 	#classVars : [
-		'ScaleValueMap'
+		'ScaleValueMap',
+		'SizeNames'
 	],
 	#pools : [
 		'SAsmX86Constants'
 	],
 	#category : #'SAsm-Core-X86'
 }
+
+{ #category : #initialization }
+SAsmX86RegisterAddress class >> initialize [
+	SizeNames := Dictionary newFromPairs: #(
+		1 byte
+		2 word
+		4 dword
+		8 qword
+	)
+]
 
 { #category : #arithmetic }
 SAsmX86RegisterAddress >> + displacementOrIndex [
@@ -61,7 +73,7 @@ SAsmX86RegisterAddress >> displacement [
 
 { #category : #accessing }
 SAsmX86RegisterAddress >> displacement: anObject [
-	displacement := anObject
+	displacement := anObject.
 ]
 
 { #category : #'as yet unclassified' }
@@ -144,6 +156,8 @@ SAsmX86RegisterAddress >> index: anObject [
 SAsmX86RegisterAddress >> initialize [
 	scale := 1.
 	displacement := 0.
+	vectorRegister := false.
+	
 ]
 
 { #category : #testing }
@@ -192,13 +206,23 @@ SAsmX86RegisterAddress >> printOn: aStream [
 			print: displacement
 	].
 
-	aStream nextPut: $].
+	aStream nextPut: $]; space; nextPutAll: (SizeNames at: size ifAbsent: [size asString])
 
 ]
 
 { #category : #'as yet unclassified' }
 SAsmX86RegisterAddress >> qword [
 	^ self copy size: 8
+]
+
+{ #category : #accessing }
+SAsmX86RegisterAddress >> registerClass [
+	vectorRegister ifTrue: [ ^ SAsmX86RegisterVector ].
+	size = 1 ifTrue: [ ^ SAsmX86RegisterInt8 ].
+	size = 2 ifTrue: [ ^ SAsmX86RegisterInt16 ].
+	size = 4 ifTrue: [ ^ SAsmX86RegisterInt32 ].
+	size = 8 ifTrue: [ ^ SAsmX86RegisterInt64 ].
+	self halt.
 ]
 
 { #category : #accessing }
@@ -219,6 +243,21 @@ SAsmX86RegisterAddress >> size [
 { #category : #accessing }
 SAsmX86RegisterAddress >> size: anObject [
 	size := anObject
+]
+
+{ #category : #accessing }
+SAsmX86RegisterAddress >> vectorRegister [
+	^ vectorRegister
+]
+
+{ #category : #accessing }
+SAsmX86RegisterAddress >> vectorRegister: anObject [
+	vectorRegister := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86RegisterAddress >> withSize: aSize [
+	^ self copy size: aSize
 ]
 
 { #category : #'as yet unclassified' }

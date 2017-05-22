@@ -104,7 +104,7 @@ SAsmElfBuilder >> computeFileBinaryElementsOffsets [
 	offset := 0.
 	self allComponentsDo: [ :component |
 		component fileOffset: offset.
-		offset := offset + component size
+		offset := offset + component fileSize
 	]
 ]
 

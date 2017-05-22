@@ -10,21 +10,6 @@ SAsmRegister class >> canHoldVirtualRegisterData: virtualRegister [
 ]
 
 { #category : #testing }
-SAsmRegister >> isDoubleFloatRegister [
-	^ false
-]
-
-{ #category : #testing }
-SAsmRegister >> isFloatRegister [
-	^ false
-]
-
-{ #category : #testing }
-SAsmRegister >> isIntegerRegister [
-	^ false
-]
-
-{ #category : #testing }
 SAsmRegister >> isRegister [
 	^ true
 ]
@@ -32,9 +17,4 @@ SAsmRegister >> isRegister [
 { #category : #testing }
 SAsmRegister >> isRegisterOrRegisterAddress [
 	^ true
-]
-
-{ #category : #testing }
-SAsmRegister >> isVectorRegister [
-	^ false
 ]

@@ -42,6 +42,11 @@ SAsmObject >> isInstructionOperand [
 ]
 
 { #category : #testing }
+SAsmObject >> isSAsmSymbol [
+	^ false
+]
+
+{ #category : #testing }
 SAsmObject >> isVirtualRegister [
 	^ false
 ]

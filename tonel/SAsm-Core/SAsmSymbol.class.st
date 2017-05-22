@@ -55,7 +55,7 @@ SAsmSymbol >> initialize [
 ]
 
 { #category : #testing }
-SAsmSymbol >> isSymbol [
+SAsmSymbol >> isSAsmSymbol [
 	^ true
 ]
 

@@ -29,23 +29,16 @@ SAsmBinaryObject >> buildElfOn: builder [
 
 	sections do: [ :section |
 		elfSection := builder addFirstComponent: section sectionNamed: section name.
-		elfSection programBits; allocated.
+		elfSection programBits.
 		elfSection address: section base.
 		"Ensure the local symbols come before the globals."
 		builder indexOfRelocationSymbol: nil section: elfSection.
 		
-		(#('.text' '.oopRegistration') includes: section name) ifTrue: [ elfSection executableInstructions ].
-		(#('.bss' '.data' '.oop') includes: section name) ifTrue: [
-			elfSection
-				writeable;
-				addressAlign: 16
-		].
-		(#('.text' '.rodata') includes: section name) ifTrue: [
-			elfSection
-				addressAlign: 16
-		].
-
-		section name = #'.bss' ifTrue: [ elfSection nobits ].
+		section loaded ifFalse: [ elfSection nobits ].
+		section readable ifTrue: [ elfSection allocated ].
+		section writeable ifTrue: [ elfSection writeable ].
+		section executable ifTrue: [ elfSection executableInstructions ].
+		elfSection addressAlign: section alignment.
 	].
 
 	symbols do: [ :symbol |

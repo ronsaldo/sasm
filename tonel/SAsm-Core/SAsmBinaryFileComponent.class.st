@@ -22,6 +22,11 @@ SAsmBinaryFileComponent >> fileOffset: anObject [
 	fileOffset := anObject
 ]
 
+{ #category : #accessing }
+SAsmBinaryFileComponent >> fileSize [
+	^ self size
+]
+
 { #category : #writing }
 SAsmBinaryFileComponent >> prepareForWritingToFile [
 	"Do nothing for now"

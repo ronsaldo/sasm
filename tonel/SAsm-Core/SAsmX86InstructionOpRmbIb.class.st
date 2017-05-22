@@ -17,7 +17,7 @@ SAsmX86InstructionOpRmbIb >> canWriteInstruction: anInstruction [
 		and: [ anInstruction second isImmediate ] ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SAsmX86InstructionOpRmbIb >> parameters: extraParameters [
 	registerOpcode := extraParameters first
 ]

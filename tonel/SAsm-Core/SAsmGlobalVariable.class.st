@@ -3,10 +3,22 @@ Class {
 	#superclass : #SAsmModuleElement,
 	#instVars : [
 		'name',
-		'content'
+		'content',
+		'size',
+		'alignment'
 	],
 	#category : #'SAsm-Core-Generic'
 }
+
+{ #category : #accessing }
+SAsmGlobalVariable >> alignment [
+	^ alignment
+]
+
+{ #category : #accessing }
+SAsmGlobalVariable >> alignment: anObject [
+	alignment := anObject
+]
 
 { #category : #accessing }
 SAsmGlobalVariable >> content [
@@ -59,18 +71,38 @@ SAsmGlobalVariable >> printOn: aStream [
 ]
 
 { #category : #accessing }
+SAsmGlobalVariable >> size [
+	^ size
+]
+
+{ #category : #accessing }
+SAsmGlobalVariable >> size: anObject [
+	size := anObject
+]
+
+{ #category : #accessing }
 SAsmGlobalVariable >> validName [
 	^ name ifNil: [ #anonymous ]
 ]
 
 { #category : #writing }
 SAsmGlobalVariable >> writeToStream: aStreamBuilder [
-	self isEmpty ifTrue: [ ^ self ].
+	(self isEmpty and: [self isExternal]) ifTrue: [ ^ self ].
 	
 	aStreamBuilder withNewLocalScope: [
-		aStreamBuilder dataSection.
-		aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
+		content ifNil: [
+			aStreamBuilder bssSection.
+			aStreamBuilder
+				align: alignment;
+				label: (aStreamBuilder findSymbolForObject: self);
+				zeros: size.
+		] ifNotNil: [ 
+			aStreamBuilder dataSection.
+			aStreamBuilder
+				align: alignment;
+				label: (aStreamBuilder findSymbolForObject: self).
 		
-		content writeToStream: aStreamBuilder.
+			content writeToStream: aStreamBuilder.
+		]
 	]
 ]
