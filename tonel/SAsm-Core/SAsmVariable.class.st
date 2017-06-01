@@ -12,7 +12,9 @@ Class {
 		'argument',
 		'dynamicRoot',
 		'virtualRegisters',
-		'usedDirectly'
+		'usedDirectly',
+		'argumentPassingRegister',
+		'argumentRegisterClass'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -50,6 +52,26 @@ SAsmVariable >> argument: anObject [
 ]
 
 { #category : #accessing }
+SAsmVariable >> argumentPassingRegister [
+	^ argumentPassingRegister
+]
+
+{ #category : #accessing }
+SAsmVariable >> argumentPassingRegister: anObject [
+	argumentPassingRegister := anObject
+]
+
+{ #category : #accessing }
+SAsmVariable >> argumentRegisterClass [
+	^ argumentRegisterClass
+]
+
+{ #category : #accessing }
+SAsmVariable >> argumentRegisterClass: anObject [
+	argumentRegisterClass := anObject
+]
+
+{ #category : #accessing }
 SAsmVariable >> dynamicRoot [
 	^ dynamicRoot
 ]
@@ -84,6 +106,11 @@ SAsmVariable >> initialize [
 { #category : #testing }
 SAsmVariable >> isVariable [
 	^ true
+]
+
+{ #category : #testing }
+SAsmVariable >> markAsSpilledExplicitly [
+	usedDirectly := true
 ]
 
 { #category : #'live ranges' }

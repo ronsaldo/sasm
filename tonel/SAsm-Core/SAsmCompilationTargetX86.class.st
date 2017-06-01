@@ -51,6 +51,8 @@ SAsmCompilationTargetX86 >> callingConventionNamed: aCallingConventionName [
 	aCallingConventionName == #stdcall ifTrue: [ ^ SAsmX86CallingConventionStdcall new ].
 	aCallingConventionName == #cdecl ifTrue: [ ^ SAsmX86CallingConventionCDecl new ].
 	aCallingConventionName == #smalltalk ifTrue: [ ^ SAsmX86CallingConventionSmalltalk new ].
+	aCallingConventionName == #smalltalk_send ifTrue: [ ^ SAsmX86CallingConventionSmalltalkSend new ].
+	aCallingConventionName == #smalltalk_supersend ifTrue: [ ^ SAsmX86CallingConventionSmalltalkSuperSend new ].
 	aCallingConventionName == #apicall ifTrue: [
 	].
 

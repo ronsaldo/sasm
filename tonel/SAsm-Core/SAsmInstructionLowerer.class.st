@@ -41,10 +41,12 @@ SAsmInstructionLowerer >> allocateRegisters [
 	allocatableRegisterClasses := self buildRegisterClasses: callingConvention allocatableRegisters.
 	scratchRegisterClases := self buildRegisterClasses: callingConvention scratchRegisters.
 	usedRegisters := Set new.
-	registersToPreserve := #().
 	self
-		performLinearScanRegisterAllocation;
-		buildStackFrameLayout
+		assignRegistersToArguments;
+		performLinearScanRegisterAllocation.
+
+	registersToPreserve := callingConvention callerRegisters select: [ :reg | usedRegisters includes: reg ].
+	self buildStackFrameLayout	
 ]
 
 { #category : #'register allocation' }
@@ -60,6 +62,27 @@ SAsmInstructionLowerer >> allocateSpillLocationForVirtualRegister: virtualRegist
 	].
 
 	^ spillLocation
+]
+
+{ #category : #'register allocation' }
+SAsmInstructionLowerer >> assignRegistersToArguments [
+	| callingConvention  integerArgumentRegisters floatArgumentRegisters intRegisterIndex floatRegisterIndex |
+	callingConvention := function callingConvention.
+	integerArgumentRegisters := callingConvention integerArgumentRegisters.
+	floatArgumentRegisters := callingConvention integerArgumentRegisters.
+	intRegisterIndex := 1.
+	floatRegisterIndex := 1.
+	stackFrameLayout arguments do: [ :arg |
+		(arg argumentRegisterClass == #integer and: [ intRegisterIndex <= integerArgumentRegisters size ]) ifTrue: [ 
+			arg argumentPassingRegister: (integerArgumentRegisters at: intRegisterIndex).
+			intRegisterIndex := intRegisterIndex + 1
+		].
+		(arg argumentRegisterClass == #float and: [ floatRegisterIndex <= floatArgumentRegisters size]) ifTrue: [ 
+			arg argumentPassingRegister: (floatArgumentRegisters at: floatRegisterIndex).
+			floatRegisterIndex := floatRegisterIndex + 1
+		].
+	].
+
 ]
 
 { #category : #'register allocation' }
@@ -250,6 +273,7 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 	
 		[spillingPoints isNotEmpty and: [spillingPoints first index <= virtualRegister firstUsage]] whileTrue: [
 			spillingPoints first activeRegisters: currentActiveRanges asArray.
+			currentActiveRanges do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
 			spillingPoints removeFirst
 		]
 	].

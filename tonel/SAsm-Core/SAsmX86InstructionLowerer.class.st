@@ -1,12 +1,21 @@
 Class {
 	#name : #SAsmX86InstructionLowerer,
 	#superclass : #SAsmInstructionLowerer,
+	#instVars : [
+		'stackSizeToRestoreBeforeReturn'
+	],
 	#pools : [
 		'SAsmX86Constants',
 		'SAsmX86Instructions'
 	],
 	#category : #'SAsm-Core-X86'
 }
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> compiledMethodMetaData [
+	self flag: 'Implement myself'.
+	^ 0
+]
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right integer: integerInstruction float: floatInstruction double: doubleInstruction [
@@ -192,8 +201,23 @@ SAsmX86InstructionLowerer >> emitMove: instruction withExtension: extensionInstr
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitPrologueLoads [
-	self flag: 'TODO: Support parameters passed in arguments.'.
-	stackFrameLayout arguments doWithIndex: [:arg :index |
+	"Spill the arguments that are passed in registers"
+	stackFrameLayout arguments do: [:arg |
+		arg argumentPassingRegister ifNotNil: [
+			self assert: arg virtualRegisters size = 1.
+			(arg argumentPassingRegister ~= arg virtualRegisters first register) ifTrue: [
+				arg argumentRegisterClass == #integer ifTrue: [ 
+					streamBuilder x86: MOV dst: (self virtualRegisterLocationToPhysicalLocation: arg virtualRegisters first) src: arg argumentPassingRegister
+				].
+				arg argumentRegisterClass == #float ifTrue: [ 
+					self halt
+				].
+			]
+		]
+	].
+
+	"Unspill the arguments that are stored in registers during the function duration."
+	stackFrameLayout arguments do: [:arg |
 		arg virtualRegisters do: [ :virtualRegister |
 			self unspillRegister: virtualRegister
 		]
@@ -219,9 +243,9 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	argumentDescriptor := self computeArgumentDescriptor.
 	
 	scratchRegister := callingConvention scratchRegisters first.
-	
+
 	"Compute the stack size requirements."
-	callingConvention hasSegmentedStack ifTrue: [
+	(callingConvention hasSegmentedStack and: [false]) ifTrue: [
 		stackSizeRequirement := totalFrameSize + maxCallStackSize + (pointerSize * StackSwitchPointerRequired) - ( "Return pointer" pointerSize * 1).
 		stackCheckedEntry := streamBuilder newPrivateSymbol: #stackCheckedEntry.
 		stackLimitTrap := self stackLimitTrapSymbol.
@@ -246,7 +270,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	"Fetch the nil pointer"
 	nilPointerRegister := nil.
 	(stackFrameLayout dynamicRootCount ~= 0 or: [callingConvention hasContextMetadata]) ifTrue: [
-		nilPointer := self nilGlobalSymbol.
+		nilPointer := 0."self nilGlobalSymbol".
 		nilPointerRegister := scratchRegister.
 		streamBuilder
 			x86: MOV with: nilPointerRegister with: nilPointer.
@@ -259,7 +283,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 		
 		streamBuilder
 			x86: PUSH with: (self compiledMethodMetaData);
-			x86: PUSH with: nilPointerRegister;
+			x86: PUSH with: nilPointerRegister; "Context object"
 			x86: PUSH with: argumentDescriptor;
 			x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (registersToPreserve size << 12))
 	].
@@ -278,6 +302,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	nativeSizeToAllocate ~= 0 ifTrue: [
 		streamBuilder x86: SUB with: target stackPointerRegister with: nativeSizeToAllocate.
 	].
+	stackSizeToRestoreBeforeReturn := nativeSizeToAllocate.
 
 	"Emit the argument loads."
 	self emitPrologueLoads
@@ -291,6 +316,16 @@ SAsmX86InstructionLowerer >> leaveFrame [
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> leaveFramefullMethod [
+	registersToPreserve ifNotEmpty: [
+		stackSizeToRestoreBeforeReturn ~= 0 ifTrue: [ 
+			streamBuilder x86: ADD dst: target stackPointerRegister src: stackSizeToRestoreBeforeReturn
+		].
+	
+		registersToPreserve reverseDo: [ :reg |
+			streamBuilder x86: POP with: reg
+		]
+	].
+	
 	streamBuilder
 		x86: MOV dst: target stackPointerRegister src: target framePointerRegister;
 		x86: POP with: target framePointerRegister.
@@ -323,6 +358,15 @@ SAsmX86InstructionLowerer >> movePhysical: physicalValue toScratchRegister: scra
 
 	self error: 'Unsupported move type.'
 
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86InstructionLowerer >> moveSpilledValue: value toIntegerRegister: register [
+	value isVirtualRegister ifFalse: [ 
+		^ streamBuilder x86: MOV dst: register src: (value copyWithStreamBuilder: streamBuilder)
+	].
+
+	^ streamBuilder x86: MOV dst: register src: (self virtualRegisterLocationToPhysicalLocation: value)
 ]
 
 { #category : #spilling }
@@ -552,26 +596,65 @@ SAsmX86InstructionLowerer >> visitTacBranchInstruction: branch [
 
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
-	| calledFunction calledConvention calledRegisters registersToSpill stackCleanUpSize stackElementSize |
-	self flag: 'TODO: Support the different calling conventions'.
-	
+	| calledFunction calledConvention calledRegisters registersToSpill stackCleanUpSize stackElementSize registerArguments stackArguments remainingIntegerRegisters remainingFloatRegisters integerRegisterIndex floatRegisterIndex resultPhysical |
+
 	calledConvention := callInstruction calledConvention.
 	calledRegisters := calledConvention calledRegisters.
 	registersToSpill := callInstruction activeRegisters select: [ :virtualRegister |
 		virtualRegister isVirtualRegister and:
 		[ virtualRegister register isNotNil and:
-		[ virtualRegister lastUsage ~= callInstruction index and: 
+		[ (virtualRegister lastUsage ~= callInstruction index or:
+			[ (calledConvention integerArgumentRegisters includes: virtualRegister register) or:
+			  [(calledConvention floatArgumentRegisters includes: virtualRegister register)]]) and: 
 		[ calledRegisters includes: virtualRegister register ] ] ]
 	].
 
 	self spillRegisters: registersToSpill.
+	
+	registerArguments := OrderedCollection new.
+	stackArguments := OrderedCollection new.
+	
+	remainingIntegerRegisters := calledConvention integerArgumentRegisters size.
+	remainingFloatRegisters := calledConvention floatArgumentRegisters size.
+	
+	callInstruction arguments do: [ :arg |
+		(arg isIntegerRegister or: [ arg isImmediate ]) ifTrue: [
+			remainingIntegerRegisters > 0 ifTrue: [
+				registerArguments add: arg.
+				remainingIntegerRegisters := remainingIntegerRegisters - 1
+			] ifFalse: [ 
+				stackArguments add: arg.
+			]
+		] ifFalse: [
+			self halt.
+		]
+	].
+
+	"Pass arguments in the stack."	
 	stackCleanUpSize := 0.
 	stackElementSize := target pointerSize.
-	callInstruction arguments reverseDo: [ :arg |
+	stackArguments reverseDo: [ :arg |
 		streamBuilder x86: PUSH with: (self virtualToPhysical: arg).
-		stackCleanUpSize := arg size max: stackElementSize
+		stackCleanUpSize := (arg isImmediate ifTrue: [target pointerSize] ifFalse: [arg size]) max: stackElementSize
 	].
 	
+	"Pass some arguments in registers"
+	integerRegisterIndex := 1.
+	floatRegisterIndex := 1.
+	remainingFloatRegisters := calledConvention floatArgumentRegisters size.
+
+	registerArguments do: [ :arg |
+		(arg isIntegerRegister or: [ arg isImmediate ]) ifTrue: [
+			self moveSpilledValue: arg toIntegerRegister: (calledConvention integerArgumentRegisters at: integerRegisterIndex)
+		] ifFalse: [
+			(arg isFloatRegister or: [ arg isDoubleFloatRegister ]) ifTrue: [
+				self moveSpilledValue: arg toFloatRegister: (calledConvention floatArgumentRegisters at: floatRegisterIndex)
+			] ifFalse: [
+				self error: 'Unsupported register argument type.'
+			]
+		]
+	].
+
 	calledFunction := self virtualToPhysical: callInstruction called.
 	streamBuilder
 		x86: CALL with: calledFunction.
@@ -580,6 +663,15 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 			x86: ADD dst: target stackPointerRegister src: stackCleanUpSize.
 	].
 	self unspillRegisters: registersToSpill.
+	
+	callInstruction result doWithIndex: [ :result :index |
+		resultPhysical := self virtualToPhysical: result.
+		resultPhysical isIntegerRegister ifTrue: [
+			streamBuilder x86: MOV dst: resultPhysical src: (index = 1 ifTrue: [calledConvention resultIntRegister] ifFalse: [ calledConvention resultInt2Register ])
+		] ifFalse: [ 
+			self halt
+		]
+	]
 	
 ]
 
@@ -807,7 +899,13 @@ SAsmX86InstructionLowerer >> visitTacNotEqual: instruction withBranch: branch [
 SAsmX86InstructionLowerer >> visitTacReturn: returnInstruction [
 	self returnValue: returnInstruction left valueHigh: returnInstruction right.
 	self leaveFrame.
-	streamBuilder x86: RET
+	
+	function callingConvention isStackCleanedByCaller ifTrue: [ 
+		streamBuilder x86: RET
+	] ifFalse: [
+		streamBuilder x86: RET with: stackFrameLayout argumentsSize
+	]
+	
 ]
 
 { #category : #casting }

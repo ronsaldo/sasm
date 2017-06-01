@@ -9,15 +9,16 @@ Class {
 		'virtualRegisters',
 		'stackFrameLayout',
 		'constantZone',
-		'constantZoneBuilder'
+		'constantZoneBuilder',
+		'contextMetaData'
 	],
 	#category : #'SAsm-Core-Generic'
 }
 
 { #category : #'abstract instruction adding' }
-SAsmFunction >> addArgumentVirtualRegister: virtualRegister name: argumentName [
+SAsmFunction >> addArgumentVirtualRegister: virtualRegister name: argumentName registerClass: registerClass [
 	| variable |
-	variable := stackFrameLayout createArgument: virtualRegister size alignment: virtualRegister alignment dynamicRoot: false.
+	variable := stackFrameLayout createArgument: virtualRegister size alignment: virtualRegister alignment dynamicRoot: false registerClass: registerClass.
 	virtualRegister variable: variable.
 	^ virtualRegister
 ]
@@ -132,6 +133,16 @@ SAsmFunction >> constantZoneBuilder [
 	^ constantZoneBuilder ifNil: [ constantZoneBuilder := SAsmStreamBuilder new stream: self constantZone ]
 ]
 
+{ #category : #accessing }
+SAsmFunction >> contextMetaData [
+	^ contextMetaData
+]
+
+{ #category : #accessing }
+SAsmFunction >> contextMetaData: anObject [
+	contextMetaData := anObject
+]
+
 { #category : #'linear scan' }
 SAsmFunction >> enumerateInstructionPositions [
 	| index |
@@ -232,7 +243,7 @@ SAsmFunction >> name: anObject [
 
 { #category : #'abstract instruction adding' }
 SAsmFunction >> newDoubleFloatArgument: argumentName [
-	^ self addArgumentVirtualRegister: self newDoubleFloatVirtualRegister name: argumentName
+	^ self addArgumentVirtualRegister: self newDoubleFloatVirtualRegister name: argumentName registerClass: #float
 ]
 
 { #category : #'abstract instruction adding' }
@@ -242,7 +253,7 @@ SAsmFunction >> newDoubleFloatVirtualRegister [
 
 { #category : #'abstract instruction adding' }
 SAsmFunction >> newFloatArgument: argumentName [
-	^ self addArgumentVirtualRegister: self newFloatVirtualRegister name: argumentName
+	^ self addArgumentVirtualRegister: self newFloatVirtualRegister name: argumentName registerClass: #float
 ]
 
 { #category : #'abstract instruction adding' }
@@ -252,7 +263,7 @@ SAsmFunction >> newFloatVirtualRegister [
 
 { #category : #'abstract instruction adding' }
 SAsmFunction >> newIntegerArgument: argumentName [
-	^ self addArgumentVirtualRegister: self newIntegerVirtualRegister name: argumentName
+	^ self addArgumentVirtualRegister: self newIntegerVirtualRegister name: argumentName registerClass: #integer
 ]
 
 { #category : #'abstract instruction adding' }

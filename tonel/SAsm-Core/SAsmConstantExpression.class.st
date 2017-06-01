@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmConstantExpression,
-	#superclass : #Object,
+	#superclass : #SAsmObject,
 	#category : #'SAsm-Core-Generic'
 }
 
@@ -21,4 +21,24 @@ SAsmConstantExpression >> asSAsmStreamElement [
 SAsmConstantExpression >> copyWithStreamBuilder: aStreamBuilder [
 	self subclassResponsibility
 	
+]
+
+{ #category : #testing }
+SAsmConstantExpression >> isConstantExpressionConstantFloat [
+	^ false
+]
+
+{ #category : #testing }
+SAsmConstantExpression >> isConstantExpressionConstantInteger [
+	^ false
+]
+
+{ #category : #testing }
+SAsmConstantExpression >> isConstantExpressionSymbolValue [
+	^ false
+]
+
+{ #category : #testing }
+SAsmConstantExpression >> isSAsmConstantExpression [
+	^ true
 ]

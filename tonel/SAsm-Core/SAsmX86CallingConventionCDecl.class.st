@@ -64,9 +64,9 @@ SAsmX86CallingConventionCDecl >> scratchRegisters [
 	}
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'message passing' }
 SAsmX86CallingConventionCDecl >> sendDescriptionRegister [
-	^ ECX
+	^ EDI
 ]
 
 { #category : #'as yet unclassified' }
@@ -74,9 +74,9 @@ SAsmX86CallingConventionCDecl >> sendLookupBehindRegister [
 	^ EDX
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'message passing' }
 SAsmX86CallingConventionCDecl >> sendSelectorRegister [
-	^ EAX
+	^ ESI
 ]
 
 { #category : #stack }

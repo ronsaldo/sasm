@@ -42,6 +42,11 @@ SAsmObject >> isInstructionOperand [
 ]
 
 { #category : #testing }
+SAsmObject >> isSAsmConstantExpression [
+	^ false
+]
+
+{ #category : #testing }
 SAsmObject >> isSAsmSymbol [
 	^ false
 ]

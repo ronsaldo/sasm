@@ -93,6 +93,8 @@ SAsmCompilationTargetX86_64 >> callingConventionNamed: aCallingConventionName [
 	aCallingConventionName == #stdcall ifTrue: [ ^ SAsmX86CallingConventionCDecl new ].
 	aCallingConventionName == #cdecl ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
 	aCallingConventionName == #smalltalk ifTrue: [ ^ SAsmX86_64CallingConventionSmalltalk new ].
+	aCallingConventionName == #smalltalk_send ifTrue: [ ^ SAsmX86_64CallingConventionSmalltalkSend new ].
+	aCallingConventionName == #smalltalk_supersend ifTrue: [ ^ SAsmX86_64CallingConventionSmalltalkSuperSend new ].
 	aCallingConventionName == #apicall ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
 
 	self error: 'Unknown calling convention ' , aCallingConventionName

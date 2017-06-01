@@ -7,6 +7,11 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #testing }
+SAsmConstantExpressionConstantFloat >> isConstantExpressionConstantFloat [
+	^ true
+]
+
 { #category : #accessing }
 SAsmConstantExpressionConstantFloat >> size [
 	^ size

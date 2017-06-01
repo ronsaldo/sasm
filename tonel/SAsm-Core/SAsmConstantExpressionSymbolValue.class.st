@@ -23,6 +23,11 @@ SAsmConstantExpressionSymbolValue >> fullPrintOn: aStream [
 	symbol fullPrintOn: aStream
 ]
 
+{ #category : #testing }
+SAsmConstantExpressionSymbolValue >> isConstantExpressionSymbolValue [
+	^ true
+]
+
 { #category : #accessing }
 SAsmConstantExpressionSymbolValue >> size [
 	^ size

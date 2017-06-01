@@ -50,7 +50,7 @@ SAsmStackFrameLayout >> argumentsSize [
 { #category : #'as yet unclassified' }
 SAsmStackFrameLayout >> buildArgumentLayout [
 	argumentsSize := 0.
-	arguments do: [ :var |
+	arguments select: [:arg | arg argumentPassingRegister isNil] thenDo: [ :var |
 		argumentsSize := argumentsSize alignedTo: var alignment.
 		var offset: argumentsSize + argumentsBaseOffset.
 		argumentsSize := argumentsSize + var size.
@@ -96,23 +96,24 @@ SAsmStackFrameLayout >> buildLocalLayout [
 
 ]
 
-{ #category : #'register allocation' }
-SAsmStackFrameLayout >> createArgument: spillingClass [
-	^ self createArgument: spillingClass first alignment: spillingClass second dynamicRoot: spillingClass third
-]
-
 { #category : #'as yet unclassified' }
-SAsmStackFrameLayout >> createArgument: argSize alignment: argAlignment dynamicRoot: dynamicRoot [
+SAsmStackFrameLayout >> createArgument: argSize alignment: argAlignment dynamicRoot: dynamicRoot registerClass: argumentRegisterClass [
 	| result |
 	result := SAsmVariable new
 		index: arguments size + 1;
 		size: argSize;
 		alignment: argAlignment;
 		dynamicRoot: dynamicRoot;
+		argumentRegisterClass: argumentRegisterClass;
 		argument: true;
 		yourself.
 	arguments add: result.
 	^ result
+]
+
+{ #category : #'as yet unclassified' }
+SAsmStackFrameLayout >> createArgument: spillingClass registerClass: argumentRegisterClass [
+	^ self createArgument: spillingClass first alignment: spillingClass second dynamicRoot: spillingClass third registerClass: argumentRegisterClass
 ]
 
 { #category : #'register allocation' }
@@ -184,7 +185,7 @@ SAsmStackFrameLayout >> localsBaseOffset: anObject [
 
 { #category : #optimizing }
 SAsmStackFrameLayout >> optimize [
-	optimizedLocalVariables := localVariables select: #actuallyUsed
+	optimizedLocalVariables := (arguments select: [:arg | arg argumentPassingRegister isNotNil]) , (localVariables select: #actuallyUsed)
 ]
 
 { #category : #'as yet unclassified' }
