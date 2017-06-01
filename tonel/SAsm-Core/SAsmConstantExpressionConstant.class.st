@@ -7,6 +7,11 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #copying }
+SAsmConstantExpressionConstant >> copyWithStreamBuilder: aStreamBuilder [
+	^ self
+]
+
 { #category : #'public access' }
 SAsmConstantExpressionConstant >> evaluate [
 	^ self

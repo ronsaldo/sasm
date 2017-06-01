@@ -16,6 +16,11 @@ SAsmStreamElement >> accept: aVisitor [
 	self subclassResponsibility
 ]
 
+{ #category : #converting }
+SAsmStreamElement >> asSAsmStreamElement [
+	^ self
+]
+
 { #category : #successors }
 SAsmStreamElement >> blockSuccessorsDo: aBlock [
 ]

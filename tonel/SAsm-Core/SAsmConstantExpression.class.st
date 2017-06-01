@@ -8,3 +8,17 @@ Class {
 SAsmConstantExpression >> asSAsmConstantExpression [
 	^ self
 ]
+
+{ #category : #converting }
+SAsmConstantExpression >> asSAsmStreamElement [
+	^ SAsmConstantExpressionValue new
+		size: self size;
+		value: self;
+		yourself
+]
+
+{ #category : #copying }
+SAsmConstantExpression >> copyWithStreamBuilder: aStreamBuilder [
+	self subclassResponsibility
+	
+]

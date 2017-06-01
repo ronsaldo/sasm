@@ -32,6 +32,16 @@ SAsmImmediateSymbolWithAddend >> addend: anObject [
 ]
 
 { #category : #converting }
+SAsmImmediateSymbolWithAddend >> asSAsmConstantExpression [
+	^ SAsmConstantExpressionSymbolValue new size: self size; symbol: self 
+]
+
+{ #category : #converting }
+SAsmImmediateSymbolWithAddend >> asSAsmStreamElement [
+	^ self asSAsmConstantExpression asSAsmStreamElement
+]
+
+{ #category : #converting }
 SAsmImmediateSymbolWithAddend >> asX86PointerOfSize: pointerSize withBuilder: streamBuilder [
 	^ SAsmX86RegisterAddress new size: pointerSize; displacement: (self copyWithStreamBuilder: streamBuilder)
 ]

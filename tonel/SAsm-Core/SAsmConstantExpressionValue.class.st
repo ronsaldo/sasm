@@ -43,3 +43,8 @@ SAsmConstantExpressionValue >> value [
 SAsmConstantExpressionValue >> value: anObject [
 	value := anObject
 ]
+
+{ #category : #writing }
+SAsmConstantExpressionValue >> writeToStream: aStreamBuilder [
+	aStreamBuilder add: (self copy value: (value copyWithStreamBuilder: aStreamBuilder))
+]
