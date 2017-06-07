@@ -29,7 +29,10 @@ SAsmModuleElement >> prepareWriteToStream: streamBuilder [
 	self name isNotNil ifTrue: [
 		(streamBuilder addSymbol: self name for: self)
 			visibility: self visibility.
-	].
+	] ifFalse: [
+		(streamBuilder addSymbol: nil for: self)
+			visibility: #private.
+	]
 ]
 
 { #category : #accessing }

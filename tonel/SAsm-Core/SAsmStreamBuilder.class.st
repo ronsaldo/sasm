@@ -507,7 +507,11 @@ SAsmStreamBuilder >> x86: operation with: operand1 [
 
 { #category : #x86 }
 SAsmStreamBuilder >> x86: operation with: operand1 with: operand2 [
-	^ self x86: operation withOperands: { operand1 asSAsmInstructionOperand . operand2 asSAsmInstructionOperand }
+	| sop1 sop2 |
+	sop1 := operand1 asSAsmInstructionOperand.
+	sop2 := operand2 asSAsmInstructionOperand.
+	self assert: (sop1 isRegisterAddress not or: [ sop2 isRegisterAddress not ]).
+	^ self x86: operation withOperands: { sop1 . sop2 }
 ]
 
 { #category : #x86 }

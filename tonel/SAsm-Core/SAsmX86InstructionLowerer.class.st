@@ -380,7 +380,7 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 
 	valuePhysical := self virtualToPhysical: value.
 	valuePhysical == physical ifTrue: [ ^ self ].
-	(valuePhysical isRegisterAddress and: [ register isRegisterAddress ]) ifTrue: [
+	(valuePhysical isRegisterAddress and: [ physical isRegisterAddress ]) ifTrue: [
 		valuePhysical := self movePhysical: valuePhysical toScratchRegister: 0
 	].
 
@@ -666,9 +666,9 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	
 	callInstruction result doWithIndex: [ :result :index |
 		resultPhysical := self virtualToPhysical: result.
-		resultPhysical isIntegerRegister ifTrue: [
+		result isIntegerRegister ifTrue: [
 			streamBuilder x86: MOV dst: resultPhysical src: (index = 1 ifTrue: [calledConvention resultIntRegister] ifFalse: [ calledConvention resultInt2Register ])
-		] ifFalse: [ 
+		] ifFalse: [
 			self halt
 		]
 	]
@@ -976,6 +976,11 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate8: instruction [
 SAsmX86InstructionLowerer >> visitTacSubtract: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
 			integer: SUB float: SUB double: SUB
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacURemainder: instruction [
+	self flag: 'TODO'
 ]
 
 { #category : #casting }
