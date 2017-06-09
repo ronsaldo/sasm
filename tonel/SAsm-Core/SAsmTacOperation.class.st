@@ -19,6 +19,16 @@ SAsmTacOperation >> isCondition [
 	^ false
 ]
 
+{ #category : #testing }
+SAsmTacOperation >> isIntegerDivision [
+	^ false
+]
+
+{ #category : #testing }
+SAsmTacOperation >> isIntegerRemainder [
+	^ false
+]
+
 { #category : #printing }
 SAsmTacOperation >> mnemonic [
 	^ self subclassResponsibility

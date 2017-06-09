@@ -101,7 +101,7 @@ SAsmStreamElement >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIn
 ]
 
 { #category : #testing }
-SAsmStreamElement >> needsToSpill [
+SAsmStreamElement >> needsToSpillWith: instructionLowerer [
 	^ false
 ]
 

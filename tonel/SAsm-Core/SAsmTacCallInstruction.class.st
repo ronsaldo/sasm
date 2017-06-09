@@ -85,7 +85,7 @@ SAsmTacCallInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: bl
 ]
 
 { #category : #testing }
-SAsmTacCallInstruction >> needsToSpill [
+SAsmTacCallInstruction >> needsToSpillWith: instructionLowerer [
 	^ true
 ]
 

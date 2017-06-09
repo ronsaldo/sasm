@@ -8,7 +8,8 @@ Class {
 		'operation',
 		'result',
 		'left',
-		'right'
+		'right',
+		'activeRegisters'
 	],
 	#category : #'SAsm-Core-TAC'
 }
@@ -16,6 +17,16 @@ Class {
 { #category : #visiting }
 SAsmTacInstruction >> accept: aVisitor [
 	^ aVisitor visitTacInstruction: self
+]
+
+{ #category : #accessing }
+SAsmTacInstruction >> activeRegisters [
+	^ activeRegisters
+]
+
+{ #category : #accessing }
+SAsmTacInstruction >> activeRegisters: anObject [
+	activeRegisters := anObject
 ]
 
 { #category : #testing }
@@ -39,6 +50,11 @@ SAsmTacInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: blockI
 	left ifNotNil: [ left markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex].
 	right ifNotNil: [ right markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex].
 
+]
+
+{ #category : #testing }
+SAsmTacInstruction >> needsToSpillWith: instructionLowerer [
+	^ instructionLowerer needsToSpillThreeAddressInstruction: self
 ]
 
 { #category : #accessing }

@@ -9,6 +9,16 @@ SAsmX86RegisterInt8 >> byte [
 	^ self
 ]
 
+{ #category : #testing }
+SAsmX86RegisterInt8 >> canBeValidByteRegisters [
+	^ true
+]
+
+{ #category : #testing }
+SAsmX86RegisterInt8 >> isByteRegister [
+	^ true
+]
+
 { #category : #'as yet unclassified' }
 SAsmX86RegisterInt8 >> isRegisterI8 [
 	^ true
@@ -17,6 +27,11 @@ SAsmX86RegisterInt8 >> isRegisterI8 [
 { #category : #'as yet unclassified' }
 SAsmX86RegisterInt8 >> isRegisterOrRegisterAddressI8 [
 	^ true
+]
+
+{ #category : #converting }
+SAsmX86RegisterInt8 >> rexByte [
+	^ self
 ]
 
 { #category : #'as yet unclassified' }

@@ -59,7 +59,7 @@ SAsmTacCopyInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: bl
 ]
 
 { #category : #testing }
-SAsmTacCopyInstruction >> needsToSpill [
+SAsmTacCopyInstruction >> needsToSpillWith: instructionLowerer [
 	^ true
 ]
 

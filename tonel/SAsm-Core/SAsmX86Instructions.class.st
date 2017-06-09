@@ -9,6 +9,8 @@ Class {
 		'CLD',
 		'CMP',
 		'CMPXCHG',
+		'DIV',
+		'IDIV',
 		'IMUL',
 		'IRET',
 		'JA',
@@ -46,7 +48,8 @@ Class {
 		'SUB',
 		'TEST',
 		'XADD',
-		'XCHG'
+		'XCHG',
+		'XOR'
 	],
 	#category : #'SAsm-Core-X86'
 }
@@ -133,6 +136,16 @@ SAsmX86Instructions class >> initializeInstructions [
 		(CMPXCHG
 			(OpRmbRb (16r0F 16rB0))
 			(OpRmwRw (16r0F 16rB1))
+		)
+		
+		(DIV
+			(OpRmbOp 16rF6 6)
+			(OpRmwOp 16rF7 6)
+		)
+		
+		(IDIV
+			(OpRmbOp 16rF6 7)
+			(OpRmwOp 16rF7 7)
 		)
 		
 		(IMUL
@@ -279,7 +292,7 @@ SAsmX86Instructions class >> initializeInstructions [
 		
 		(PUSH
 			(OppR 16r50)
-			(OpRm 16rFF 0)
+			(OpRm 16rFF 6)
 			(OpS8 16r6A)
 			(OpIw 16r68)
 		)
@@ -333,6 +346,21 @@ SAsmX86Instructions class >> initializeInstructions [
 
 			(OpRbRmb 16r86)
 			(OpRwRmw 16r87)
+		)
+
+		(XOR
+			(OpALI8 16r34)
+			(OpAXIw 16r35)
+
+			(OpRmbIb 16r80 6)
+			
+			(OpRmwS8 16r83 6)
+			(OpRmwIw 16r81 6)
+			
+			(OpRmbRb 16r30)
+			(OpRmwRw 16r31)
+			(OpRbRmb 16r32)
+			(OpRwRmw 16r33)
 		)
 
 	)

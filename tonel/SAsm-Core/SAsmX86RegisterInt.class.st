@@ -21,12 +21,30 @@ SAsmX86RegisterInt >> asX86PointerOfSize: size withBuilder: streamBuilder [
 
 { #category : #converting }
 SAsmX86RegisterInt >> byte [
-	^ SAsmX86RegisterAddress new base: self; size: 1
+	| result |
+	self assert: self isByteRegister not.
+	result := X86MappedRegisters at: value + 1.
+	result ifNil: [ self error: 'unsupported register' ].
+	^ result.
+]
+
+{ #category : #converting }
+SAsmX86RegisterInt >> canBeValidByteRegisters [
+	^ (X86MappedRegisters at: value + 1) isNotNil
 ]
 
 { #category : #converting }
 SAsmX86RegisterInt >> dword [
-	^ SAsmX86RegisterAddress new base: self; size: 4
+	^ self isByteRegister ifTrue: [ 
+		self halt.
+	] ifFalse: [ 
+		X86DWordRegisters at: value + 1
+	]
+]
+
+{ #category : #converting }
+SAsmX86RegisterInt >> isByteRegister [
+	^ false
 ]
 
 { #category : #testing }
@@ -46,12 +64,21 @@ SAsmX86RegisterInt >> isRegisterWord [
 
 { #category : #converting }
 SAsmX86RegisterInt >> qword [
-	^ SAsmX86RegisterAddress new base: self; size: 8
+	^ self isByteRegister ifTrue: [ 
+		self halt.
+	] ifFalse: [ 
+		X86QWordRegisters at: value + 1
+	]
+]
+
+{ #category : #converting }
+SAsmX86RegisterInt >> rexByte [
+	^ X86RexByteRegisters at: value + 1
 ]
 
 { #category : #'as yet unclassified' }
 SAsmX86RegisterInt >> withSize: aSize [
-	aSize = 1 ifTrue: [ ^ self byte ].
+	aSize = 1 ifTrue: [ ^ self rexByte ].
 	aSize = 2 ifTrue: [ ^ self word ].
 	aSize = 4 ifTrue: [ ^ self dword ].
 	aSize = 8 ifTrue: [ ^ self qword ].
@@ -61,5 +88,9 @@ SAsmX86RegisterInt >> withSize: aSize [
 
 { #category : #converting }
 SAsmX86RegisterInt >> word [
-	^ SAsmX86RegisterAddress new base: self; size: 2
+	^ self isByteRegister ifTrue: [ 
+		self halt.
+	] ifFalse: [ 
+		X86WordRegisters at: value + 1
+	]
 ]

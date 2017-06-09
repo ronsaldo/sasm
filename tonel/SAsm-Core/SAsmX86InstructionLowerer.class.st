@@ -172,6 +172,51 @@ SAsmX86InstructionLowerer >> emitComparisonInto: result left: left right: right 
 
 ]
 
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> emitIntegerDivisionInto: result dividend: dividend divisor: divisor instruction: x86DivisionInstruction resultRegisterIndex: resultRegisterIndex activeRegisters: activeRegisters [
+	| dividendPhysical divisorPhysical resultPhysical dividendUpperRegister dividendLowerRegister touchedRegisters toSpill resultRegister |
+	self assert: result isRegisterOrRegisterAddress.
+
+	target pointerSize = 4 ifTrue: [
+		dividendUpperRegister := EDX.
+		dividendLowerRegister := EAX.
+		touchedRegisters := { EDX . EAX }
+	] ifFalse: [ 
+		dividendUpperRegister := RDX.
+		dividendLowerRegister := RAX.
+		touchedRegisters := { RDX . RAX }
+	].
+
+	toSpill := activeRegisters select: [:reg | touchedRegisters includes: reg register].
+	self spillRegisters: toSpill.
+
+	dividendPhysical := self virtualToPhysical: result.
+	divisorPhysical := self virtualToPhysical: divisor.
+	(touchedRegisters includes: divisorPhysical) ifTrue: [
+		self assert: (toSpill includes: divisor).
+		divisorPhysical := self virtualRegisterLocationToPhysicalLocation: divisor
+	].
+
+	"Move the dividend"
+	dividendPhysical ~= dividendLowerRegister ifTrue: [ 
+		streamBuilder x86: MOV dst: dividendLowerRegister src: dividendPhysical.
+	].
+	streamBuilder x86: XOR dst: dividendUpperRegister src: dividendUpperRegister.
+	
+	"Perform the division"
+	streamBuilder x86: x86DivisionInstruction with: divisorPhysical.
+	
+	"Fetch the result"
+	resultRegister := resultRegisterIndex = 1 ifTrue: [ dividendLowerRegister ] ifFalse: [ dividendUpperRegister ].
+	resultPhysical := self virtualToPhysical: result.
+	
+	resultRegister ~= resultPhysical ifTrue: [
+		streamBuilder x86: MOV dst: resultPhysical src: resultRegister
+	].
+
+	self unspillRegisters: toSpill.
+]
+
 { #category : #memory }
 SAsmX86InstructionLowerer >> emitLoad: instruction withExtension: extensionInstruction pointerSize: pointerSize [
 	| value pointer resultTemp |
@@ -196,7 +241,16 @@ SAsmX86InstructionLowerer >> emitMove: instruction withExtension: extensionInstr
 		value := self movePhysical: value toScratchRegister: 0
 	].
 
-	streamBuilder x86: extensionInstruction dst: result src: (value withSize: operandSize).
+	(operandSize = 1 and: [target pointerSize ~= 8]) ifTrue: [
+		(value isRegister and: [ value canBeValidByteRegisters not ]) ifTrue: [ 
+			value := self movePhysical: value toScratchRegister: 0
+		].
+		streamBuilder x86: extensionInstruction dst: result src: value byte.
+	] ifFalse: [
+		streamBuilder x86: extensionInstruction dst: result src: (value withSize: operandSize).
+	].
+
+	
 ]
 
 { #category : #'abstract instruction generation' }
@@ -206,7 +260,7 @@ SAsmX86InstructionLowerer >> emitPrologueLoads [
 		arg argumentPassingRegister ifNotNil: [
 			self assert: arg virtualRegisters size = 1.
 			(arg argumentPassingRegister ~= arg virtualRegisters first register) ifTrue: [
-				arg argumentRegisterClass == #integer ifTrue: [ 
+				arg argumentRegisterClass == #integer ifTrue: [
 					streamBuilder x86: MOV dst: (self virtualRegisterLocationToPhysicalLocation: arg virtualRegisters first) src: arg argumentPassingRegister
 				].
 				arg argumentRegisterClass == #float ifTrue: [ 
@@ -219,7 +273,9 @@ SAsmX86InstructionLowerer >> emitPrologueLoads [
 	"Unspill the arguments that are stored in registers during the function duration."
 	stackFrameLayout arguments do: [:arg |
 		arg virtualRegisters do: [ :virtualRegister |
-			self unspillRegister: virtualRegister
+			(arg argumentPassingRegister isNil or: [ arg argumentPassingRegister ~= virtualRegister register ]) ifTrue: [ 
+				self unspillRegister: virtualRegister
+			]
 		]
 	].
 ]
@@ -390,6 +446,11 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 		^ streamBuilder x86: MOV dst: physical src: valuePhysical
 	]
 	
+]
+
+{ #category : #testing }
+SAsmX86InstructionLowerer >> needsToSpillThreeAddressInstruction: tacInstruction [
+	^ tacInstruction operation isIntegerDivision or: [ tacInstruction operation isIntegerRemainder ]
 ]
 
 { #category : #'abstract instruction generation' }
@@ -635,7 +696,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	stackElementSize := target pointerSize.
 	stackArguments reverseDo: [ :arg |
 		streamBuilder x86: PUSH with: (self virtualToPhysical: arg).
-		stackCleanUpSize := (arg isImmediate ifTrue: [target pointerSize] ifFalse: [arg size]) max: stackElementSize
+		stackCleanUpSize := stackCleanUpSize + ((arg isImmediate ifTrue: [target pointerSize] ifFalse: [arg size]) max: stackElementSize)
 	].
 	
 	"Pass some arguments in registers"
@@ -724,6 +785,11 @@ SAsmX86InstructionLowerer >> visitTacCopyInstruction64: instruction [
 SAsmX86InstructionLowerer >> visitTacCopyInstruction: instruction [
 	target pointerSize = 4 ifTrue: [ self visitTacCopyInstruction32: instruction ]
 	ifFalse: [ self visitTacCopyInstruction64: instruction ]
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacDivide: instruction [
+	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: IDIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
 ]
 
 { #category : #visiting }
@@ -895,6 +961,11 @@ SAsmX86InstructionLowerer >> visitTacNotEqual: instruction withBranch: branch [
 			branchTrue: JNE destination: branch trueDestination branchFalse: JE destination: branch falseDestination
 ]
 
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacRemainder: instruction [
+	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: IDIV resultRegisterIndex: 2 activeRegisters: instruction activeRegisters
+]
+
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacReturn: returnInstruction [
 	self returnValue: returnInstruction left valueHigh: returnInstruction right.
@@ -979,8 +1050,13 @@ SAsmX86InstructionLowerer >> visitTacSubtract: instruction [
 ]
 
 { #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacUDivide: instruction [
+	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
+]
+
+{ #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacURemainder: instruction [
-	self flag: 'TODO'
+	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 2 activeRegisters: instruction activeRegisters
 ]
 
 { #category : #casting }

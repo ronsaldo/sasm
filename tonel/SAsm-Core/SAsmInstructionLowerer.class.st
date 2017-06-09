@@ -193,6 +193,11 @@ SAsmInstructionLowerer >> mapVirtualRegister: virtualRegister toSpillLocation: s
 	self flag: 'TODO: add a mapping entry for debugging.'
 ]
 
+{ #category : #testing }
+SAsmInstructionLowerer >> needsToSpillThreeAddressInstruction: tacInstruction [
+	^ false
+]
+
 { #category : #'runtime functions' }
 SAsmInstructionLowerer >> nilGlobalSymbol [
 	^ self runtimeProvidedFunction: #'slvm_nil'
@@ -211,7 +216,7 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 	spillingPoints := OrderedCollection new.
 	function basicBlocks do: [ :bb |
 		bb do: [ :instruction |
-			instruction needsToSpill ifTrue: [ 
+			(instruction needsToSpillWith: self) ifTrue: [ 
 				spillingPoints add: instruction
 			]
 		]

@@ -80,6 +80,12 @@ SAsmModule >> fullPrintOn: aStream [
 	elements do: [ :element | element fullPrintOn: aStream ]
 ]
 
+{ #category : #accessing }
+SAsmModule >> globalNamed: aName [
+	elements do: [ :element | element name = aName ifTrue: [ ^ element ] ].
+	^ nil
+]
+
 { #category : #'gt-inspector-extension' }
 SAsmModule >> gtInspectorItemsIn: composite [
 	<gtInspectorPresentationOrder: 1>

@@ -9,6 +9,11 @@ SAsmTacOperationUDivide >> acceptInstruction: anInstruction with: aVisitor [
 	^ aVisitor visitTacUDivide: anInstruction
 ]
 
+{ #category : #testing }
+SAsmTacOperationUDivide >> isIntegerDivision [
+	^ true
+]
+
 { #category : #printing }
 SAsmTacOperationUDivide >> mnemonic [
 	^ #'udiv'
