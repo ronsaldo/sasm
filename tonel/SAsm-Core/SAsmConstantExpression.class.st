@@ -4,6 +4,16 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #arithmetic }
+SAsmConstantExpression >> + other [
+	^ SAsmConstantExpressionBinaryAdd left: self right: other asSAsmConstantExpression
+]
+
+{ #category : #arithmetic }
+SAsmConstantExpression >> - other [
+	^ SAsmConstantExpressionBinarySubtract left: self right: other asSAsmConstantExpression
+]
+
 { #category : #'as yet unclassified' }
 SAsmConstantExpression >> asSAsmConstantExpression [
 	^ self
@@ -21,6 +31,16 @@ SAsmConstantExpression >> asSAsmStreamElement [
 SAsmConstantExpression >> copyWithStreamBuilder: aStreamBuilder [
 	self subclassResponsibility
 	
+]
+
+{ #category : #'public access' }
+SAsmConstantExpression >> evaluate [
+	^ self subclassResponsibility
+]
+
+{ #category : #'public access' }
+SAsmConstantExpression >> evaluateValue [
+	^ self evaluate
 ]
 
 { #category : #testing }

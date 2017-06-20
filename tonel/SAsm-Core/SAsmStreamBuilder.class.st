@@ -17,6 +17,14 @@ SAsmStreamBuilder >> add: value [
 	^ stream add: value
 ]
 
+{ #category : #constants }
+SAsmStreamBuilder >> addConstantExpressionValue: constantExpression [
+	^ self add: (SAsmConstantExpressionValue new
+		size: constantExpression size;
+		value: constantExpression;
+		yourself)
+]
+
 { #category : #symbols }
 SAsmStreamBuilder >> addPrivateSymbol: name for: anObject [
 	^ (self addSymbol: name for: anObject)
@@ -58,35 +66,36 @@ SAsmStreamBuilder >> bssSection [
 ]
 
 { #category : #constants }
-SAsmStreamBuilder >> constI16: value [
+SAsmStreamBuilder >> const: value size: size [
 	^ self add: (SAsmConstantExpressionValue new
-		size: 2;
+		size: size;
 		value: value asSAsmConstantExpression;
 		yourself).
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> constI16: value [
+	^ self const: value size: 2
 ]
 
 { #category : #constants }
 SAsmStreamBuilder >> constI32: value [
-	^ self add: (SAsmConstantExpressionValue new
-		size: 4;
-		value: value asSAsmConstantExpression;
-		yourself).
+	^ self const: value size: 4
 ]
 
 { #category : #constants }
 SAsmStreamBuilder >> constI64: value [
-	^ self add: (SAsmConstantExpressionValue new
-		size: 8;
-		value: value asSAsmConstantExpression;
-		yourself).
+	^ self const: value size: 8
 ]
 
 { #category : #constants }
 SAsmStreamBuilder >> constI8: value [
-	^ self add: (SAsmConstantExpressionValue new
-		size: 1;
-		value: value asSAsmConstantExpression;
-		yourself).
+	^ self const: value size: 1
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> cstring: aString [
+	^ self addConstantExpressionValue: (SAsmConstantExpressionString new data: aString; hasExtraNullCharacter: true)
 ]
 
 { #category : #sections }
@@ -152,6 +161,11 @@ SAsmStreamBuilder >> rodataSection [
 	]
 ]
 
+{ #category : #constants }
+SAsmStreamBuilder >> sleb128: value [
+	^ self addConstantExpressionValue: (SAsmConstantExpressionConstantIntegerSLEB128 new value: value)
+]
+
 { #category : #sections }
 SAsmStreamBuilder >> startSection: sectionName attributes: aBlock [
 	self currentSectionName = sectionName ifTrue: [ ^ currentSection ].
@@ -168,6 +182,11 @@ SAsmStreamBuilder >> stream [
 { #category : #accessing }
 SAsmStreamBuilder >> stream: anObject [
 	stream := anObject
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> string: aString [
+	^ self addConstantExpressionValue: (SAsmConstantExpressionString new data: aString)
 ]
 
 { #category : #'three address code' }
@@ -475,6 +494,11 @@ SAsmStreamBuilder >> textSection [
 			readable: true;
 			writeable: false
 	]
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> uleb128: value [
+	^ self addConstantExpressionValue: (SAsmConstantExpressionConstantIntegerULEB128 new value: value)
 ]
 
 { #category : #symbols }

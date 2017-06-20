@@ -18,6 +18,11 @@ SAsmConstantExpressionSymbolValue >> evaluate [
 	^ self
 ]
 
+{ #category : #'public access' }
+SAsmConstantExpressionSymbolValue >> evaluateValue [
+	^ symbol positionValue ifNil: [ 0 ]
+]
+
 { #category : #printing }
 SAsmConstantExpressionSymbolValue >> fullPrintOn: aStream [
 	symbol fullPrintOn: aStream
@@ -26,6 +31,11 @@ SAsmConstantExpressionSymbolValue >> fullPrintOn: aStream [
 { #category : #testing }
 SAsmConstantExpressionSymbolValue >> isConstantExpressionSymbolValue [
 	^ true
+]
+
+{ #category : #printing }
+SAsmConstantExpressionSymbolValue >> printOn: aStream [
+	symbol printOn: aStream
 ]
 
 { #category : #accessing }

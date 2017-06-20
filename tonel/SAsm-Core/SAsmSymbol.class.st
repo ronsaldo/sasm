@@ -74,6 +74,11 @@ SAsmSymbol >> name: anObject [
 	name := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmSymbol >> positionValue [
+	^ value
+]
+
 { #category : #accessing }
 SAsmSymbol >> prettyPrintOn: aStream [
 	aStream putIdentifier: self visibilityPrefix; putIdentifier: self validName

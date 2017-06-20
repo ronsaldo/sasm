@@ -6,7 +6,8 @@ Class {
 		'loaded',
 		'executable',
 		'readable',
-		'writeable'
+		'writeable',
+		'debugging'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -14,6 +15,16 @@ Class {
 { #category : #visiting }
 SAsmSection >> accept: aVisitor [
 	^ aVisitor visitSection: self
+]
+
+{ #category : #accessing }
+SAsmSection >> debugging [
+	^ debugging
+]
+
+{ #category : #accessing }
+SAsmSection >> debugging: anObject [
+	debugging := anObject
 ]
 
 { #category : #accessing }

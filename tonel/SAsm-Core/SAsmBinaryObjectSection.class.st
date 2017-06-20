@@ -11,7 +11,8 @@ Class {
 		'executable',
 		'writeable',
 		'loaded',
-		'readable'
+		'readable',
+		'debugging'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -69,6 +70,16 @@ SAsmBinaryObjectSection >> data [
 { #category : #accessing }
 SAsmBinaryObjectSection >> data: anObject [
 	data := anObject
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSection >> debugging [
+	^ debugging
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSection >> debugging: anObject [
+	debugging := anObject
 ]
 
 { #category : #accessing }

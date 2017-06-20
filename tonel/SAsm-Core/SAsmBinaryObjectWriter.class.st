@@ -472,6 +472,7 @@ SAsmBinaryObjectWriter >> visitSection: aSection [
 		attr executable: aSection executable.
 		attr readable: aSection readable.
 		attr writeable: aSection writeable.
+		attr debugging: aSection debugging.
 	].
 
 	aSection

@@ -137,6 +137,11 @@ SAsmImmediateSymbolWithAddend >> isImmediateU8 [
 	^ self isImmediate8
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmImmediateSymbolWithAddend >> positionValue [
+	^ symbol positionValue ifNil: [addend] ifNotNil: [:pos | pos + addend]
+]
+
 { #category : #printing }
 SAsmImmediateSymbolWithAddend >> prettyPrintOn: aStream [
 	symbol prettyPrintOn: aStream.
