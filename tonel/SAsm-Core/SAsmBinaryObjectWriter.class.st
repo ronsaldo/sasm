@@ -466,6 +466,12 @@ SAsmBinaryObjectWriter >> visitLabel: aLabel [
 ]
 
 { #category : #visiting }
+SAsmBinaryObjectWriter >> visitLabelEnd: aLabelEnd [
+	aLabelEnd symbol
+		size: aLabelEnd position - aLabelEnd symbol value
+]
+
+{ #category : #visiting }
 SAsmBinaryObjectWriter >> visitSection: aSection [
 	currentSection := self createSectionNamed: aSection name loaded: aSection loaded attributes: [:attr |
 		attr loaded: aSection loaded.

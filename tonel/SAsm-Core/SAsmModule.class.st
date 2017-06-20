@@ -70,6 +70,14 @@ SAsmModule >> buildFunction: aBlock [
 	^ self build: nil function: aBlock
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmModule >> createDummyFunction [
+	| function |
+	function := SAsmFunction new target: target; callingConventionNamed: #naked.
+	function addBasicBlock: (SAsmBasicBlock new name: #dummy).
+	^ self addElement: function
+]
+
 { #category : #accessing }
 SAsmModule >> elements [
 	^ elements

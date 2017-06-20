@@ -283,6 +283,7 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 		]
 	].
 
+	currentActiveRanges ifNil: [ ^ self ].
 	finalActiveRanges := currentActiveRanges asArray.
 	spillingPoints do: [ :point |
 		point activeRegisters: finalActiveRanges.

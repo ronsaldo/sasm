@@ -88,6 +88,11 @@ SAsmFunction >> cdecl [
 	self callingConvention: target cdeclCallingConvention
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmFunction >> codeSizeExpression [
+	^ SAsmConstantExpressionCodeSize new value: self
+]
+
 { #category : #'linear scan' }
 SAsmFunction >> computeMaxPredecessorIndex [
 	| pendingBlocks block newPredecessorIndex |
@@ -330,6 +335,7 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 		aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
 		instructionLowerer enterFrame.
 		basicBlocks do: [ :bb | bb writeToStream: aStreamBuilder ].
+		aStreamBuilder labelEnd: (aStreamBuilder findSymbolForObject: self).
 		
 		constantZone ifNotNil: [
 			aStreamBuilder rodataSection.

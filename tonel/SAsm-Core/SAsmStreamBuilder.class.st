@@ -137,6 +137,11 @@ SAsmStreamBuilder >> label: aSymbol [
 	self add: (SAsmLabel new symbol: aSymbol)
 ]
 
+{ #category : #symbols }
+SAsmStreamBuilder >> labelEnd: aSymbol [
+	self add: (SAsmLabelEnd new symbol: aSymbol)
+]
+
 { #category : #accessing }
 SAsmStreamBuilder >> localScope [
 	^ localScope
