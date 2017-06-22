@@ -115,6 +115,11 @@ SAsmStreamBuilder >> dataSection [
 	]
 ]
 
+{ #category : #'debug information' }
+SAsmStreamBuilder >> debugSourceLocation: debugInformation [
+	self add: (SAsmDebugLocation new data: debugInformation)
+]
+
 { #category : #symbols }
 SAsmStreamBuilder >> findSymbolForObject: anObject [
 	anObject ifNil: [ ^ nil ].

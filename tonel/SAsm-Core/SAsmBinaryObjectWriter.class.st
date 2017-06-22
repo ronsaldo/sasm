@@ -9,7 +9,8 @@ Class {
 		'symbolList',
 		'symbolSet',
 		'pendingLocalSymbolRelocations',
-		'compilationTarget'
+		'compilationTarget',
+		'debugSourceLocationsList'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -17,6 +18,18 @@ Class {
 { #category : #'as yet unclassified' }
 SAsmBinaryObjectWriter class >> target: aCompilationTarget writeStream: aStream [
 	^ self new target: aCompilationTarget; writeStream: aStream
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> addRelocationAt: offset toSection: targetSection addend: addend [
+	| reloc |
+	reloc := SAsmBinaryObjectSectionRelocation new
+		offset: offset;
+		addend: addend;
+		section: targetSection;
+		yourself.
+	currentSection addRelocation: reloc.
+	^ reloc
 ]
 
 { #category : #initialization }
@@ -86,12 +99,24 @@ SAsmBinaryObjectWriter >> createSectionNamed: name loaded: isLoaded attributes: 
 	^ result
 ]
 
+{ #category : #accessing }
+SAsmBinaryObjectWriter >> currentSectionPosition [
+	^ currentSection data position
+]
+
+{ #category : #generation }
+SAsmBinaryObjectWriter >> generateDebugLines [
+	currentSection := sectionDictionary at: #'.debug_line' ifAbsent: [ ^ self ].
+	self writeDWDebugLines.
+]
+
 { #category : #generation }
 SAsmBinaryObjectWriter >> generateStream: aStream [
 	sectionDictionary := Dictionary new.
 	sectionList := OrderedCollection new.
 	symbolList := OrderedCollection new.
 	symbolSet := Set new.
+	debugSourceLocationsList := OrderedCollection new.
 	
 	aStream target setupBinaryObjectWriter: self.
 	
@@ -109,6 +134,8 @@ SAsmBinaryObjectWriter >> generateStream: aStream [
 		
 		instruction accept: self
 	].
+
+	self postProcessStreamGeneration.
 	
 	sectionList do: [ :section |
 		section size: section currentDataSize.
@@ -337,6 +364,11 @@ SAsmBinaryObjectWriter >> nextPutZeros: size [
 	currentSection nextPutZeros: size
 ]
 
+{ #category : #generation }
+SAsmBinaryObjectWriter >> postProcessStreamGeneration [
+	self generateDebugLines
+]
+
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc16: immediate extraAddend: extraAddend [
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
@@ -421,6 +453,11 @@ SAsmBinaryObjectWriter >> recordImmediateReloc: immediate extraAddend: extraAdde
 ]
 
 { #category : #accessing }
+SAsmBinaryObjectWriter >> target [
+	^ compilationTarget
+]
+
+{ #category : #accessing }
 SAsmBinaryObjectWriter >> target: aCompilationTarget [
 	compilationTarget := aCompilationTarget
 ]
@@ -445,6 +482,11 @@ SAsmBinaryObjectWriter >> visitConstantExpressionValue: aConstantExpressionValue
 { #category : #visiting }
 SAsmBinaryObjectWriter >> visitConstantZeros: zeros [
 	self nextPutZeros: zeros size
+]
+
+{ #category : #visiting }
+SAsmBinaryObjectWriter >> visitDebugSourceLocation: aDebugLocation [
+	debugSourceLocationsList add: aDebugLocation
 ]
 
 { #category : #visiting }
