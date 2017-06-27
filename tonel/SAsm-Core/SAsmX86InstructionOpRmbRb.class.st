@@ -7,11 +7,11 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SAsmX86InstructionOpRmbRb >> canWriteInstruction: anInstruction [
 	^ anInstruction argumentCount = 2
 		and: [ anInstruction first isRegisterOrRegisterAddressI8
-		and: [ anInstruction second isImmediate32 ] ]
+		and: [ anInstruction second isRegisterI8  ] ]
 ]
 
 { #category : #'as yet unclassified' }

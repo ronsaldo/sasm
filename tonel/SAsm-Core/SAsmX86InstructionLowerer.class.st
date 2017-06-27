@@ -1110,6 +1110,7 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate16: instruction [
 		value := self movePhysical: value toScratchRegister: 0
 	].
 
+	value isRegister ifTrue: [ value := value word ].
 	self assert: value isRegisterAddress not.
 	streamBuilder x86: MOV dst: pointer word src: value
 	
@@ -1126,10 +1127,11 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate8: instruction [
 	| value pointer |
 	value := self virtualToPhysical: instruction left.
 	pointer := (self virtualToPhysical: instruction right) asX86PointerOfSize: target pointerSize.
-	value isRegisterAddress ifTrue: [
+	(value isRegisterAddress or: [ value isRegister and: [value canBeValidByteRegisters ]]) ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0
 	].
 
+	value isRegister ifTrue: [ value := value byte ].
 	self assert: value isRegisterAddress not.
 	streamBuilder x86: MOV dst: pointer byte src: value
 	
