@@ -11,6 +11,7 @@ Class {
 		'TacBitNot',
 		'TacBitOr',
 		'TacBitXor',
+		'TacContextReplaceFunction',
 		'TacDivide',
 		'TacEqual',
 		'TacGreater',
@@ -114,8 +115,9 @@ SAsmTacOperations class >> initialize [
 	TacTruncate16 := SAsmTacTruncate16Operation new.
 	TacTruncate32 := SAsmTacTruncate32Operation new.
 	
-	
 	TacAtomicCompareAndSwap := SAsmTacAtomicCompareAndSwap new.
 	TacAtomicFetchAndAdd := SAsmTacAtomicFetchAndAdd new.
 	TacAtomicSwap := SAsmTacAtomicSwap new.
+	
+	TacContextReplaceFunction := SAsmTacContextReplaceFunctionOperation new.
 ]

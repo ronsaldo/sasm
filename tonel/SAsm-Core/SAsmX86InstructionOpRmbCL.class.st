@@ -1,5 +1,5 @@
 Class {
-	#name : #SAsmX86InstructionOpRmbIb,
+	#name : #SAsmX86InstructionOpRmbCL,
 	#superclass : #SAsmX86InstructionTemplateAlternative,
 	#instVars : [
 		'registerOpcode'
@@ -11,31 +11,27 @@ Class {
 }
 
 { #category : #testing }
-SAsmX86InstructionOpRmbIb >> canWriteInstruction: anInstruction [
+SAsmX86InstructionOpRmbCL >> canWriteInstruction: anInstruction [
 	^ anInstruction argumentCount = 2
-		and: [ anInstruction first isRegisterOrRegisterAddressI8
-		and: [ anInstruction second isImmediateS8 ] ]
+		and: [ anInstruction first isRegisterOrRegisterAddressI8 
+		and: [ anInstruction second = CL ] ]
 ]
 
 { #category : #accessing }
-SAsmX86InstructionOpRmbIb >> parameters: extraParameters [
+SAsmX86InstructionOpRmbCL >> parameters: extraParameters [
 	registerOpcode := extraParameters first
 ]
 
 { #category : #writing }
-SAsmX86InstructionOpRmbIb >> writeInstruction: instruction with: writer [
-	| immediate registerAddress operandSize |
+SAsmX86InstructionOpRmbCL >> writeInstruction: instruction with: writer [
+	| registerAddress operandSize |
 	registerAddress := instruction first.
-	immediate := instruction second.
-	self assert: immediate isImmediate.
+	self assert: instruction second = CL.
 	self assert: registerAddress isRegisterOrRegisterAddress.
 	operandSize := registerAddress size.
 	self assert: operandSize = 1.
 	
 	self write: writer rexSize: operandSize rm: registerAddress reg: registerOpcode.
 	writer nextPutAll: opcode.
-	self write: writer modRM: registerAddress opcode: registerOpcode immediate: 1.
-	writer nextPutI8: immediate
-
-	
+	self write: writer modRM: registerAddress reg: registerOpcode
 ]

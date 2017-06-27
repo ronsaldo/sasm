@@ -87,6 +87,11 @@ SAsmCompilationTargetX86 >> elfMachine [
 	^ 3
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86 >> emitNopOfSize: paddingSize with: writer [
+	1 to: paddingSize do: [ :i | writer nextPut: 16r90 ]
+]
+
 { #category : #accessing }
 SAsmCompilationTargetX86 >> framePointerRegister [
 	^ EBP

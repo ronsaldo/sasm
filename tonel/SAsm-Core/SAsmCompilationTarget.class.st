@@ -19,6 +19,16 @@ SAsmCompilationTarget >> defaultCallingConvention [
 	^ self cdeclCallingConvention
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTarget >> emitNopOfSize: paddingSize with: writer [
+	self subclassResponsibility
+]
+
+{ #category : #accessing }
+SAsmCompilationTarget >> functionEntryPointAlignment [
+	^ 16
+]
+
 { #category : #testing }
 SAsmCompilationTarget >> isBigEndian [
 	^ self isLittleEndian not

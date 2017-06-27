@@ -332,7 +332,10 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 		basicBlocks do: [ :bb | bb prepareWriteToStream: aStreamBuilder ].
 		constantZone ifNotNil: [ constantZone prepareWriteToStream: aStreamBuilder ].
 		
-		aStreamBuilder label: (aStreamBuilder findSymbolForObject: self).
+		aStreamBuilder
+			alignCode: target functionEntryPointAlignment;
+			label: (aStreamBuilder findSymbolForObject: self).
+			
 		instructionLowerer enterFrame.
 		basicBlocks do: [ :bb | bb writeToStream: aStreamBuilder ].
 		aStreamBuilder labelEnd: (aStreamBuilder findSymbolForObject: self).

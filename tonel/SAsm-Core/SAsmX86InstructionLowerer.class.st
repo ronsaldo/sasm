@@ -95,6 +95,29 @@ SAsmX86InstructionLowerer >> emitBitwiseInto: result left: left right: right int
 
 ]
 
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> emitBitwiseShiftInto: result value: value amount: amount instruction: instruction [
+	| amountRegister amountPhysical resultPhysical |
+	amountRegister := target pointerSize = 4 ifTrue: [ ECX ] ifFalse: [ RCX ].
+	
+	result ~= value ifTrue: [ 
+		self moveValue: value toRegister: result
+	].
+
+	resultPhysical := self virtualToPhysical: result.
+	amount isImmediate ifTrue: [ 
+		streamBuilder x86: instruction dst: resultPhysical src: (amount value bitAnd: 63)
+	] ifFalse: [ 
+		amountPhysical := self virtualToPhysical: amount.
+		amountPhysical ~= amountRegister ifTrue: [
+			streamBuilder x86: MOV dst: amountRegister src: amountPhysical
+		].
+	
+		streamBuilder x86: instruction dst: resultPhysical src: CL
+	].
+
+]
+
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitComparison: instruction left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination [
 	| rightPhysical rightRegister leftPhysical falseLabel trueLabel |
@@ -174,24 +197,33 @@ SAsmX86InstructionLowerer >> emitComparisonInto: result left: left right: right 
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> emitIntegerDivisionInto: result dividend: dividend divisor: divisor instruction: x86DivisionInstruction resultRegisterIndex: resultRegisterIndex activeRegisters: activeRegisters [
-	| dividendPhysical divisorPhysical resultPhysical dividendUpperRegister dividendLowerRegister touchedRegisters toSpill resultRegister |
+	| dividendPhysical divisorPhysical resultPhysical dividendUpperRegister dividendLowerRegister touchedRegisters toSpill resultRegister divisorRegister |
 	self assert: result isRegisterOrRegisterAddress.
 
 	target pointerSize = 4 ifTrue: [
 		dividendUpperRegister := EDX.
 		dividendLowerRegister := EAX.
+		divisorRegister := ECX.
 		touchedRegisters := { EDX . EAX }
 	] ifFalse: [ 
 		dividendUpperRegister := RDX.
 		dividendLowerRegister := RAX.
+		divisorRegister := RCX.
 		touchedRegisters := { RDX . RAX }
 	].
 
-	toSpill := activeRegisters select: [:reg | touchedRegisters includes: reg register].
+	toSpill := activeRegisters select: [:reg |
+		(reg ~= result or: [reg = dividend or: [reg = divisor]])
+		and: [touchedRegisters includes: reg register]].
 	self spillRegisters: toSpill.
 
-	dividendPhysical := self virtualToPhysical: result.
+	dividendPhysical := self virtualToPhysical: dividend.
 	divisorPhysical := self virtualToPhysical: divisor.
+	divisorPhysical isImmediate ifTrue: [ 
+		streamBuilder x86: MOV dst: divisorRegister src: divisorPhysical.
+		divisorPhysical := divisorRegister
+	].
+
 	(touchedRegisters includes: divisorPhysical) ifTrue: [
 		self assert: (toSpill includes: divisor).
 		divisorPhysical := self virtualRegisterLocationToPhysicalLocation: divisor
@@ -426,6 +458,14 @@ SAsmX86InstructionLowerer >> moveSpilledValue: value toIntegerRegister: register
 ]
 
 { #category : #spilling }
+SAsmX86InstructionLowerer >> moveValue: value toIntegerRegister: register [
+	| valuePhysical |
+	valuePhysical := self virtualToPhysical: value.
+	valuePhysical ~= register ifTrue: [ streamBuilder x86: MOV dst: register src: valuePhysical ]
+
+]
+
+{ #category : #spilling }
 SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 	| physical valuePhysical |
 	physical := self virtualToPhysical: register.
@@ -577,6 +617,11 @@ SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 			integer: ADD float: ADD double: ADD
 ]
 
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacArithmeticShiftRight: instruction [
+	self emitBitwiseShiftInto: instruction result value: instruction left amount: instruction right instruction: SAR
+]
+
 { #category : #'atomic operations' }
 SAsmX86InstructionLowerer >> visitTacAtomicCompareAndSwap: instruction [
 	self halt
@@ -638,6 +683,18 @@ SAsmX86InstructionLowerer >> visitTacBitAnd: instruction [
 			integer: AND float: AND double: AND
 ]
 
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacBitOr: instruction [
+	^ self emitBitwiseInto: instruction result left: instruction left right: instruction right 
+			integer: OR float: OR double: OR
+]
+
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacBitXor: instruction [
+	^ self emitBitwiseInto: instruction result left: instruction left right: instruction right 
+			integer: XOR float: XOR double: XOR
+]
+
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacBranchInstruction: branch [
 	| conditionRegister trueDestination falseDestination |
@@ -661,13 +718,14 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 
 	calledConvention := callInstruction calledConvention.
 	calledRegisters := calledConvention calledRegisters.
+	
 	registersToSpill := callInstruction activeRegisters select: [ :virtualRegister |
 		virtualRegister isVirtualRegister and:
 		[ virtualRegister register isNotNil and:
 		[ (virtualRegister lastUsage ~= callInstruction index or:
 			[ (calledConvention integerArgumentRegisters includes: virtualRegister register) or:
 			  [(calledConvention floatArgumentRegisters includes: virtualRegister register)]]) and: 
-		[ calledRegisters includes: virtualRegister register ] ] ]
+		[ (calledRegisters includes: virtualRegister register) ] ] ]
 	].
 
 	self spillRegisters: registersToSpill.
@@ -706,10 +764,18 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 
 	registerArguments do: [ :arg |
 		(arg isIntegerRegister or: [ arg isImmediate ]) ifTrue: [
-			self moveSpilledValue: arg toIntegerRegister: (calledConvention integerArgumentRegisters at: integerRegisterIndex)
+			(registersToSpill includes: arg) ifTrue: [ 
+				self moveSpilledValue: arg toIntegerRegister: (calledConvention integerArgumentRegisters at: integerRegisterIndex)
+			] ifFalse: [ 
+				self moveValue: arg toIntegerRegister: (calledConvention integerArgumentRegisters at: integerRegisterIndex)
+			]
 		] ifFalse: [
 			(arg isFloatRegister or: [ arg isDoubleFloatRegister ]) ifTrue: [
-				self moveSpilledValue: arg toFloatRegister: (calledConvention floatArgumentRegisters at: floatRegisterIndex)
+				(registersToSpill includes: arg) ifTrue: [ 
+					self moveSpilledValue: arg toFloatRegister: (calledConvention floatArgumentRegisters at: floatRegisterIndex)
+				] ifFalse: [
+					
+				]
 			] ifFalse: [
 				self error: 'Unsupported register argument type.'
 			]
@@ -734,6 +800,22 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 		]
 	]
 	
+]
+
+{ #category : #context }
+SAsmX86InstructionLowerer >> visitTacContextReplaceFunction: instruction [
+	| functionRegister newFunction |
+	"Move the function into a register."
+	newFunction := self virtualToPhysical: instruction left.
+	functionRegister := function callingConvention resultIntRegister.
+	newFunction ~= functionRegister ifTrue: [ streamBuilder x86: MOV dst: functionRegister src: newFunction ].
+	
+	"Leave the frame"
+	self leaveFrame.
+	
+	"Jump into the new function"
+	streamBuilder x86: JMP with: functionRegister
+
 ]
 
 { #category : #memory }
@@ -905,6 +987,16 @@ SAsmX86InstructionLowerer >> visitTacLoadZeroExtend32: instruction [
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacLoadZeroExtend8: instruction [
 	self emitLoad: instruction withExtension: MOVZX pointerSize: 1
+]
+
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacLogicalShiftLeft: instruction [
+	self emitBitwiseShiftInto: instruction result value: instruction left amount: instruction right instruction: SHL
+]
+
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacLogicalShiftRight: instruction [
+	self emitBitwiseShiftInto: instruction result value: instruction left amount: instruction right instruction: SHR
 ]
 
 { #category : #visiting }

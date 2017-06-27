@@ -8,3 +8,8 @@ Class {
 SAsmX86CallingConventionSmalltalkSend >> integerArgumentRegisters [
 	^ { self sendSelectorRegister  }
 ]
+
+{ #category : #accessing }
+SAsmX86CallingConventionSmalltalkSend >> name [
+	^ #smalltalk_send
+]

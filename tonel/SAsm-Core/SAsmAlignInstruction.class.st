@@ -2,7 +2,8 @@ Class {
 	#name : #SAsmAlignInstruction,
 	#superclass : #SAsmStreamElement,
 	#instVars : [
-		'alignment'
+		'alignment',
+		'isCodeAlignment'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -27,9 +28,26 @@ SAsmAlignInstruction >> fullPrintOn: aStream [
 	aStream putKeyword: 'align '; print: alignment
 ]
 
+{ #category : #initialization }
+SAsmAlignInstruction >> initialize [
+	super initialize.
+	alignment := 1.
+	isCodeAlignment := false
+]
+
 { #category : #testing }
 SAsmAlignInstruction >> isAlignInstruction [
 	^ true
+]
+
+{ #category : #accessing }
+SAsmAlignInstruction >> isCodeAlignment [
+	^ isCodeAlignment
+]
+
+{ #category : #accessing }
+SAsmAlignInstruction >> isCodeAlignment: anObject [
+	isCodeAlignment := anObject
 ]
 
 { #category : #accessing }

@@ -88,7 +88,7 @@ SAsmImmediateSymbolWithAddend >> isImmediate64 [
 
 { #category : #accessing }
 SAsmImmediateSymbolWithAddend >> isImmediate8 [
-	^ size = 2
+	^ size = 1
 ]
 
 { #category : #accessing }
@@ -145,13 +145,13 @@ SAsmImmediateSymbolWithAddend >> positionValue [
 { #category : #printing }
 SAsmImmediateSymbolWithAddend >> prettyPrintOn: aStream [
 	symbol prettyPrintOn: aStream.
-	addend ~= 0 ifTrue: [ aStream space; print: addend ]
+	addend ~= 0 ifTrue: [ aStream nextPutAll: ' + '; print: addend ]
 ]
 
 { #category : #printing }
 SAsmImmediateSymbolWithAddend >> printOn: aStream [
 	aStream print: symbol.
-	addend ~= 0 ifTrue: [ aStream space; print: addend ]
+	addend ~= 0 ifTrue: [ aStream nextPutAll: ' + '; print: addend ]
 ]
 
 { #category : #accessing }

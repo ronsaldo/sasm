@@ -49,8 +49,22 @@ SAsmStreamBuilder >> addSymbolCopy: aSymbol [
 
 { #category : #constants }
 SAsmStreamBuilder >> align: alignment [
+	^ self alignData: alignment
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> alignCode: alignment [
 	^ self add: (SAsmAlignInstruction new
 		alignment: alignment;
+		isCodeAlignment: true;
+		yourself).
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> alignData: alignment [
+	^ self add: (SAsmAlignInstruction new
+		alignment: alignment;
+		isCodeAlignment: false;
 		yourself).
 ]
 
@@ -139,12 +153,12 @@ SAsmStreamBuilder >> initialize [
 
 { #category : #symbols }
 SAsmStreamBuilder >> label: aSymbol [
-	self add: (SAsmLabel new symbol: aSymbol)
+	^ self add: (SAsmLabel new symbol: aSymbol)
 ]
 
 { #category : #symbols }
 SAsmStreamBuilder >> labelEnd: aSymbol [
-	self add: (SAsmLabelEnd new symbol: aSymbol)
+	^ self add: (SAsmLabelEnd new symbol: aSymbol)
 ]
 
 { #category : #accessing }
@@ -246,6 +260,11 @@ SAsmStreamBuilder >> tacCall: called arguments: arguments into: result conventio
 		result: (result collect: #asSAsmInstructionOperand);
 		calledConvention: convention;
 		yourself)
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacContextReplaceFunction: newFunction [
+	^ self tacOperation: TacContextReplaceFunction value: newFunction
 ]
 
 { #category : #'three address code' }

@@ -468,7 +468,12 @@ SAsmBinaryObjectWriter >> visitAlignInstruction: alignInstruction [
 	alignment := alignInstruction alignment.
 	currentSection alignment: (currentSection alignment max: alignment).
 	paddingSize := alignInstruction size.
-	self nextPutZeros: paddingSize.
+	alignInstruction isCodeAlignment ifTrue: [ 
+		compilationTarget emitNopOfSize: paddingSize with: self
+	] ifFalse: [ 
+		self nextPutZeros: paddingSize.
+	]
+	
 ]
 
 { #category : #visiting }

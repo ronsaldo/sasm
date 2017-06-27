@@ -41,10 +41,15 @@ Class {
 		'MOVZX',
 		'NEG',
 		'NOT',
+		'OR',
 		'POP',
 		'PUSH',
 		'REP',
 		'RET',
+		'SAL',
+		'SAR',
+		'SHL',
+		'SHR',
 		'SUB',
 		'TEST',
 		'XADD',
@@ -284,6 +289,21 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRmbOp 16rF6 2)
 			(OpRmwOp 16rF7 2)
 		)
+
+		(OR
+			(OpALI8 16r0C)
+			(OpAXIw 16r0D)
+
+			(OpRmbIb 16r80 1)
+			
+			(OpRmwS8 16r83 1)
+			(OpRmwIw 16r81 1)
+			
+			(OpRmbRb 16r08)
+			(OpRmwRw 16r09)
+			(OpRbRmb 16r0A)
+			(OpRwRmw 16r0B)
+		)
 		
 		(POP
 			(OppR 16r58)
@@ -304,6 +324,42 @@ SAsmX86Instructions class >> initializeInstructions [
 		(RET
 			(Op 16rC3 )
 			(OpU16 16rC2)
+		)
+		
+		(SHL
+			(OpRmbI_1 16rD0 4)
+			(OpRmbIb 16rC0 4)
+			(OpRmbCL 16rD2 4)
+			(OpRmwI_1 16rD1 4)
+			(OpRmwIb 16rC1 4)
+			(OpRmwCL 16rD3 4)
+		)
+
+		(SAL
+			(OpRmbI_1 16rD0 4)
+			(OpRmbIb 16rC0 4)
+			(OpRmbCL 16rD2 4)
+			(OpRmwI_1 16rD1 4)
+			(OpRmwIb 16rC1 4)
+			(OpRmwCL 16rD3 4)
+		)
+
+		(SHR
+			(OpRmbI_1 16rD0 5)
+			(OpRmbIb 16rC0 5)
+			(OpRmbCL 16rD2 5)
+			(OpRmwI_1 16rD1 5)
+			(OpRmwIb 16rC1 5)
+			(OpRmwCL 16rD3 5)
+		)
+
+		(SAR
+			(OpRmbI_1 16rD0 7)
+			(OpRmbIb 16rC0 7)
+			(OpRmbCL 16rD2 7)
+			(OpRmwI_1 16rD1 7)
+			(OpRmwIb 16rC1 7)
+			(OpRmwCL 16rD3 7)
 		)
 		
 		(SUB

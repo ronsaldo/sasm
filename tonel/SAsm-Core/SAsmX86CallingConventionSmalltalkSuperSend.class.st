@@ -8,3 +8,8 @@ Class {
 SAsmX86CallingConventionSmalltalkSuperSend >> integerArgumentRegisters [
 	^ { self sendSelectorRegister . self sendLookupBehindRegister }
 ]
+
+{ #category : #accessing }
+SAsmX86CallingConventionSmalltalkSuperSend >> name [
+	^ #smalltalk_supersend
+]
