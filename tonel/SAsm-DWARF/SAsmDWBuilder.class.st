@@ -84,6 +84,11 @@ SAsmDWBuilder >> subprogram: aBlock [
 ]
 
 { #category : #tags }
+SAsmDWBuilder >> subrangeType: aBlock [
+	^ self newDebugInfoEntry: DW_TAG_subrange_type build: aBlock
+]
+
+{ #category : #tags }
 SAsmDWBuilder >> typedef: aBlock [
 	^ self newDebugInfoEntry: DW_TAG_typedef build: aBlock
 ]

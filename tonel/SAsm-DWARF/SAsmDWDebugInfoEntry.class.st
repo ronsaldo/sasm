@@ -315,6 +315,11 @@ SAsmDWDebugInfoEntry >> lowPC: value [
 ]
 
 { #category : #'attributes setters' }
+SAsmDWDebugInfoEntry >> lowerBound: anInteger [
+	^ self addAttribute: DW_AT_lower_bound uleb128: anInteger
+]
+
+{ #category : #'attributes setters' }
 SAsmDWDebugInfoEntry >> name: aName [
 	^ self addAttribute: DW_AT_name string: aName
 ]
@@ -374,6 +379,11 @@ SAsmDWDebugInfoEntry >> tag: anObject [
 { #category : #'attributes setters' }
 SAsmDWDebugInfoEntry >> type: aType [
 	^ self addAttribute: DW_AT_type dieReference: aType
+]
+
+{ #category : #'attributes setters' }
+SAsmDWDebugInfoEntry >> upperBound: anInteger [
+	^ self addAttribute: DW_AT_upper_bound uleb128: anInteger
 ]
 
 { #category : #enumerating }
