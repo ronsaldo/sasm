@@ -18,3 +18,13 @@ SAsmX86RegisterVector >> isDoubleFloatRegister [
 SAsmX86RegisterVector >> isFloatRegister [
 	^ true
 ]
+
+{ #category : #testing }
+SAsmX86RegisterVector >> isRegisterOrRegisterAddressVector128 [
+	^ true
+]
+
+{ #category : #testing }
+SAsmX86RegisterVector >> isRegisterVector128 [
+	^ true
+]

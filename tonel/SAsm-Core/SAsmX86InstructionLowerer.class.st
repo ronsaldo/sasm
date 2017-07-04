@@ -433,8 +433,13 @@ SAsmX86InstructionLowerer >> movePhysical: physicalLocations toRegisters: regist
 
 { #category : #spilling }
 SAsmX86InstructionLowerer >> movePhysical: physicalValue toScratchRegister: scratchIndex [
+	^ self movePhysical: physicalValue toScratchRegister: scratchIndex classOf: physicalValue
+]
+
+{ #category : #spilling }
+SAsmX86InstructionLowerer >> movePhysical: physicalValue toScratchRegister: scratchIndex classOf: registerClassSource [
 	| scratchRegister |
-	scratchRegister := self scratchRegister: scratchIndex for: physicalValue.
+	scratchRegister := self scratchRegister: scratchIndex for: registerClassSource.
 	scratchRegister isVectorRegister ifTrue: [
 		self halt
 	] ifFalse: [ 
@@ -614,7 +619,7 @@ SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister pointerValueScra
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
-			integer: ADD float: ADD double: ADD
+			integer: ADD float: ADDSS double: ADDSD
 ]
 
 { #category : #'bitwise operations' }
@@ -680,19 +685,19 @@ SAsmX86InstructionLowerer >> visitTacAtomicSwap: instruction [
 { #category : #'bitwise operations' }
 SAsmX86InstructionLowerer >> visitTacBitAnd: instruction [
 	^ self emitBitwiseInto: instruction result left: instruction left right: instruction right 
-			integer: AND float: AND double: AND
+			integer: AND float: ANDPS double: ANDPD
 ]
 
 { #category : #'bitwise operations' }
 SAsmX86InstructionLowerer >> visitTacBitOr: instruction [
 	^ self emitBitwiseInto: instruction result left: instruction left right: instruction right 
-			integer: OR float: OR double: OR
+			integer: OR float: ORPS double: ORPD
 ]
 
 { #category : #'bitwise operations' }
 SAsmX86InstructionLowerer >> visitTacBitXor: instruction [
 	^ self emitBitwiseInto: instruction result left: instruction left right: instruction right 
-			integer: XOR float: XOR double: XOR
+			integer: XOR float: XORPS double: XORPD
 ]
 
 { #category : #visiting }
@@ -871,6 +876,10 @@ SAsmX86InstructionLowerer >> visitTacCopyInstruction: instruction [
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacDivide: instruction [
+	instruction result isFloatingPointRegister ifTrue: [ 
+		^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
+			integer: NOP float: DIVSS double: DIVSD
+	].
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: IDIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
 ]
 
@@ -1038,7 +1047,24 @@ SAsmX86InstructionLowerer >> visitTacMultiply: instruction [
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacNegate: instruction [
-	^ self emitArithmeticUnaryInto: instruction result value: instruction left integer: NEG float: NEG double: NEG
+	| resultPhysical result value valuePhysical |
+	result := instruction result.
+	value := instruction left.
+	self assert: result isRegisterOrRegisterAddress.
+
+	value isFloatingPointRegister ifTrue: [
+		resultPhysical := self virtualToPhysical: result.
+		valuePhysical := self virtualToPhysical: value.
+		
+		(valuePhysical = resultPhysical or: [ valuePhysical isRegisterAddress and: [ resultPhysical isRegisterAddress ]]) ifTrue: [ 			valuePhysical := self movePhysical: valuePhysical toScratchRegister: 0 classOf: result
+		].
+		
+		^ streamBuilder
+			x86: XORPD dst: resultPhysical src: resultPhysical;
+			x86: (value isDoubleFloatRegister ifTrue: [ SUBSD ] ifFalse: [ SUBSS ]) dst: resultPhysical src: valuePhysical
+	].
+
+	^ self emitArithmeticUnaryInto: result value: value integer: NEG float: NOP double: NOP
 ]
 
 { #category : #visiting }
@@ -1055,6 +1081,10 @@ SAsmX86InstructionLowerer >> visitTacNotEqual: instruction withBranch: branch [
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacRemainder: instruction [
+	instruction result isFloatingPointRegister ifTrue: [ 
+		self error: 'Floating point remainder not yet implemented'
+	].
+
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: IDIV resultRegisterIndex: 2 activeRegisters: instruction activeRegisters
 ]
 
@@ -1140,16 +1170,24 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate8: instruction [
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacSubtract: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
-			integer: SUB float: SUB double: SUB
+			integer: SUB float: SUBSS double: SUBSD
 ]
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacUDivide: instruction [
+	instruction result isFloatingPointRegister ifTrue: [ 
+		^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
+			integer: NOP float: DIVSS double: DIVSD
+	].
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
 ]
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacURemainder: instruction [
+	instruction result isFloatingPointRegister ifTrue: [
+		self error: 'Floating point remainder not yet implemented'
+	].
+
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 2 activeRegisters: instruction activeRegisters
 ]
 

@@ -176,6 +176,16 @@ SAsmX86RegisterAddress >> isRegisterOrRegisterAddressI8 [
 ]
 
 { #category : #testing }
+SAsmX86RegisterAddress >> isRegisterOrRegisterAddressVector128 [
+	^ size = 16
+]
+
+{ #category : #testing }
+SAsmX86RegisterAddress >> isRegisterOrRegisterAddressVector256 [
+	^ size = 32
+]
+
+{ #category : #testing }
 SAsmX86RegisterAddress >> isRegisterOrRegisterAddressWord [
 	^ self isRegisterOrRegisterAddressI8 not
 ]

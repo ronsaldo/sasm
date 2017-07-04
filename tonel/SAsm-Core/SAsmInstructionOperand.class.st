@@ -25,6 +25,11 @@ SAsmInstructionOperand >> isFloatRegister [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isFloatingPointRegister [
+	^ self isFloatRegister or: [ self isDoubleFloatRegister ]
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isImmediate [
 	^ false
 ]
@@ -125,7 +130,27 @@ SAsmInstructionOperand >> isRegisterOrRegisterAddressI8 [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isRegisterOrRegisterAddressVector128 [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isRegisterOrRegisterAddressVector256 [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isRegisterOrRegisterAddressWord [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isRegisterVector128 [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isRegisterVector256 [
 	^ false
 ]
 

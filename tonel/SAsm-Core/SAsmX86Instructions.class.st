@@ -4,12 +4,42 @@ Class {
 	#classVars : [
 		'ADC',
 		'ADD',
+		'ADDPD',
+		'ADDPS',
+		'ADDSD',
+		'ADDSS',
 		'AND',
+		'ANDNPD',
+		'ANDNPS',
+		'ANDPD',
+		'ANDPS',
 		'CALL',
 		'CLD',
 		'CMP',
+		'CMPPD',
+		'CMPPS',
+		'CMPSD',
+		'CMPSS',
 		'CMPXCHG',
+		'COMISD',
+		'COMISS',
+		'CVTDQ2PD',
+		'CVTDQ2PS',
+		'CVTPD2DQ',
+		'CVTPD2PS',
+		'CVTPS2DQ',
+		'CVTPS2PD',
+		'CVTSD2SI',
+		'CVTSD2SS',
+		'CVTSI2SD',
+		'CVTSI2SS',
+		'CVTSS2SD',
+		'CVTSS2SI',
 		'DIV',
+		'DIVPD',
+		'DIVPS',
+		'DIVSD',
+		'DIVSS',
 		'IDIV',
 		'IMUL',
 		'IRET',
@@ -33,28 +63,57 @@ Class {
 		'LEA',
 		'LOCK',
 		'MOV',
+		'MOVAPD',
+		'MOVAPS',
+		'MOVSD',
+		'MOVSS',
 		'MOVSX',
 		'MOVSXD',
 		'MOVS_B',
 		'MOVS_D',
 		'MOVS_Q',
 		'MOVZX',
+		'MULPD',
+		'MULPS',
+		'MULSD',
+		'MULSS',
 		'NEG',
+		'NOP',
 		'NOT',
 		'OR',
+		'ORPD',
+		'ORPS',
 		'POP',
 		'PUSH',
+		'RCL',
+		'RCR',
 		'REP',
 		'RET',
+		'ROL',
+		'ROR',
 		'SAL',
 		'SAR',
 		'SHL',
 		'SHR',
+		'SHUFPD',
+		'SHUFPS',
+		'SQRTPD',
+		'SQRTPS',
+		'SQRTSD',
+		'SQRTSS',
 		'SUB',
+		'SUBPD',
+		'SUBPS',
+		'SUBSD',
+		'SUBSS',
 		'TEST',
+		'UCOMISD',
+		'UCOMISS',
 		'XADD',
 		'XCHG',
-		'XOR'
+		'XOR',
+		'XORPD',
+		'XORPS'
 	],
 	#category : #'SAsm-Core-X86'
 }
@@ -258,6 +317,16 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRwRmw 16r8B)
 		)
 		
+		(MOVAPD
+			(OpRxRmx (16r0f 16r28) (16r66))
+			(OpRmxRx (16r0f 16r29) (16r66))
+		)
+		
+		(MOVAPS
+			(OpRxRmx (16r0f 16r28))
+			(OpRmxRx (16r0f 16r29))
+		)
+		
 		(MOVSX
 			(OpRwRmb #(16r0F 16rBE))
 			(OpRwRmw #(16r0F 16rBF))
@@ -279,7 +348,7 @@ SAsmX86Instructions class >> initializeInstructions [
 		(MOVS_Q
 			(RexWOp 16rA5)
 		)
-		
+
 		(NEG
 			(OpRmbOp 16rF6 3)
 			(OpRmwOp 16rF7 3)
@@ -288,6 +357,10 @@ SAsmX86Instructions class >> initializeInstructions [
 		(NOT
 			(OpRmbOp 16rF6 2)
 			(OpRmwOp 16rF7 2)
+		)
+		
+		(NOP
+			(Op 16r90)
 		)
 
 		(OR
@@ -324,6 +397,40 @@ SAsmX86Instructions class >> initializeInstructions [
 		(RET
 			(Op 16rC3 )
 			(OpU16 16rC2)
+		)
+
+		(RCL
+			(OpRmbI_1 16rD0 2)
+			(OpRmbIb 16rC0 2)
+			(OpRmbCL 16rD2 2)
+			(OpRmwI_1 16rD1 2)
+			(OpRmwIb 16rC1 2)
+			(OpRmwCL 16rD3 2)
+		)
+		(RCR
+			(OpRmbI_1 16rD0 3)
+			(OpRmbIb 16rC0 3)
+			(OpRmbCL 16rD2 3)
+			(OpRmwI_1 16rD1 3)
+			(OpRmwIb 16rC1 3)
+			(OpRmwCL 16rD3 3)
+		)
+
+		(ROL
+			(OpRmbI_1 16rD0 0)
+			(OpRmbIb 16rC0 0)
+			(OpRmbCL 16rD2 0)
+			(OpRmwI_1 16rD1 0)
+			(OpRmwIb 16rC1 0)
+			(OpRmwCL 16rD3 0)
+		)
+		(ROR
+			(OpRmbI_1 16rD0 1)
+			(OpRmbIb 16rC0 1)
+			(OpRmbCL 16rD2 1)
+			(OpRmwI_1 16rD1 1)
+			(OpRmwIb 16rC1 1)
+			(OpRmwCL 16rD3 1)
 		)
 		
 		(SHL
@@ -419,6 +526,185 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRwRmw 16r33)
 		)
 
+		"SSE instructions"
+		(ADDPD
+			(OpRxRmx (16r0F 16r58) (16r66))
+		)
+		(ADDPS
+			(OpRxRmx (16r0F 16r58))
+		)
+		(ADDSD
+			(OpRxRmx (16r0F 16r58) (16rf2))
+		)
+		(ADDSS
+			(OpRxRmx (16r0F 16r58) (16rf3))
+		)
+
+		(ANDPD
+			(OpRxRmx (16r0F 16r54) (16r66))
+		)
+		(ANDPS
+			(OpRxRmx (16r0F 16r54))
+		)
+
+		(ANDNPD
+			(OpRxRmx (16r0F 16r55) (16r66))
+		)
+		(ANDNPS
+			(OpRxRmx (16r0F 16r55))
+		)
+
+		(CMPPD
+			(OpRxRmxI8 (16r0F 16rC2) (16r66))
+		)
+		(CMPPS
+			(OpRxRmxI8 (16r0F 16rC2))
+		)
+		(CMPSD
+			(OpRxRmxI8 (16r0F 16rC2) (16rF2))
+		)
+		(CMPSS
+			(OpRxRmxI8 (16r0F 16rC2) (16rF3))
+		)
+
+		(COMISD
+			(OpRxRmx (16r0F 16r2F) (16r66))
+		)
+		(COMISS
+			(OpRxRmx (16r0F 16r2F))
+		)
+
+
+		(CVTDQ2PD
+			(OpRxRmx (16r0F 16rE6) (16rF3))
+		)
+		(CVTDQ2PS
+			(OpRxRmx (16r0F 16r5B))
+		)
+		(CVTPD2DQ
+			(OpRxRmx (16r0F 16rE6) (16rF2))
+		)
+		(CVTPD2PS
+			(OpRxRmx (16r0F 16r5A) (16r66))
+		)
+
+		(CVTPS2DQ
+			(OpRxRmx (16r0F 16r5B) (16r66))
+		)
+
+		(CVTPS2PD
+			(OpRxRmx (16r0F 16r5A))
+		)
+
+		(CVTSD2SI
+			(OpRwRmx (16r0F 16r2D) (16rF2))
+		)
+		(CVTSD2SS
+			(OpRxRmx (16r0F 16r5A) (16rF2))
+		)
+		(CVTSI2SD
+			(OpRxRmw (16r0F 16r2A) (16rF2))
+		)
+		(CVTSI2SS
+			(OpRxRmw (16r0F 16r2A) (16rF3))
+		)
+		(CVTSS2SD
+			(OpRxRmx (16r0F 16r5A) (16rF3))
+		)
+		(CVTSS2SI
+			(OpRxRmx (16r0F 16r2D) (16rF3))
+		)
+
+		(DIVPD
+			(OpRxRmx (16r0F 16r5e) (16r66))
+		)
+		(DIVPS
+			(OpRxRmx (16r0F 16r5e))
+		)
+		(DIVSD
+			(OpRxRmx (16r0F 16r5e) (16rf2))
+		)
+		(DIVSS
+			(OpRxRmx (16r0F 16r5e) (16rf3))
+		)
+		
+		(MOVSD
+			(OpRxRmx (16r0f 16r10) (16rf2))
+			(OpRmxRx (16r0f 16r11) (16rf2))
+		)
+		
+		(MOVSS
+			(OpRxRmx (16r0f 16r10) (16rf3))
+			(OpRmxRx (16r0f 16r11) (16rf3))
+		)
+
+		(MULPD
+			(OpRxRmx (16r0F 16r59) (16r66))
+		)
+		(MULPS
+			(OpRxRmx (16r0F 16r59))
+		)
+		(MULSD
+			(OpRxRmx (16r0F 16r59) (16rf2))
+		)
+		(MULSS
+			(OpRxRmx (16r0F 16r59) (16rf3))
+		)
+
+		(ORPD
+			(OpRxRmx (16r0F 16r56) (16r66))
+		)
+		(ORPS
+			(OpRxRmx (16r0F 16r56))
+		)
+		
+		(SHUFPD
+			(OpRxRmxI8 (16r0f 16rc6) (16r66))
+		)
+		(SHUFPS
+			(OpRxRmxI8 (16r0f 16rc6))
+		)
+
+		(SQRTPD
+			(OpRxRmx (16r0F 16r51) (16r66))
+		)
+		(SQRTPS
+			(OpRxRmx (16r0F 16r51))
+		)
+		(SQRTSD
+			(OpRxRmx (16r0F 16r51) (16rf2))
+		)
+		(SQRTSS
+			(OpRxRmx (16r0F 16r51) (16rf3))
+		)
+
+		(SUBPD
+			(OpRxRmx (16r0F 16r5c) (16r66))
+		)
+		(SUBPS
+			(OpRxRmx (16r0F 16r5c))
+		)
+		(SUBSD
+			(OpRxRmx (16r0F 16r5c) (16rf2))
+		)
+		(SUBSS
+			(OpRxRmx (16r0F 16r5c) (16rf3))
+		)
+
+		(UCOMISD
+			(OpRxRmx (16r0F 16r2E) (16r66))
+		)
+		(UCOMISS
+			(OpRxRmx (16r0F 16r2E))
+		)
+		
+		(XORPD
+			(OpRxRmx (16r0F 16r57) (16r66))
+		)
+		(XORPS
+			(OpRxRmx (16r0F 16r57))
+		)
+		
 	)
 ]
 

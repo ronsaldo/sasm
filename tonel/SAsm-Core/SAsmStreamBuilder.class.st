@@ -579,8 +579,18 @@ SAsmStreamBuilder >> x86: operation dst: operand1 src: operand2 [
 ]
 
 { #category : #x86 }
+SAsmStreamBuilder >> x86: operation dst: operand1 src: operand2 with: operand3 [
+	^ self x86: operation with: operand1 with: operand2 with: operand3
+]
+
+{ #category : #x86 }
 SAsmStreamBuilder >> x86: operation src: operand1 dst: operand2 [
 	^ self x86: operation with: operand2 with: operand1
+]
+
+{ #category : #x86 }
+SAsmStreamBuilder >> x86: operation src: operand1 dst: operand2 with: operand3 [
+	^ self x86: operation with: operand2 with: operand1 with: operand3
 ]
 
 { #category : #x86 }
