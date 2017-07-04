@@ -219,6 +219,11 @@ SAsmStreamBuilder >> tacAdd: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacArithmeticShiftRight: left with: right into: result [
+	^ self tacOperation: TacArithmeticShiftRight  result: result left: left right: right
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacAtomicCompareAndSwap: left with: right into: result [
 	^ self tacOperation: TacAtomicCompareAndSwap result: result left: left right: right
 ]
@@ -234,8 +239,23 @@ SAsmStreamBuilder >> tacAtomicSwap: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacBitAnd: left with: right into: result [
+	^ self tacOperation: TacBitAnd result: result left: left right: right
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacBitNot: value into: result [
 	^ self tacOperation: TacBitNot result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacBitOr: left with: right into: result [
+	^ self tacOperation: TacBitOr result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacBitXor: left with: right into: result [
+	^ self tacOperation: TacBitXor result: result left: left right: right
 ]
 
 { #category : #'three address code' }
@@ -372,6 +392,16 @@ SAsmStreamBuilder >> tacLoadZeroExtend32: pointer into: result [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacLoadZeroExtend8: pointer into: result [
 	^ self tacOperation: TacLoadZeroExtend8 result: result value: pointer
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLogicalShiftLeft: left with: right into: result [
+	^ self tacOperation: TacLogicalShiftLeft result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacLogicalShiftRight: left with: right into: result [
+	^ self tacOperation: TacLogicalShiftRight  result: result left: left right: right
 ]
 
 { #category : #'three address code' }

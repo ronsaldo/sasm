@@ -6,7 +6,7 @@ Class {
 
 { #category : #visiting }
 SAsmTacLoadSignExtend16Operation >> acceptInstruction: anInstruction with: aVisitor [
-	^ aVisitor visitTacLoadSignExtent16: anInstruction
+	^ aVisitor visitTacLoadSignExtend16: anInstruction
 ]
 
 { #category : #printing }
