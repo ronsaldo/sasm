@@ -256,6 +256,67 @@ SAsmExamples class >> exampleX86_64Ret0 [
 	
 ]
 
+{ #category : #'x86 64 examples' }
+SAsmExamples class >> exampleX86_64SSE [
+	<example>
+	| module entry function |
+	module := SAsmModule x86_64.
+	function := module build: #main function: [ :functionBuilder |
+		functionBuilder naked.
+		entry := functionBuilder basicBlock: #entry build: [ :asm |
+			asm
+				x86: MOVAPD dst: XMM0 src: XMM15;
+				x86: MOVAPS dst: XMM1 src: XMM14;
+				x86: MOVSD dst: XMM2 src: XMM13;
+				x86: MOVSS dst: XMM3 src: XMM12;
+
+				x86: ADDPD dst: XMM0 src: XMM15;
+				x86: ADDPS dst: XMM1 src: XMM14;
+				x86: ADDSD dst: XMM2 src: XMM13;
+				x86: ADDSS dst: XMM3 src: XMM12;
+
+				x86: SUBPD dst: XMM0 src: XMM15;
+				x86: SUBPS dst: XMM1 src: XMM14;
+				x86: SUBSD dst: XMM2 src: XMM13;
+				x86: SUBSS dst: XMM3 src: XMM12;
+
+				x86: MULPD dst: XMM0 src: XMM15;
+				x86: MULPS dst: XMM1 src: XMM14;
+				x86: MULSD dst: XMM2 src: XMM13;
+				x86: MULSS dst: XMM3 src: XMM12;
+
+				x86: DIVPD dst: XMM0 src: XMM15;
+				x86: DIVPS dst: XMM1 src: XMM14;
+				x86: DIVSD dst: XMM2 src: XMM13;
+				x86: DIVSS dst: XMM3 src: XMM12;
+
+				x86: SQRTPD dst: XMM0 src: XMM15;
+				x86: SQRTPS dst: XMM1 src: XMM14;
+				x86: SQRTSD dst: XMM2 src: XMM13;
+				x86: SQRTSS dst: XMM3 src: XMM12;
+
+				x86: ANDPD dst: XMM2 src: XMM13;
+				x86: ANDPS dst: XMM3 src: XMM12;
+
+				x86: ANDNPD dst: XMM2 src: XMM13;
+				x86: ANDNPS dst: XMM3 src: XMM12;
+
+				x86: ORPD dst: XMM2 src: XMM13;
+				x86: ORPS dst: XMM3 src: XMM12;
+
+				x86: XORPD dst: XMM2 src: XMM13;
+				x86: XORPS dst: XMM3 src: XMM12;
+
+				x86: SHUFPD dst: XMM0 src: XMM15 with: 16r77;
+				x86: SHUFPS dst: XMM1 src: XMM14 with: 16r77;
+
+				x86: RET
+		]
+	].
+	module inspect
+	
+]
+
 { #category : #'see class side' }
 SAsmExamples >> seeClassSide [
 ]
