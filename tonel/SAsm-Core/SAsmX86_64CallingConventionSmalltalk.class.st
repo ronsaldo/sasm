@@ -46,3 +46,8 @@ SAsmX86_64CallingConventionSmalltalk >> isStackCleanedByCaller [
 SAsmX86_64CallingConventionSmalltalk >> name [
 	^ #smalltalk
 ]
+
+{ #category : #stack }
+SAsmX86_64CallingConventionSmalltalk >> stackAlignment [
+	^ 16
+]

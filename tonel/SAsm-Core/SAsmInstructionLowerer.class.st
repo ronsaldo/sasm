@@ -100,6 +100,7 @@ SAsmInstructionLowerer >> buildStackFrameLayout [
 	callingConvention := function callingConvention.
 	pointerSize := target pointerSize.
 	stackFrameLayout
+		stackAlignment: callingConvention stackAlignment;
 		argumentsBaseOffset: 2 * pointerSize;
 		localsBaseOffset: 2 * pointerSize;
 		addLocalReservedSpace: 2 * pointerSize "Return pointer + frame pointer".

@@ -12,7 +12,9 @@ Class {
 		'argumentsSize',
 		'dynamicRootCount',
 		'reservedLocalsSpace',
-		'optimizedLocalVariables'
+		'optimizedLocalVariables',
+		'stackAlignment',
+		'argumentsAlignment'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -50,12 +52,14 @@ SAsmStackFrameLayout >> argumentsSize [
 { #category : #'as yet unclassified' }
 SAsmStackFrameLayout >> buildArgumentLayout [
 	argumentsSize := 0.
+	argumentsAlignment := stackAlignment.
 	arguments select: [:arg | arg argumentPassingRegister isNil] thenDo: [ :var |
+		argumentsAlignment := argumentsAlignment max: var alignment.
 		argumentsSize := argumentsSize alignedTo: var alignment.
 		var offset: argumentsSize + argumentsBaseOffset.
 		argumentsSize := argumentsSize + var size.
 	].
-
+	argumentsSize := argumentsSize alignedTo: argumentsAlignment
 ]
 
 { #category : #'as yet unclassified' }
@@ -75,7 +79,7 @@ SAsmStackFrameLayout >> buildLocalLayout [
 		]
 	].
 
-	alignment := 1.
+	alignment := stackAlignment.
 	size := reservedLocalsSpace.
 	dynamicRootCount := 0.
 	optimizedLocalVariables do: [ :var |
@@ -89,6 +93,7 @@ SAsmStackFrameLayout >> buildLocalLayout [
 		var offset: (size - localsBaseOffset) negated.
 	].
 
+	size := size alignedTo: stackAlignment.
 	(dynamicRootCount > 0 and: [dynamicRootCount ~= localVariables size ]) ifTrue: [
 		"TODO: Ensure the dynamic roots come first"
 		self halt.
@@ -219,4 +224,14 @@ SAsmStackFrameLayout >> reservedLocalsSpace: anObject [
 { #category : #accessing }
 SAsmStackFrameLayout >> size [
 	^ size
+]
+
+{ #category : #accessing }
+SAsmStackFrameLayout >> stackAlignment [
+	^ stackAlignment
+]
+
+{ #category : #accessing }
+SAsmStackFrameLayout >> stackAlignment: anObject [
+	stackAlignment := anObject
 ]

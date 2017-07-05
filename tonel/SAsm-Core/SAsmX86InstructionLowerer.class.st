@@ -11,6 +11,11 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
+{ #category : #'procedure call' }
+SAsmX86InstructionLowerer >> alignmentOfValuePushedToTheStack: value calledConvention: calledConvention [
+	^ (value isImmediate ifTrue: [target pointerSize] ifFalse: [value alignment]) max: calledConvention stackArgumentAlignment
+]
+
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> compiledMethodMetaData [
 	self flag: 'Implement myself'.
@@ -498,6 +503,11 @@ SAsmX86InstructionLowerer >> needsToSpillThreeAddressInstruction: tacInstruction
 	^ tacInstruction operation isIntegerDivision or: [ tacInstruction operation isIntegerRemainder ]
 ]
 
+{ #category : #'procedure call' }
+SAsmX86InstructionLowerer >> pushValueToTheStack: value [
+	streamBuilder x86: PUSH with: (self virtualToPhysical: value).
+]
+
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> returnValue: value [
 	value ifNil: [ ^ self ].
@@ -518,6 +528,11 @@ SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 { #category : #spilling }
 SAsmX86InstructionLowerer >> scratchRegister: scratchIndex for: value [
 	^ (scratchRegisterClases at: value registerClass)  at: scratchIndex + 1
+]
+
+{ #category : #'procedure call' }
+SAsmX86InstructionLowerer >> sizeOfValuePushedToTheStack: value calledConvention: calledConvention [
+	^ (value isImmediate ifTrue: [target pointerSize] ifFalse: [value size]) max: calledConvention stackArgumentAlignment
 ]
 
 { #category : #spilling }
@@ -717,9 +732,9 @@ SAsmX86InstructionLowerer >> visitTacBranchInstruction: branch [
 		x86: JMP with: trueDestination.
 ]
 
-{ #category : #visiting }
+{ #category : #'procedure call' }
 SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
-	| calledFunction calledConvention calledRegisters registersToSpill stackCleanUpSize stackElementSize registerArguments stackArguments remainingIntegerRegisters remainingFloatRegisters integerRegisterIndex floatRegisterIndex resultPhysical |
+	| calledFunction calledConvention calledRegisters registersToSpill stackCleanUpSize registerArguments stackArguments remainingIntegerRegisters remainingFloatRegisters integerRegisterIndex floatRegisterIndex resultPhysical stackPushedSize stackPaddingSize stackArgumentsPadding |
 
 	calledConvention := callInstruction calledConvention.
 	calledRegisters := calledConvention calledRegisters.
@@ -754,12 +769,33 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 		]
 	].
 
+	"Compute the size of the arguments passed in the stack."	
+	stackPushedSize := 0.
+	stackArgumentsPadding := stackArguments collect: [ :arg |
+		| oldSize padding |
+		oldSize := stackPushedSize.
+		stackPushedSize := stackPushedSize alignedTo: (self alignmentOfValuePushedToTheStack: arg calledConvention: calledConvention).
+
+		padding := stackPushedSize - oldSize.
+		stackPushedSize := stackPushedSize + (self sizeOfValuePushedToTheStack: arg calledConvention: calledConvention).
+		padding.
+	].
+
+	stackCleanUpSize := stackPushedSize alignedTo: calledConvention stackAlignment.
+	stackPaddingSize := stackCleanUpSize - stackPushedSize.
+	stackPaddingSize ~= 0 ifTrue: [
+		streamBuilder x86: SUB dst: target stackPointerRegister src: stackPaddingSize
+	].
+
 	"Pass arguments in the stack."	
-	stackCleanUpSize := 0.
-	stackElementSize := target pointerSize.
-	stackArguments reverseDo: [ :arg |
-		streamBuilder x86: PUSH with: (self virtualToPhysical: arg).
-		stackCleanUpSize := stackCleanUpSize + ((arg isImmediate ifTrue: [target pointerSize] ifFalse: [arg size]) max: stackElementSize)
+	stackArguments size to: 1 by: -1 do: [ :index |
+		| arg padding |
+		arg := stackArguments at: index.
+		padding := stackArgumentsPadding at: index.
+		padding ~= 0 ifTrue: [ 
+			streamBuilder x86: SUB dst: target stackPointerRegister src: padding
+		].
+		self pushValueToTheStack: arg
 	].
 	
 	"Pass some arguments in registers"

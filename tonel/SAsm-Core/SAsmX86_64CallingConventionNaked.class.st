@@ -13,3 +13,8 @@ SAsmX86_64CallingConventionNaked >> isNaked [
 SAsmX86_64CallingConventionNaked >> name [
 	^ #naked
 ]
+
+{ #category : #stack }
+SAsmX86_64CallingConventionNaked >> stackAlignment [
+	^ 1
+]
