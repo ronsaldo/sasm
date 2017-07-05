@@ -140,7 +140,15 @@ SAsmCompilationTargetX86_64 >> elfMachine [
 
 { #category : #'as yet unclassified' }
 SAsmCompilationTargetX86_64 >> emitNopOfSize: paddingSize with: writer [
-	1 to: paddingSize do: [ :i | writer nextPut: 16r90 ]
+	| remainingSize pattern |
+	remainingSize := paddingSize.
+	[remainingSize > 0] whileTrue: [
+		pattern := NopFillPattern32_Intel at: (remainingSize min: NopFillPattern32_Intel size).
+		writer nextPutAll: pattern.
+		remainingSize := remainingSize - pattern size
+	].
+
+	"1 to: paddingSize do: [ :i | writer nextPut: 16r90 ]"
 ]
 
 { #category : #accessing }
