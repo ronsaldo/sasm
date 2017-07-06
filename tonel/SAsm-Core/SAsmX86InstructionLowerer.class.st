@@ -833,11 +833,13 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	self unspillRegisters: registersToSpill.
 	
 	callInstruction result doWithIndex: [ :result :index |
-		resultPhysical := self virtualToPhysical: result.
-		result isIntegerRegister ifTrue: [
-			streamBuilder x86: MOV dst: resultPhysical src: (index = 1 ifTrue: [calledConvention resultIntRegister] ifFalse: [ calledConvention resultInt2Register ])
-		] ifFalse: [
-			self halt
+		(result firstUsage ~= callInstruction index or: [ result lastUsage ~= callInstruction index]) ifTrue: [ 
+			resultPhysical := self virtualToPhysical: result.
+			result isIntegerRegister ifTrue: [
+				streamBuilder x86: MOV dst: resultPhysical src: (index = 1 ifTrue: [calledConvention resultIntRegister] ifFalse: [ calledConvention resultInt2Register ])
+			] ifFalse: [
+				self halt
+			]
 		]
 	]
 	
@@ -990,15 +992,39 @@ SAsmX86InstructionLowerer >> visitTacLessOrEqual: instruction withBranch: branch
 
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacLoad: instruction [
-	| value pointer |
+	| value pointer valueTemp |
 	value := self virtualToPhysical: instruction result.
 	pointer := self virtualToPhysical: instruction left pointerOfSize: target pointerSize scratchIndex: 0.
 	(value isRegisterAddress and: [ pointer isRegisterAddress ]) ifTrue: [ 
-		pointer := (self movePhysical: pointer toScratchRegister: 0) asX86PointerOfSize: target pointerSize
-	].
+		valueTemp := self scratchRegister: 0 for: value.
+		streamBuilder
+			x86: MOV dst: valueTemp src: pointer;
+			x86: MOV dst: value src: valueTemp
+	] ifFalse: [ 
+		self assert: value isRegisterOrRegisterAddressWord.
+		streamBuilder x86: MOV dst: value src: pointer
+	]
 
-	self assert: value isRegisterOrRegisterAddressWord.
-	streamBuilder x86: MOV dst: value src: pointer
+	
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacLoadLocalAddress: instruction [
+	| result variable scratch |
+	result := self virtualToPhysical: instruction result.
+	variable := self virtualToPhysical: instruction left.
+	self assert: variable isRegisterAddress.
+	
+	result isRegisterAddress ifTrue: [ 
+		scratch := self scratchRegister: 0 for: instruction result.
+		streamBuilder
+			x86: LEA dst: scratch src: variable;
+			x86: MOV dst: result src: scratch
+	] ifFalse: [ 
+		streamBuilder x86: LEA dst: result src: variable
+	]
+	
+	
 	
 ]
 
@@ -1157,7 +1183,7 @@ SAsmX86InstructionLowerer >> visitTacSignExtend8: instruction [
 SAsmX86InstructionLowerer >> visitTacStore: instruction [
 	| value pointer |
 	value := self virtualToPhysical: instruction left.
-	pointer := (self virtualToPhysical: instruction right) asX86PointerOfSize: target pointerSize.
+	pointer := self virtualToPhysical: instruction right pointerOfSize: target pointerSize scratchIndex: 1.
 	value isRegisterAddress ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0
 	].
@@ -1171,7 +1197,7 @@ SAsmX86InstructionLowerer >> visitTacStore: instruction [
 SAsmX86InstructionLowerer >> visitTacStoreTruncate16: instruction [
 	| value pointer |
 	value := self virtualToPhysical: instruction left.
-	pointer := (self virtualToPhysical: instruction right) asX86PointerOfSize: target pointerSize.
+	pointer := self virtualToPhysical: instruction right pointerOfSize: 2 scratchIndex: 1.
 	value isRegisterAddress ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0
 	].
@@ -1184,16 +1210,27 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate16: instruction [
 
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacStoreTruncate32: instruction [
+	| value pointer |
 	target pointerSize = 4 ifTrue: [ ^ self visitTacStore: instruction ].
-	self halt.
+
+	value := self virtualToPhysical: instruction left.
+	pointer := self virtualToPhysical: instruction right pointerOfSize: 4 scratchIndex: 1.
+	value isRegisterAddress ifTrue: [
+		value := self movePhysical: value toScratchRegister: 0
+	].
+
+	value isRegister ifTrue: [ value := value dword ].
+	self assert: value isRegisterAddress not.
+	streamBuilder x86: MOV dst: pointer word src: value
+
 ]
 
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacStoreTruncate8: instruction [
 	| value pointer |
 	value := self virtualToPhysical: instruction left.
-	pointer := (self virtualToPhysical: instruction right) asX86PointerOfSize: target pointerSize.
-	(value isRegisterAddress or: [ value isRegister and: [value canBeValidByteRegisters ]]) ifTrue: [
+	pointer := self virtualToPhysical: instruction right pointerOfSize: 1 scratchIndex: 1.
+	(value isRegisterAddress or: [ value isRegister and: [value canBeValidByteRegisters not ]]) ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0
 	].
 

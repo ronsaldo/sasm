@@ -21,6 +21,7 @@ Class {
 		'TacLoad',
 		'TacLoadDouble',
 		'TacLoadFloat',
+		'TacLoadLocalAddress',
 		'TacLoadSignExtend16',
 		'TacLoadSignExtend32',
 		'TacLoadSignExtend8',
@@ -79,6 +80,7 @@ SAsmTacOperations class >> initialize [
 	TacArithmeticShiftRight := SAsmTacArithmeticShiftRight new.
 		
 	TacMove := SAsmTacMoveOperation new.
+	TacLoadLocalAddress := SAsmTacLoadLocalAddress new.
 	TacReturn := SAsmTacReturnOperation new.
 
 	TacEqual := SAsmTacComparisonOperationEqual new.

@@ -10,7 +10,8 @@ Class {
 		'stackFrameLayout',
 		'constantZone',
 		'constantZoneBuilder',
-		'contextMetaData'
+		'contextMetaData',
+		'debugSourceLocation'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -146,6 +147,16 @@ SAsmFunction >> contextMetaData [
 { #category : #accessing }
 SAsmFunction >> contextMetaData: anObject [
 	contextMetaData := anObject
+]
+
+{ #category : #accessing }
+SAsmFunction >> debugSourceLocation [
+	^ debugSourceLocation
+]
+
+{ #category : #accessing }
+SAsmFunction >> debugSourceLocation: anObject [
+	debugSourceLocation := anObject
 ]
 
 { #category : #'linear scan' }
@@ -333,7 +344,11 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 		constantZone ifNotNil: [ constantZone prepareWriteToStream: aStreamBuilder ].
 		
 		aStreamBuilder
-			alignCode: target functionEntryPointAlignment;
+			alignCode: target functionEntryPointAlignment.
+		debugSourceLocation ifNotNil: [ 
+			aStreamBuilder debugSourceLocation: debugSourceLocation
+		].
+		aStreamBuilder
 			label: (aStreamBuilder findSymbolForObject: self).
 			
 		instructionLowerer enterFrame.

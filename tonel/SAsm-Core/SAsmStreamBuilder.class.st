@@ -365,6 +365,11 @@ SAsmStreamBuilder >> tacLoadFloat: pointer into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacLoadLocalAddress: variable into: destination [
+	^ self tacOperation: TacLoadLocalAddress result: destination value: variable
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacLoadSignExtend16: pointer into: result [
 	^ self tacOperation: TacLoadSignExtend16 result: result value: pointer
 ]
