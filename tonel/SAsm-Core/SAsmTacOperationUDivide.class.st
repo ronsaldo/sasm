@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmTacOperationUDivide,
-	#superclass : #SAsmTacArithmeticOperation,
+	#superclass : #SAsmTacIntegerArithmeticOperation,
 	#category : #'SAsm-Core-TAC'
 }
 

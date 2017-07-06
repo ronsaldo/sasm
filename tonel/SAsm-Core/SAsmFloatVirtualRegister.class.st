@@ -11,6 +11,11 @@ SAsmFloatVirtualRegister >> isDoubleFloatRegister [
 
 { #category : #testing }
 SAsmFloatVirtualRegister >> isFloatRegister [
+	^ size = 4
+]
+
+{ #category : #testing }
+SAsmFloatVirtualRegister >> isFloatingPointRegister [
 	^ true
 ]
 

@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmDebugLocation,
-	#superclass : #SAsmStreamElement,
+	#superclass : #SAsmDebugInstruction,
 	#instVars : [
 		'data'
 	],

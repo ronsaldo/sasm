@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmTacOperationSubtract,
-	#superclass : #SAsmTacArithmeticOperation,
+	#superclass : #SAsmTacIntegerArithmeticOperation,
 	#category : #'SAsm-Core-TAC'
 }
 

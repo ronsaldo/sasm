@@ -77,6 +77,11 @@ SAsmStreamElement >> isConstantZeros [
 ]
 
 { #category : #testing }
+SAsmStreamElement >> isDebugInstruction [
+	^ false
+]
+
+{ #category : #testing }
 SAsmStreamElement >> isInstruction [
 	^ false
 ]
@@ -113,6 +118,16 @@ SAsmStreamElement >> next [
 { #category : #accessing }
 SAsmStreamElement >> next: anObject [
 	next := anObject
+]
+
+{ #category : #accessing }
+SAsmStreamElement >> nonDebugNext [
+	| currentNode |
+	currentNode := self next.
+	[currentNode isNotNil and: [ currentNode isDebugInstruction ]] whileTrue: [ 
+		currentNode := currentNode next
+	].
+	^ currentNode
 ]
 
 { #category : #accessing }

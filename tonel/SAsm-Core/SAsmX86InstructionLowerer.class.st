@@ -22,8 +22,8 @@ SAsmX86InstructionLowerer >> compiledMethodMetaData [
 	^ 0
 ]
 
-{ #category : #'abstract instruction generation' }
-SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right integer: integerInstruction float: floatInstruction double: doubleInstruction [
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right float: floatInstruction double: doubleInstruction [
 	| resultPhysical rightPhysical rightRegister |
 	self assert: result isRegisterOrRegisterAddress.
 
@@ -38,9 +38,6 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
 	].
 
-	result isIntegerRegister ifTrue: [
-		streamBuilder x86: integerInstruction with: resultPhysical with: rightRegister.
-	].
 	result isDoubleFloatRegister ifTrue: [
 		streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister.
 	].
@@ -50,8 +47,47 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 
 ]
 
-{ #category : #'abstract instruction generation' }
-SAsmX86InstructionLowerer >> emitArithmeticUnaryInto: result value: value integer: integerInstruction float: floatInstruction double: doubleInstruction [
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right integer: integerInstruction [
+	| resultPhysical rightPhysical rightRegister |
+	self assert: result isRegisterOrRegisterAddress.
+
+	left ~= result ifTrue: [
+		self moveValue: left toRegister: result.
+	].
+
+	resultPhysical := self virtualToPhysical: result.
+	rightPhysical := self virtualToPhysical: right.
+	rightRegister := rightPhysical.
+	(resultPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
+		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
+	].
+
+	streamBuilder x86: integerInstruction with: resultPhysical with: rightRegister.
+
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> emitArithmeticUnaryInto: result value: value float: floatInstruction double: doubleInstruction [
+	| resultPhysical |
+	self assert: result isRegisterOrRegisterAddress.
+
+	value ~= result ifTrue: [
+		self moveValue: value toRegister: result.
+	].
+	resultPhysical := self virtualToPhysical: result.
+
+	result isDoubleFloatRegister ifTrue: [
+		streamBuilder x86: resultPhysical with: doubleInstruction
+	].
+	result isFloatRegister ifTrue: [ 
+		streamBuilder x86: resultPhysical with: floatInstruction
+	]
+
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> emitArithmeticUnaryInto: result value: value integer: integerInstruction [
 	| resultPhysical |
 	self assert: result isRegisterOrRegisterAddress.
 
@@ -63,12 +99,6 @@ SAsmX86InstructionLowerer >> emitArithmeticUnaryInto: result value: value intege
 	result isIntegerRegister ifTrue: [
 		streamBuilder x86: integerInstruction with: resultPhysical
 	].
-	result isDoubleFloatRegister ifTrue: [
-		self halt
-	].
-	result isFloatRegister ifTrue: [ 
-		self halt
-	]
 
 ]
 
@@ -124,7 +154,39 @@ SAsmX86InstructionLowerer >> emitBitwiseShiftInto: result value: value amount: a
 ]
 
 { #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitComparison: comparisonInstruction into: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse [
+	| resultPhysical rightPhysical rightRegister leftPhysical cmpResult |
+	self assert: result isRegisterOrRegisterAddress.
+
+	leftPhysical := self virtualToPhysical: left.
+	rightPhysical := self virtualToPhysical: right.
+
+	rightRegister := rightPhysical.
+	(leftPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
+		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
+	].
+
+	resultPhysical := self virtualToPhysical: result.
+	streamBuilder x86: MOV dst: resultPhysical src: 1.
+
+	streamBuilder x86: comparisonInstruction with: leftPhysical with: rightRegister.
+
+	cmpResult := streamBuilder newPrivateSymbol: #cmpResult.
+	streamBuilder
+		x86: branchTrue with: cmpResult;
+		x86: MOV dst: resultPhysical src: 0;
+		label: cmpResult
+
+]
+
+{ #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitComparison: instruction left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination [
+	self assert: left isIntegerRegister.
+	^ self emitComparison: instruction with: CMP left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitComparison: instruction with: comparisonInstruction left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination [
 	| rightPhysical rightRegister leftPhysical falseLabel trueLabel |
 	leftPhysical := self virtualToPhysical: left.
 	rightPhysical := self virtualToPhysical: right.
@@ -134,18 +196,7 @@ SAsmX86InstructionLowerer >> emitComparison: instruction left: left right: right
 		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
 	].
 
-	left isIntegerRegister ifTrue: [
-		streamBuilder x86: CMP with: leftPhysical with: rightRegister.
-	].
-	
-	left isDoubleFloatRegister ifTrue: [
-		self halt.
-		"streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister."
-	].
-	left isFloatRegister ifTrue: [ 
-		self halt.
-		"streamBuilder x86: doubleInstruction with: resultPhysical with: rightRegister."
-	].
+	streamBuilder x86: comparisonInstruction with: leftPhysical with: rightRegister..
 
 	falseLabel := streamBuilder findSymbolForObject: falseDestination.
 	trueLabel := streamBuilder findSymbolForObject: trueDestination.
@@ -164,40 +215,37 @@ SAsmX86InstructionLowerer >> emitComparison: instruction left: left right: right
 ]
 
 { #category : #'abstract instruction generation' }
-SAsmX86InstructionLowerer >> emitComparisonInto: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse [
-	| resultPhysical rightPhysical rightRegister leftPhysical cmpResult |
-	self assert: result isRegisterOrRegisterAddress.
+SAsmX86InstructionLowerer >> emitComparisonFloat: isOrdered into: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse [
 
-	leftPhysical := self virtualToPhysical: left.
-	rightPhysical := self virtualToPhysical: right.
-
-	rightRegister := rightPhysical.
-	(leftPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
-		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
-	].
-
-	resultPhysical := self virtualToPhysical: result.
-	streamBuilder x86: MOV dst: resultPhysical src: 1.
-	
-	left isIntegerRegister ifTrue: [
-		streamBuilder x86: CMP with: leftPhysical with: rightRegister.
-	].
-	
-	left isDoubleFloatRegister ifTrue: [
-		self halt.
-		"streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister."
-	].
 	left isFloatRegister ifTrue: [ 
-		self halt.
-		"streamBuilder x86: doubleInstruction with: resultPhysical with: rightRegister."
+		^ self emitComparison: (isOrdered ifTrue: [ COMISS ] ifFalse: [ UCOMISS ])
+			into: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse
+	] ifFalse: [
+		self assert: left isDoubleFloatRegister.
+		^ self emitComparison: (isOrdered ifTrue: [ COMISD ] ifFalse: [ UCOMISD ])
+			into: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse
 	].
 
-	cmpResult := streamBuilder newPrivateSymbol: #cmpResult.
-	streamBuilder
-		x86: branchTrue with: cmpResult;
-		x86: MOV dst: resultPhysical src: 0;
-		label: cmpResult
+]
 
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitComparisonFloat: instruction ordered: ordered left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination [
+	self assert: left isFloatingPointRegister.
+	left isFloatRegister ifTrue: [ 
+		^ self emitComparison: instruction with: (ordered ifTrue: [ COMISS ] ifFalse: [ UCOMISS ])
+			left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination	
+	] ifFalse: [ 
+		self assert: left isDoubleFloatRegister.
+		^ self emitComparison: instruction with: (ordered ifTrue: [ COMISD ] ifFalse: [ UCOMISD ])
+			left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination	
+	].
+
+
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> emitComparisonIntegerInto:result left: left right: right branchTrue: branchTrue branchFalse: branchFalse [
+	^ self emitComparison: CMP into: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse
 ]
 
 { #category : #arithmetic }
@@ -490,9 +538,13 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 		valuePhysical := self movePhysical: valuePhysical toScratchRegister: 0
 	].
 
-	physical isVectorRegister ifTrue: [ 
+	physical isVectorRegister ifTrue: [
+		valuePhysical isVectorRegister ifTrue: [ 
+			^ streamBuilder x86: MOVAPS dst: physical src: valuePhysical
+		].
+	
 		self halt
-	] ifFalse: [ 
+	] ifFalse: [
 		^ streamBuilder x86: MOV dst: physical src: valuePhysical
 	]
 	
@@ -574,10 +626,10 @@ SAsmX86InstructionLowerer >> unspillRegister: virtualRegister [
 			^ streamBuilder x86: MOV dst: virtualRegister register src: (self virtualRegisterLocationToPhysicalLocation: virtualRegister)
 		].
 		virtualRegister isFloatRegister  ifTrue: [ 
-			self halt.
+			^ streamBuilder x86: MOVSS dst: virtualRegister register src: (self virtualRegisterLocationToPhysicalLocation: virtualRegister)
 		].
 		virtualRegister isDoubleFloatRegister  ifTrue: [ 
-			self halt.
+			^ streamBuilder x86: MOVSD dst: virtualRegister register src: (self virtualRegisterLocationToPhysicalLocation: virtualRegister)
 		].
 	].
 
@@ -631,10 +683,34 @@ SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister pointerValueScra
 	^ physicalRegister
 ]
 
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacAbove: instruction [
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JA branchFalse: JBE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacAbove: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JA destination: branch trueDestination branchFalse: JBE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacAboveOrEqual: instruction [
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JAE branchFalse: JB
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacAboveOrEqual: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JAE destination: branch trueDestination branchFalse: JB destination: branch falseDestination
+]
+
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacAdd: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
-			integer: ADD float: ADDSS double: ADDSD
+			integer: ADD
 ]
 
 { #category : #'bitwise operations' }
@@ -695,6 +771,30 @@ SAsmX86InstructionLowerer >> visitTacAtomicSwap: instruction [
 	
 	streamBuilder x86: LOCK;
 		x86: XCHG dst: variablePhysical src: valuePhysical.
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacBelow: instruction [
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JB branchFalse: JAE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacBelow: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JB destination: branch trueDestination branchFalse: JAE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacBelowOrEqual: instruction [
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
+			branchTrue: JBE branchFalse: JB
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacBelowOrEqual: instruction withBranch: branch [
+	^ self emitComparison: branch left: instruction left right: instruction right 
+			branchTrue: JBE destination: branch trueDestination branchFalse: JA destination: branch falseDestination
 ]
 
 { #category : #'bitwise operations' }
@@ -811,7 +911,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 				self moveValue: arg toIntegerRegister: (calledConvention integerArgumentRegisters at: integerRegisterIndex)
 			]
 		] ifFalse: [
-			(arg isFloatRegister or: [ arg isDoubleFloatRegister ]) ifTrue: [
+			(arg isFloatingPointRegister) ifTrue: [
 				(registersToSpill includes: arg) ifTrue: [ 
 					self moveSpilledValue: arg toFloatRegister: (calledConvention floatArgumentRegisters at: floatRegisterIndex)
 				] ifFalse: [
@@ -914,16 +1014,12 @@ SAsmX86InstructionLowerer >> visitTacCopyInstruction: instruction [
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacDivide: instruction [
-	instruction result isFloatingPointRegister ifTrue: [ 
-		^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
-			integer: NOP float: DIVSS double: DIVSD
-	].
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: IDIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
 ]
 
-{ #category : #visiting }
+{ #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacEqual: instruction [
-	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
 			branchTrue: JE branchFalse: JNE
 ]
 
@@ -933,9 +1029,213 @@ SAsmX86InstructionLowerer >> visitTacEqual: instruction withBranch: branch [
 			branchTrue: JE destination: branch trueDestination branchFalse: JNE destination: branch falseDestination
 ]
 
-{ #category : #visiting }
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacFloatAdd: instruction [
+	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
+			float: ADDSS double: ADDSD
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacFloatDivide: instruction [
+	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
+			float: DIVSS double: DIVSD
+
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacFloatMultiply: instruction [
+	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
+			float: MULSS double: MULSD
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacFloatNegate: instruction [
+	| result value resultPhysical valuePhysical |
+	result := instruction result.
+	value := instruction left.
+	self assert: result isRegisterOrRegisterAddress.
+
+	resultPhysical := self virtualToPhysical: result.
+	valuePhysical := self virtualToPhysical: value.
+		
+	(valuePhysical = resultPhysical or: [ valuePhysical isRegisterAddress and: [ resultPhysical isRegisterAddress ]]) ifTrue: [ 			valuePhysical := self movePhysical: valuePhysical toScratchRegister: 0 classOf: result
+	].
+		
+	^ streamBuilder
+		x86: XORPD dst: resultPhysical src: resultPhysical;
+		x86: (value isDoubleFloatRegister ifTrue: [ SUBSD ] ifFalse: [ SUBSS ]) dst: resultPhysical src: valuePhysical
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedEqual: instruction [
+	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
+			branchTrue: JE branchFalse: JNE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
+			branchTrue: JE destination: branch trueDestination
+			branchFalse: JNE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedGreater: instruction [
+	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
+			branchTrue: JG branchFalse: JLE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedGreater: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
+			branchTrue: JG destination: branch trueDestination
+			branchFalse: JLE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedGreaterOrEqual: instruction [
+	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
+			branchTrue: JGE branchFalse: JL
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedGreaterOrEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
+			branchTrue: JGE destination: branch trueDestination
+			branchFalse: JL destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedLess: instruction [
+	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right 
+			branchTrue: JL branchFalse: JGE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedLess: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
+			branchTrue: JL destination: branch trueDestination
+			branchFalse: JGE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedLessOrEqual: instruction [
+	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
+			branchTrue: JLE branchFalse: JG
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedLessOrEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
+			branchTrue: JLE destination: branch trueDestination
+			branchFalse: JG destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedNotEqual: instruction [
+	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
+			branchTrue: JNE branchFalse: JE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatOrderedNotEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
+			branchTrue: JNE destination: branch trueDestination
+			branchFalse: JE destination: branch falseDestination
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacFloatSqrt: instruction [
+	^ self emitArithmeticUnaryInto: instruction result value: instruction left float: SQRTSS double: SQRTSD
+]
+
+{ #category : #arithmetic }
+SAsmX86InstructionLowerer >> visitTacFloatSubtract: instruction [
+	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
+			float: SUBSS double: SUBSD
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnoderedGreater: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JG destination: branch trueDestination
+			branchFalse: JLE destination: branch falseDestination
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnoderedLessOrEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JLE destination: branch trueDestination
+			branchFalse: JG destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedEqual: instruction [
+	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
+			branchTrue: JE branchFalse: JNE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JE destination: branch trueDestination
+			branchFalse: JNE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedGreater: instruction [
+	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
+			branchTrue: JG branchFalse: JLE
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedGreaterOrEqual: instruction [
+	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
+			branchTrue: JGE branchFalse: JL
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedGreaterOrEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JGE destination: branch trueDestination
+			branchFalse: JL destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedLess: instruction [
+	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right 
+			branchTrue: JL branchFalse: JGE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedLess: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JL destination: branch trueDestination
+			branchFalse: JGE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedLessOrEqual: instruction [
+	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
+			branchTrue: JLE branchFalse: JG
+]
+
+{ #category : #comparisons }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedNotEqual: instruction [
+	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
+			branchTrue: JNE branchFalse: JE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedNotEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JNE destination: branch trueDestination
+			branchFalse: JE destination: branch falseDestination
+]
+
+{ #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacGreater: instruction [
-	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
 			branchTrue: JG branchFalse: JLE
 ]
 
@@ -945,9 +1245,9 @@ SAsmX86InstructionLowerer >> visitTacGreater: instruction withBranch: branch [
 			branchTrue: JG destination: branch trueDestination branchFalse: JLE destination: branch falseDestination
 ]
 
-{ #category : #visiting }
+{ #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacGreaterOrEqual: instruction [
-	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
 			branchTrue: JGE branchFalse: JL
 ]
 
@@ -966,9 +1266,9 @@ SAsmX86InstructionLowerer >> visitTacJumpInstruction: branch [
 		x86: JMP with: destination.
 ]
 
-{ #category : #visiting }
+{ #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacLess: instruction [
-	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
 			branchTrue: JL branchFalse: JGE
 ]
 
@@ -978,9 +1278,9 @@ SAsmX86InstructionLowerer >> visitTacLess: instruction withBranch: branch [
 			branchTrue: JL destination: branch trueDestination branchFalse: JGE destination: branch falseDestination
 ]
 
-{ #category : #visiting }
+{ #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacLessOrEqual: instruction [
-	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
 			branchTrue: JLE branchFalse: JE
 ]
 
@@ -1109,29 +1409,12 @@ SAsmX86InstructionLowerer >> visitTacMultiply: instruction [
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacNegate: instruction [
-	| resultPhysical result value valuePhysical |
-	result := instruction result.
-	value := instruction left.
-	self assert: result isRegisterOrRegisterAddress.
-
-	value isFloatingPointRegister ifTrue: [
-		resultPhysical := self virtualToPhysical: result.
-		valuePhysical := self virtualToPhysical: value.
-		
-		(valuePhysical = resultPhysical or: [ valuePhysical isRegisterAddress and: [ resultPhysical isRegisterAddress ]]) ifTrue: [ 			valuePhysical := self movePhysical: valuePhysical toScratchRegister: 0 classOf: result
-		].
-		
-		^ streamBuilder
-			x86: XORPD dst: resultPhysical src: resultPhysical;
-			x86: (value isDoubleFloatRegister ifTrue: [ SUBSD ] ifFalse: [ SUBSS ]) dst: resultPhysical src: valuePhysical
-	].
-
-	^ self emitArithmeticUnaryInto: result value: value integer: NEG float: NOP double: NOP
+	^ self emitArithmeticUnaryInto: instruction result value: instruction value integer: NEG
 ]
 
-{ #category : #visiting }
+{ #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacNotEqual: instruction [
-	^ self emitComparisonInto: instruction result left: instruction left right: instruction right 
+	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
 			branchTrue: JNE branchFalse: JE
 ]
 
@@ -1143,10 +1426,6 @@ SAsmX86InstructionLowerer >> visitTacNotEqual: instruction withBranch: branch [
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacRemainder: instruction [
-	instruction result isFloatingPointRegister ifTrue: [ 
-		self error: 'Floating point remainder not yet implemented'
-	].
-
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: IDIV resultRegisterIndex: 2 activeRegisters: instruction activeRegisters
 ]
 
@@ -1243,24 +1522,16 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate8: instruction [
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacSubtract: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
-			integer: SUB float: SUBSS double: SUBSD
+			integer: SUB
 ]
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacUDivide: instruction [
-	instruction result isFloatingPointRegister ifTrue: [ 
-		^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
-			integer: NOP float: DIVSS double: DIVSD
-	].
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
 ]
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacURemainder: instruction [
-	instruction result isFloatingPointRegister ifTrue: [
-		self error: 'Floating point remainder not yet implemented'
-	].
-
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 2 activeRegisters: instruction activeRegisters
 ]
 

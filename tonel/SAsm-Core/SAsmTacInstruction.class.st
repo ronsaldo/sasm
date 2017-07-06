@@ -30,6 +30,11 @@ SAsmTacInstruction >> activeRegisters: anObject [
 ]
 
 { #category : #testing }
+SAsmTacInstruction >> isCondition [
+	^ operation isCondition
+]
+
+{ #category : #testing }
 SAsmTacInstruction >> isThreeAddressInstruction [
 	^ true
 ]

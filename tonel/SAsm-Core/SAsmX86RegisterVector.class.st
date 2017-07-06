@@ -6,16 +6,21 @@ Class {
 
 { #category : #'as yet unclassified' }
 SAsmX86RegisterVector class >> canHoldVirtualRegisterData: virtualRegister [
-	^ virtualRegister isFloatRegister and: [ virtualRegister size <= 16 ]
+	^ virtualRegister isFloatingPointRegister and: [ virtualRegister size <= 16 ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SAsmX86RegisterVector >> isDoubleFloatRegister [
 	^ true
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SAsmX86RegisterVector >> isFloatRegister [
+	^ true
+]
+
+{ #category : #testing }
+SAsmX86RegisterVector >> isFloatingPointRegister [
 	^ true
 ]
 
@@ -26,5 +31,10 @@ SAsmX86RegisterVector >> isRegisterOrRegisterAddressVector128 [
 
 { #category : #testing }
 SAsmX86RegisterVector >> isRegisterVector128 [
+	^ true
+]
+
+{ #category : #testing }
+SAsmX86RegisterVector >> isVectorRegister [
 	^ true
 ]

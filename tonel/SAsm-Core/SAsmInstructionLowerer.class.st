@@ -172,16 +172,18 @@ SAsmInstructionLowerer >> lowerConditional: condition branch: branch [
 
 { #category : #'abstract instruction generation' }
 SAsmInstructionLowerer >> lowerInstruction: instruction writeToStream: aStreamBuilder [
+	| nextInstruction |
 	streamBuilder := aStreamBuilder.
-	(instruction isThreeAddressInstruction and: [ instruction next isNotNil ]) ifTrue: [
+	nextInstruction := instruction nonDebugNext.
+	(instruction isThreeAddressInstruction and: [ nextInstruction isNotNil ]) ifTrue: [
 		"Condition + Branch -> Conditional Branch"
 		(instruction isCondition and: [
-		 instruction next isThreeAddressInstruction and: [
-		 instruction next isConditionalJump and: [
-		 instruction next condition == instruction result and:[
-		 instruction result end == instruction next index ]]]] ) ifTrue: [
-			self lowerConditional: instruction branch: instruction next.
-			^ instruction next next
+		 nextInstruction isThreeAddressInstruction and: [
+		 nextInstruction isConditionalJump and: [
+		 nextInstruction condition == instruction result and:[
+		 instruction result end == nextInstruction index ]]]] ) ifTrue: [
+			self lowerConditional: instruction branch: nextInstruction.
+			^ nextInstruction next
 		]
 	].
 

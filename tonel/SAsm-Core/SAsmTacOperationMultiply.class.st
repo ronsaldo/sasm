@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmTacOperationMultiply,
-	#superclass : #SAsmTacArithmeticOperation,
+	#superclass : #SAsmTacIntegerArithmeticOperation,
 	#category : #'SAsm-Core-TAC'
 }
 

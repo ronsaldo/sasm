@@ -2,11 +2,15 @@ Class {
 	#name : #SAsmTacOperations,
 	#superclass : #SharedPool,
 	#classVars : [
+		'TacAbove',
+		'TacAboveOrEqual',
 		'TacAdd',
 		'TacArithmeticShiftRight',
 		'TacAtomicCompareAndSwap',
 		'TacAtomicFetchAndAdd',
 		'TacAtomicSwap',
+		'TacBelow',
+		'TacBelowOrEqual',
 		'TacBitAnd',
 		'TacBitNot',
 		'TacBitOr',
@@ -14,6 +18,24 @@ Class {
 		'TacContextReplaceFunction',
 		'TacDivide',
 		'TacEqual',
+		'TacFloatAdd',
+		'TacFloatDivide',
+		'TacFloatMultiply',
+		'TacFloatNegate',
+		'TacFloatOrderedEqual',
+		'TacFloatOrderedGreater',
+		'TacFloatOrderedGreaterOrEqual',
+		'TacFloatOrderedLess',
+		'TacFloatOrderedLessOrEqual',
+		'TacFloatOrderedNotEqual',
+		'TacFloatSqrt',
+		'TacFloatSubtract',
+		'TacFloatUnorderedEqual',
+		'TacFloatUnorderedGreater',
+		'TacFloatUnorderedGreaterOrEqual',
+		'TacFloatUnorderedLess',
+		'TacFloatUnorderedLessOrEqual',
+		'TacFloatUnorderedNotEqual',
 		'TacGreater',
 		'TacGreaterOrEqual',
 		'TacLess',
@@ -83,13 +105,18 @@ SAsmTacOperations class >> initialize [
 	TacLoadLocalAddress := SAsmTacLoadLocalAddress new.
 	TacReturn := SAsmTacReturnOperation new.
 
-	TacEqual := SAsmTacComparisonOperationEqual new.
-	TacNotEqual := SAsmTacComparisonOperationNotEqual new.
-	TacGreater := SAsmTacComparisonOperationGreater new.
-	TacGreaterOrEqual := SAsmTacComparisonOperationGreaterOrEqual new.	
-	TacLess := SAsmTacComparisonOperationLess new.
-	TacLessOrEqual := SAsmTacComparisonOperationLessOrEqual new.
-	
+	TacEqual := SAsmTacComparisonIntegerEqual new.
+	TacNotEqual := SAsmTacComparisonIntegerNotEqual new.
+	TacGreater := SAsmTacComparisonIntegerGreater new.
+	TacGreaterOrEqual := SAsmTacComparisonIntegerGreaterOrEqual new.	
+	TacLess := SAsmTacComparisonIntegerLess new.
+	TacLessOrEqual := SAsmTacComparisonIntegerLessOrEqual new.
+
+	TacAbove := SAsmTacComparisonIntegerAbove new.
+	TacAboveOrEqual := SAsmTacComparisonIntegerAboveOrEqual new.	
+	TacBelow := SAsmTacComparisonIntegerBelow new.
+	TacBelowOrEqual := SAsmTacComparisonIntegerBelowOrEqual new.
+
 	TacLoad := SAsmTacLoadOperation new.
 	TacLoadFloat := SAsmTacLoadFloatOperation new.
 	TacLoadDouble := SAsmTacLoadDoubleOperation new.
@@ -122,4 +149,25 @@ SAsmTacOperations class >> initialize [
 	TacAtomicSwap := SAsmTacAtomicSwap new.
 	
 	TacContextReplaceFunction := SAsmTacContextReplaceFunctionOperation new.
+	
+	TacFloatAdd := SAsmTacOperationFloatAdd new.
+	TacFloatSubtract := SAsmTacOperationFloatSubtract new.
+	TacFloatDivide := SAsmTacOperationFloatDivide new.
+	TacFloatNegate := SAsmTacOperationFloatNegate new.
+	TacFloatMultiply := SAsmTacOperationFloatMultiply new.
+	TacFloatSqrt := SAsmTacOperationFloatSqrt new.
+
+	TacFloatOrderedEqual := SAsmTacComparisonFloatOrderedEqual new.
+	TacFloatOrderedNotEqual := SAsmTacComparisonFloatOrderedNotEqual new.
+	TacFloatOrderedLess := SAsmTacComparisonFloatOrderedLess new.
+	TacFloatOrderedLessOrEqual := SAsmTacComparisonFloatOrderedLessOrEqual new.
+	TacFloatOrderedGreaterOrEqual := SAsmTacComparisonFloatOrderedGreaterOrEqual new.
+	TacFloatOrderedGreater := SAsmTacComparisonFloatOrderedGreater new.
+
+	TacFloatUnorderedEqual := SAsmTacComparisonFloatUnorderedEqual new.
+	TacFloatUnorderedNotEqual := SAsmTacComparisonFloatUnorderedNotEqual new.
+	TacFloatUnorderedLess := SAsmTacComparisonFloatUnorderedLess new.
+	TacFloatUnorderedLessOrEqual := SAsmTacComparisonFloatUnorderedLessOrEqual new.
+	TacFloatUnorderedGreaterOrEqual := SAsmTacComparisonFloatUnorderedGreaterOrEqual new.
+	TacFloatUnorderedGreater := SAsmTacComparisonFloatUnorderedGreater new.
 ]

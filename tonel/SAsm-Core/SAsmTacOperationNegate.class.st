@@ -1,6 +1,6 @@
 Class {
 	#name : #SAsmTacOperationNegate,
-	#superclass : #SAsmTacArithmeticOperation,
+	#superclass : #SAsmTacIntegerArithmeticOperation,
 	#category : #'SAsm-Core-TAC'
 }
 
