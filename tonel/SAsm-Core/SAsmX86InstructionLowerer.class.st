@@ -557,7 +557,34 @@ SAsmX86InstructionLowerer >> needsToSpillThreeAddressInstruction: tacInstruction
 
 { #category : #'procedure call' }
 SAsmX86InstructionLowerer >> pushValueToTheStack: value [
-	streamBuilder x86: PUSH with: (self virtualToPhysical: value).
+	| valuePhysical |
+	valuePhysical := self virtualToPhysical: value.
+	value isFloatingPointRegister ifTrue: [ 
+		target pointerSize = 4 ifTrue: [
+			valuePhysical isRegisterAddress ifTrue: [
+				value isDoubleFloatRegister ifTrue: [ 
+					^ streamBuilder x86: PUSH with: valuePhysical dword + 4.
+				].
+			
+				^ streamBuilder x86: PUSH with: valuePhysical dword.
+			] ifFalse: [ 
+				value isDoubleFloatRegister ifTrue: [ 
+					^ streamBuilder
+						x86: SUB dst: target stackPointerRegister src: 8;
+						x86: MOVSD dst: (target stackPointerRegister asX86PointerOfSize: 8) src: valuePhysical.
+				].
+				^ streamBuilder
+						x86: SUB dst: target stackPointerRegister src: 4;
+						x86: MOVSD dst: (target stackPointerRegister asX86PointerOfSize: 4) src: valuePhysical.
+			]
+		] ifFalse: [
+			self halt.
+		].
+
+	] ifFalse: [ 
+		streamBuilder x86: PUSH with: valuePhysical.
+	]
+	
 ]
 
 { #category : #'abstract instruction generation' }
@@ -568,11 +595,33 @@ SAsmX86InstructionLowerer >> returnValue: value [
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
+	| valuePhysical |
 	value ifNil: [ ^ self ].
-	self
-		moveValue: value toRegister: function callingConvention resultIntRegister.
+	value isFloatingPointRegister ifTrue: [ 
+		function callingConvention resultFloatRegister ifNil: [ 
+			valuePhysical := self virtualToPhysical: value.
+			valuePhysical isRegisterAddress ifTrue: [ 
+				streamBuilder x86: FLD with: valuePhysical
+			] ifFalse: [ 
+				self pushValueToTheStack: value.
+				streamBuilder x86: FLD with: (target stackPointerRegister asX86PointerOfSize: value size)
+			]
+		] ifNotNil: [
+			self
+				moveValue: value toRegister: function callingConvention resultFloatRegister.
+		]
+		
+	] ifFalse: [ 
+		self
+			moveValue: value toRegister: function callingConvention resultIntRegister.
+	].
+
 	valueHigh ifNotNil: [ 
-		self moveValue: value toRegister: function callingConvention resultInt2Register
+		valueHigh isFloatingPointRegister ifTrue: [ 
+			self error: 'Not yet supported.'.
+		] ifFalse: [ 
+			self moveValue: value toRegister: function callingConvention resultInt2Register
+		]
 	]
 	
 ]
@@ -598,11 +647,11 @@ SAsmX86InstructionLowerer >> spillRegister: virtualRegister [
 		virtualRegister isIntegerRegister ifTrue: [ 
 			^ streamBuilder x86: MOV dst: (self virtualRegisterLocationToPhysicalLocation: virtualRegister) src: virtualRegister register
 		].
-		virtualRegister isFloatRegister  ifTrue: [ 
-			self halt.
+		virtualRegister isFloatRegister  ifTrue: [
+			^ streamBuilder x86: MOVSS dst: (self virtualRegisterLocationToPhysicalLocation: virtualRegister) src: virtualRegister register
 		].
 		virtualRegister isDoubleFloatRegister  ifTrue: [ 
-			self halt.
+			^ streamBuilder x86: MOVSD dst: (self virtualRegisterLocationToPhysicalLocation: virtualRegister) src: virtualRegister register
 		].
 	].
 
@@ -865,7 +914,16 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 				stackArguments add: arg.
 			]
 		] ifFalse: [
-			self halt.
+			arg isFloatingPointRegister ifTrue: [ 
+				remainingFloatRegisters > 0 ifTrue: [
+					registerArguments add: arg.
+					remainingFloatRegisters := remainingFloatRegisters - 1
+				] ifFalse: [ 
+					stackArguments add: arg.
+				]
+			] ifFalse: [ 
+				self halt.
+			]
 		]
 	].
 
@@ -938,7 +996,32 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 			result isIntegerRegister ifTrue: [
 				streamBuilder x86: MOV dst: resultPhysical src: (index = 1 ifTrue: [calledConvention resultIntRegister] ifFalse: [ calledConvention resultInt2Register ])
 			] ifFalse: [
-				self halt
+				result isFloatingPointRegister ifTrue: [ 
+					calledConvention resultFloatRegister ifNotNil: [ :resultFloatRegister |
+						resultPhysical isRegisterAddress ifTrue: [ 
+							result size = 4 ifTrue: [
+								streamBuilder x86: MOVSS dst: resultPhysical src: resultFloatRegister
+							].
+							result size = 8 ifTrue: [
+								streamBuilder x86: MOVSD dst: resultPhysical src: resultFloatRegister
+							].
+						] ifFalse: [
+							streamBuilder x86: MOVAPS dst: resultPhysical src: resultFloatRegister
+						]
+					] ifNil: [
+						resultPhysical isRegisterAddress ifTrue: [
+							streamBuilder x86: FSTP with: (resultPhysical asX86PointerOfSize: result size)
+						] ifFalse: [
+							streamBuilder
+								x86: SUB dst: target stackPointerRegister src: result size;
+								x86: FSTP with: (target stackPointerRegister asX86PointerOfSize: result size);
+								x86: (result size = 4 ifTrue: [MOVSS] ifFalse: [MOVSD]) dst: resultPhysical src: (target stackPointerRegister asX86PointerOfSize: result size);
+								x86: ADD dst: target stackPointerRegister src: result size.
+						].
+					]
+				] ifFalse: [ 
+					self halt
+				]
 			]
 		]
 	]

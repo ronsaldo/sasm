@@ -100,6 +100,21 @@ SAsmInstructionOperand >> isRegisterAddress [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isRegisterAddress32 [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isRegisterAddress64 [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isRegisterAddress80 [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isRegisterI16 [
 	^ false
 ]

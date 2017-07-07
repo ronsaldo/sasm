@@ -26,7 +26,14 @@ SAsmX86RegisterAddress class >> initialize [
 		2 word
 		4 dword
 		8 qword
-	)
+	).
+	
+	ScaleValueMap := Dictionary newFromPairs: #(
+		1 0
+		2 1
+		4 2
+		8 3
+	).
 ]
 
 { #category : #arithmetic }
@@ -163,6 +170,21 @@ SAsmX86RegisterAddress >> initialize [
 { #category : #testing }
 SAsmX86RegisterAddress >> isRegisterAddress [
 	^ true
+]
+
+{ #category : #testing }
+SAsmX86RegisterAddress >> isRegisterAddress32 [
+	^ size = 4
+]
+
+{ #category : #testing }
+SAsmX86RegisterAddress >> isRegisterAddress64 [
+	^ size = 8
+]
+
+{ #category : #testing }
+SAsmX86RegisterAddress >> isRegisterAddress80 [
+	^ size = 10
 ]
 
 { #category : #testing }

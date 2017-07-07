@@ -40,6 +40,9 @@ Class {
 		'DIVPS',
 		'DIVSD',
 		'DIVSS',
+		'FLD',
+		'FST',
+		'FSTP',
 		'IDIV',
 		'IMUL',
 		'IRET',
@@ -524,6 +527,23 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRmwRw 16r31)
 			(OpRbRmb 16r32)
 			(OpRwRmw 16r33)
+		)
+		
+		"x87 FPU"
+		(FLD
+			(OpM32fp 16rD9 0)
+			(OpM64fp 16rDD 0)
+			(OpM80fp 16rDB 5)
+		)
+
+		(FST
+			(OpM32fp 16rD9 2)
+			(OpM64fp 16rDD 2)
+		)
+		(FSTP
+			(OpM32fp 16rD9 3)
+			(OpM64fp 16rDD 3)
+			(OpM80fp 16rDB 7)
 		)
 
 		"SSE instructions"
