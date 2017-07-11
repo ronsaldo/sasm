@@ -319,23 +319,27 @@ SAsmX86InstructionLowerer >> emitLoad: instruction withExtension: extensionInstr
 
 { #category : #casting }
 SAsmX86InstructionLowerer >> emitMove: instruction withExtension: extensionInstruction size: operandSize [
-	| value result |
+	| value result extensionResult |
 	value := self virtualToPhysical: instruction left.
 	result := self virtualToPhysical: instruction result.
-	(value isRegisterAddress and: [ result isRegisterAddress ]) ifTrue: [
-		value := self movePhysical: value toScratchRegister: 0
+	extensionResult := result.
+	result isRegisterAddress ifTrue: [ 
+		extensionResult := self scratchRegister: 1 for: result.
 	].
 
 	(operandSize = 1 and: [target pointerSize ~= 8]) ifTrue: [
 		(value isRegister and: [ value canBeValidByteRegisters not ]) ifTrue: [ 
 			value := self movePhysical: value toScratchRegister: 0
 		].
-		streamBuilder x86: extensionInstruction dst: result src: value byte.
+		streamBuilder x86: extensionInstruction dst: extensionResult src: value byte.
 	] ifFalse: [
-		streamBuilder x86: extensionInstruction dst: result src: (value withSize: operandSize).
+		streamBuilder x86: extensionInstruction dst: extensionResult src: (value withSize: operandSize).
 	].
 
 	
+	result ~= extensionResult ifTrue: [
+		streamBuilder x86: MOV dst: result src: extensionResult
+	]
 ]
 
 { #category : #'abstract instruction generation' }
