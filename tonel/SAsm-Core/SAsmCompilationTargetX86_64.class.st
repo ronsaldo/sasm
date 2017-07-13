@@ -1,6 +1,9 @@
 Class {
 	#name : #'SAsmCompilationTargetX86_64',
 	#superclass : #SAsmCompilationTarget,
+	#instVars : [
+		'positionIndependentCode'
+	],
 	#classVars : [
 		'R_X86_64_16',
 		'R_X86_64_32',
@@ -156,6 +159,22 @@ SAsmCompilationTargetX86_64 >> framePointerRegister [
 	^ RBP
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86_64 >> gotBaseRegister [
+	^ RBX
+]
+
+{ #category : #testing }
+SAsmCompilationTargetX86_64 >> hasPositionIndependentCode [
+	^ positionIndependentCode
+]
+
+{ #category : #initialization }
+SAsmCompilationTargetX86_64 >> initialize [
+	super initialize.
+	positionIndependentCode := false
+]
+
 { #category : #'virtual registers' }
 SAsmCompilationTargetX86_64 >> newDoubleFloatVirtualRegister [
 	^ SAsmFloatVirtualRegister new
@@ -209,4 +228,9 @@ SAsmCompilationTargetX86_64 >> stackPointerRegister [
 { #category : #accessing }
 SAsmCompilationTargetX86_64 >> usesElf64 [
 	^ true
+]
+
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86_64 >> withPositionIndependentCode [
+	self positionIndependentCode: true
 ]

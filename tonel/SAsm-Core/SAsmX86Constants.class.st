@@ -258,7 +258,8 @@ SAsmX86Constants class >> initializeRegisters [
 		declareRegisters: #(RAXB RCXB RDXB RBXB RSPB RBPB RSIB RDIB R8B R9B R10B R11B R12B R13B R14B R15B)
 		withClass: SAsmX86RegisterInt8.
 
-	X86MappedRegisters := { AL . CL . DL . BL . nil . nil . nil . nil }.
+	X86MappedRegisters := { AL . CL . DL . BL . nil . nil . nil . nil .
+		 nil . nil . nil . nil .  nil . nil . nil . nil  }.
 	X86WordRegisters :=self
 		declareRegisters: #(AX CX DX BX SP BP SI DI R8W R9W R10W R11W R12W R13W R14W R15W)
 		withClass: SAsmX86RegisterInt16.

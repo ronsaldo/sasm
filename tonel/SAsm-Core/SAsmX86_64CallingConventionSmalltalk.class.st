@@ -47,6 +47,16 @@ SAsmX86_64CallingConventionSmalltalk >> name [
 	^ #smalltalk
 ]
 
+{ #category : #'message passing' }
+SAsmX86_64CallingConventionSmalltalk >> sendDescriptionRegister [
+	^ RSI
+]
+
+{ #category : #'message passing' }
+SAsmX86_64CallingConventionSmalltalk >> sendSelectorRegister [
+	^ RDI
+]
+
 { #category : #stack }
 SAsmX86_64CallingConventionSmalltalk >> stackAlignment [
 	^ 16

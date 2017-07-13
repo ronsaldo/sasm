@@ -60,6 +60,11 @@ SAsmInstructionOperand >> isImmediateS8 [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isImmediateSymbolWithAddend [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isImmediateU16 [
 	^ false
 ]

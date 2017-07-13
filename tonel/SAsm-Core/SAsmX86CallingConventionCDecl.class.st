@@ -66,7 +66,7 @@ SAsmX86CallingConventionCDecl >> scratchRegisters [
 
 { #category : #'message passing' }
 SAsmX86CallingConventionCDecl >> sendDescriptionRegister [
-	^ EDI
+	^ ESI
 ]
 
 { #category : #'as yet unclassified' }
@@ -76,7 +76,7 @@ SAsmX86CallingConventionCDecl >> sendLookupBehindRegister [
 
 { #category : #'message passing' }
 SAsmX86CallingConventionCDecl >> sendSelectorRegister [
-	^ ESI
+	^ EDI
 ]
 
 { #category : #stack }

@@ -93,12 +93,12 @@ SAsmX86InstructionTemplateAlternative >> write: writer rexReg: reg [
 
 { #category : #writing }
 SAsmX86InstructionTemplateAlternative >> write: writer rexSize: size [
-	self write: writer rexSize: size rm: 0 reg: 0
+	self write: writer rexSize: size rm: RAX reg: RAX
 ]
 
 { #category : #writing }
-SAsmX86InstructionTemplateAlternative >> write: writer rexSize: size rm: first [
-	self write: writer rexSize: size rm: EAX reg: EAX
+SAsmX86InstructionTemplateAlternative >> write: writer rexSize: size rm: register [
+	self write: writer rexSize: size rm: register reg: EAX
 ]
 
 { #category : #writing }

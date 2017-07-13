@@ -17,5 +17,6 @@ SAsmX86InstructionOppR >> canWriteInstruction: anInstruction [
 SAsmX86InstructionOppR >> writeInstruction: instruction with: writer [
 	| register |
 	register := instruction arguments first.
+	self write: writer rexRM: register.
 	self write: writer opcodePlusRegister: register
 ]

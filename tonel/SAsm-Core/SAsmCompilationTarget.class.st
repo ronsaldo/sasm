@@ -30,6 +30,11 @@ SAsmCompilationTarget >> functionEntryPointAlignment [
 ]
 
 { #category : #testing }
+SAsmCompilationTarget >> hasPositionIndependentCode [
+	^ false
+]
+
+{ #category : #testing }
 SAsmCompilationTarget >> isBigEndian [
 	^ self isLittleEndian not
 ]

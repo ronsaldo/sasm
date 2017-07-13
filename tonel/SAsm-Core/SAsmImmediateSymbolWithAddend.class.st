@@ -117,6 +117,11 @@ SAsmImmediateSymbolWithAddend >> isImmediateS8RelativeTo: anInstruction position
 	^ super isImmediateS8RelativeTo: anInstruction position: immediateWritePosition offset: relativeCheck
 ]
 
+{ #category : #testing }
+SAsmImmediateSymbolWithAddend >> isImmediateSymbolWithAddend [
+	^ true
+]
+
 { #category : #accessing }
 SAsmImmediateSymbolWithAddend >> isImmediateU16 [
 	^ self isImmediate16

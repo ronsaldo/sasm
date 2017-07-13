@@ -32,7 +32,7 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 	].
 
 	resultPhysical := self virtualToPhysical: result.
-	rightPhysical := self virtualToPhysical: right.
+	rightPhysical := self virtualToPhysical: right scratchRegisterIndex: 0.
 	rightRegister := rightPhysical.
 	(resultPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
 		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
@@ -57,7 +57,7 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 	].
 
 	resultPhysical := self virtualToPhysical: result.
-	rightPhysical := self virtualToPhysical: right.
+	rightPhysical := self virtualToPhysical: right scratchRegisterIndex: 0.
 	rightRegister := rightPhysical.
 	(resultPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
 		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
@@ -112,7 +112,7 @@ SAsmX86InstructionLowerer >> emitBitwiseInto: result left: left right: right int
 	].
 
 	resultPhysical := self virtualToPhysical: result.
-	rightPhysical := self virtualToPhysical: right.
+	rightPhysical := self virtualToPhysical: right scratchRegisterIndex: 0.
 	rightRegister := rightPhysical.
 	(resultPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
 		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
@@ -158,12 +158,12 @@ SAsmX86InstructionLowerer >> emitComparison: comparisonInstruction into: result 
 	| resultPhysical rightPhysical rightRegister leftPhysical cmpResult |
 	self assert: result isRegisterOrRegisterAddress.
 
-	leftPhysical := self virtualToPhysical: left.
-	rightPhysical := self virtualToPhysical: right.
+	leftPhysical := self virtualToPhysical: left scratchRegisterIndex: 0.
+	rightPhysical := self virtualToPhysical: right scratchRegisterIndex: 1.
 
 	rightRegister := rightPhysical.
 	(leftPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
-		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
+		rightRegister := self movePhysical: rightPhysical toScratchRegister: 1
 	].
 
 	resultPhysical := self virtualToPhysical: result.
@@ -188,12 +188,12 @@ SAsmX86InstructionLowerer >> emitComparison: instruction left: left right: right
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> emitComparison: instruction with: comparisonInstruction left: left right: right branchTrue: branchTrue destination: trueDestination branchFalse: branchFalse destination: falseDestination [
 	| rightPhysical rightRegister leftPhysical falseLabel trueLabel |
-	leftPhysical := self virtualToPhysical: left.
-	rightPhysical := self virtualToPhysical: right.
+	leftPhysical := self virtualToPhysical: left scratchRegisterIndex: 0.
+	rightPhysical := self virtualToPhysical: right scratchRegisterIndex: 1.
 	
 	rightRegister := rightPhysical.
 	(leftPhysical isRegisterAddress and: [ rightPhysical isRegisterAddress ]) ifTrue: [ 
-		rightRegister := self movePhysical: rightPhysical toScratchRegister: 0
+		rightRegister := self movePhysical: rightPhysical toScratchRegister: 1
 	].
 
 	streamBuilder x86: comparisonInstruction with: leftPhysical with: rightRegister..
@@ -320,7 +320,7 @@ SAsmX86InstructionLowerer >> emitLoad: instruction withExtension: extensionInstr
 { #category : #casting }
 SAsmX86InstructionLowerer >> emitMove: instruction withExtension: extensionInstruction size: operandSize [
 	| value result extensionResult |
-	value := self virtualToPhysical: instruction left.
+	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
 	result := self virtualToPhysical: instruction result.
 	extensionResult := result.
 	result isRegisterAddress ifTrue: [ 
@@ -387,7 +387,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	nativeSizeToAllocate := totalFrameSize - dynamicObjectSize - stackFrameLayout reservedLocalsSpace.
 	argumentDescriptor := self computeArgumentDescriptor.
 	
-	scratchRegister := callingConvention scratchRegisters first.
+	scratchRegister := callingConvention enterFrameScratchRegister.
 
 	"Compute the stack size requirements."
 	(callingConvention hasSegmentedStack and: [false]) ifTrue: [
@@ -416,9 +416,13 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	nilPointerRegister := nil.
 	(stackFrameLayout dynamicRootCount ~= 0 or: [callingConvention hasContextMetadata]) ifTrue: [
 		nilPointer := 0."self nilGlobalSymbol".
-		nilPointerRegister := scratchRegister.
-		streamBuilder
-			x86: MOV with: nilPointerRegister with: nilPointer.
+		nilPointer ~= 0 ifTrue: [ 
+			nilPointerRegister := scratchRegister.
+			streamBuilder
+				x86: MOV with: nilPointerRegister with: nilPointer.
+		] ifFalse: [ 
+			nilPointerRegister := 0
+		]
 	].
 
 	"Context meta data"
@@ -522,6 +526,12 @@ SAsmX86InstructionLowerer >> moveSpilledValue: value toIntegerRegister: register
 { #category : #spilling }
 SAsmX86InstructionLowerer >> moveValue: value toIntegerRegister: register [
 	| valuePhysical |
+	target pointerSize = 8 ifTrue: [ 
+		value isImmediateSymbolWithAddend ifTrue: [ 
+			^ streamBuilder x86: LEA dst: register src: (value asX86PointerOfSize: 8 withBuilder: streamBuilder)
+		].
+	].
+
 	valuePhysical := self virtualToPhysical: value.
 	valuePhysical ~= register ifTrue: [ streamBuilder x86: MOV dst: register src: valuePhysical ]
 
@@ -536,7 +546,7 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 		^ streamBuilder x86: MOV dst: physical src: (value copyWithStreamBuilder: streamBuilder)
 	].
 
-	valuePhysical := self virtualToPhysical: value.
+	valuePhysical := self virtualToPhysical: value scratchRegisterIndex: 0.
 	valuePhysical == physical ifTrue: [ ^ self ].
 	(valuePhysical isRegisterAddress and: [ physical isRegisterAddress ]) ifTrue: [
 		valuePhysical := self movePhysical: valuePhysical toScratchRegister: 0
@@ -704,9 +714,27 @@ SAsmX86InstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualR
 	^ (target framePointerRegister asX86PointerOfSize: virtualRegister size) + (virtualRegister spillLocation offset + virtualRegister variableOffset)
 ]
 
-{ #category : #spilling }
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister [
+	target pointerSize = 8 ifTrue: [ 
+		virtualRegister isImmediateSymbolWithAddend ifTrue: [ 
+			self error: 'Cannot access directly to immediate symbol with addend in position independent code.'
+			"self flag: 'Load the virtual register address in a register'.
+			^ 0 asSAsmInstructionOperand"
+		].
+	].
+
+	^ super virtualToPhysical: virtualRegister
+]
+
+{ #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister pointerOfSize: pointerSize scratchIndex: scratchIndex [
 	| physicalRegister |
+	self flag: 'TODO: Handle the Position Independent Code.'.
+	virtualRegister isImmediateSymbolWithAddend ifTrue: [
+		^ virtualRegister asX86PointerOfSize: pointerSize withBuilder: streamBuilder
+	].
+
 	virtualRegister isVariable ifTrue: [
 		physicalRegister := self scratchRegister: scratchIndex for: target framePointerRegister.
 		self halt.
@@ -734,6 +762,29 @@ SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister pointerValueScra
 	].
 	
 	^ physicalRegister
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> virtualToPhysical: register scratchRegisterIndex: scratchRegisterIndex [
+	| scratchRegister |
+	target hasPositionIndependentCode ifTrue: [ 
+		self halt
+	].
+
+	target pointerSize = 8 ifTrue: [
+		register isImmediateSymbolWithAddend ifTrue: [ 
+			scratchRegister := self scratchRegister: scratchRegisterIndex for: target stackPointerRegister.
+			streamBuilder x86: LEA dst: scratchRegister src: (register asX86PointerOfSize: target pointerSize withBuilder: streamBuilder).
+			^ scratchRegister
+		]
+	].
+
+	^ self virtualToPhysical: register
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86InstructionLowerer >> virtualToPhysicalDirectRelativeImmediate: virtualRegister [
+	^ super virtualToPhysical: virtualRegister
 ]
 
 { #category : #comparisons }
@@ -790,7 +841,7 @@ SAsmX86InstructionLowerer >> visitTacAtomicFetchAndAdd: instruction [
 
 	self flag: 'Use the correct pointer size'.
 	variablePhysical := self virtualToPhysical: variable pointerOfSize: 4 scratchIndex: 0.
-	valuePhysical := self virtualToPhysical: result.
+	valuePhysical := self virtualToPhysical: result scratchRegisterIndex: 1.
 	
 	self assert: variablePhysical isRegisterAddress.
 	valuePhysical isRegister ifFalse: [ 
@@ -815,7 +866,7 @@ SAsmX86InstructionLowerer >> visitTacAtomicSwap: instruction [
 
 	self flag: 'Use the correct pointer size'.
 	variablePhysical := self virtualToPhysical: variable pointerOfSize: 4 scratchIndex: 0.
-	valuePhysical := self virtualToPhysical: result.
+	valuePhysical := self virtualToPhysical: result scratchRegisterIndex: 1.
 	
 	self assert: variablePhysical isRegisterAddress.
 	valuePhysical isRegister ifFalse: [ 
@@ -871,7 +922,7 @@ SAsmX86InstructionLowerer >> visitTacBitXor: instruction [
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacBranchInstruction: branch [
 	| conditionRegister trueDestination falseDestination |
-	conditionRegister := self virtualToPhysical: branch condition.
+	conditionRegister := self virtualToPhysical: branch condition scratchRegisterIndex: 0.
 	conditionRegister isRegisterAddress ifTrue: [
 		conditionRegister := self movePhysical: conditionRegister toScratchRegister: 0.
 	].
@@ -971,21 +1022,22 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 				self moveSpilledValue: arg toIntegerRegister: (calledConvention integerArgumentRegisters at: integerRegisterIndex)
 			] ifFalse: [ 
 				self moveValue: arg toIntegerRegister: (calledConvention integerArgumentRegisters at: integerRegisterIndex)
-			]
+			].
+			integerRegisterIndex := integerRegisterIndex + 1
 		] ifFalse: [
 			(arg isFloatingPointRegister) ifTrue: [
 				(registersToSpill includes: arg) ifTrue: [ 
 					self moveSpilledValue: arg toFloatRegister: (calledConvention floatArgumentRegisters at: floatRegisterIndex)
 				] ifFalse: [
-					
-				]
+				].
+				floatRegisterIndex := floatRegisterIndex + 1
 			] ifFalse: [
 				self error: 'Unsupported register argument type.'
 			]
 		]
 	].
 
-	calledFunction := self virtualToPhysical: callInstruction called.
+	calledFunction := self virtualToPhysicalDirectRelativeImmediate: callInstruction called.
 	streamBuilder
 		x86: CALL with: calledFunction.
 	calledConvention isStackCleanedByCaller ifTrue: [ 
@@ -1036,7 +1088,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 SAsmX86InstructionLowerer >> visitTacContextReplaceFunction: instruction [
 	| functionRegister newFunction |
 	"Move the function into a register."
-	newFunction := self virtualToPhysical: instruction left.
+	newFunction := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
 	functionRegister := function callingConvention resultIntRegister.
 	newFunction ~= functionRegister ifTrue: [ streamBuilder x86: MOV dst: functionRegister src: newFunction ].
 	
@@ -1090,7 +1142,42 @@ SAsmX86InstructionLowerer >> visitTacCopyInstruction32: instruction [
 
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacCopyInstruction64: instruction [
-	self halt
+	| source destination size requiredRegisters registersToSpill bytes words |
+	source := self virtualToPhysical: instruction source pointerValueScratchIndex: 0.
+	destination := self virtualToPhysical: instruction destination pointerValueScratchIndex: 1.
+	size := self virtualToPhysical: instruction size.
+	
+	"Spill some registers"
+	requiredRegisters := { RSI . RDI . RCX }.
+	registersToSpill := instruction activeRegisters select: [ :reg | requiredRegisters includes: reg register ].
+	self spillRegisters: registersToSpill.
+	
+	"Move the arguments"
+	size isImmediate ifTrue: [ 
+		self movePhysical: {source . destination } toRegisters: { RSI . RDI }.
+		streamBuilder x86: CLD.
+		bytes := size value & 7.
+		bytes > 0 ifTrue: [
+			streamBuilder
+				x86: MOV dst: RCX src: bytes;
+				x86: REP;
+				x86: MOVS_B
+		].
+	
+		words := size value // 8.
+		words > 0 ifTrue: [ 
+			streamBuilder
+				x86: MOV dst: RCX src: words;
+				x86: REP;
+				x86: MOVS_Q
+		].
+	] ifFalse: [ 
+		self movePhysical: {source . destination . size } toRegisters: requiredRegisters.
+		self halt.
+	].
+		
+	"Unspill the registers"
+	self unspillRegisters: registersToSpill.
 ]
 
 { #category : #memory }
@@ -1475,7 +1562,7 @@ SAsmX86InstructionLowerer >> visitTacMultiply: instruction [
 	].
 
 	resultPhysical := self virtualToPhysical: instruction result.
-	rightPhysical := self virtualToPhysical: instruction right.
+	rightPhysical := self virtualToPhysical: instruction right scratchRegisterIndex: 1.
 	
 	resultTemp := resultPhysical.
 	resultPhysical isRegisterAddress ifTrue: [
@@ -1548,7 +1635,7 @@ SAsmX86InstructionLowerer >> visitTacSignExtend8: instruction [
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacStore: instruction [
 	| value pointer |
-	value := self virtualToPhysical: instruction left.
+	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
 	pointer := self virtualToPhysical: instruction right pointerOfSize: target pointerSize scratchIndex: 1.
 	value isRegisterAddress ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0
@@ -1562,7 +1649,7 @@ SAsmX86InstructionLowerer >> visitTacStore: instruction [
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacStoreTruncate16: instruction [
 	| value pointer |
-	value := self virtualToPhysical: instruction left.
+	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
 	pointer := self virtualToPhysical: instruction right pointerOfSize: 2 scratchIndex: 1.
 	value isRegisterAddress ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0
@@ -1579,7 +1666,7 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate32: instruction [
 	| value pointer |
 	target pointerSize = 4 ifTrue: [ ^ self visitTacStore: instruction ].
 
-	value := self virtualToPhysical: instruction left.
+	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
 	pointer := self virtualToPhysical: instruction right pointerOfSize: 4 scratchIndex: 1.
 	value isRegisterAddress ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0
@@ -1594,7 +1681,7 @@ SAsmX86InstructionLowerer >> visitTacStoreTruncate32: instruction [
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacStoreTruncate8: instruction [
 	| value pointer |
-	value := self virtualToPhysical: instruction left.
+	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
 	pointer := self virtualToPhysical: instruction right pointerOfSize: 1 scratchIndex: 1.
 	(value isRegisterAddress or: [ value isRegister and: [value canBeValidByteRegisters not ]]) ifTrue: [
 		value := self movePhysical: value toScratchRegister: 0

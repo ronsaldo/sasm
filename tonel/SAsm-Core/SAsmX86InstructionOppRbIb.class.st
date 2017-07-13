@@ -25,6 +25,7 @@ SAsmX86InstructionOppRbIb >> writeInstruction: instruction with: writer [
 	value := instruction second.
 	self assert: register isRegisterI8.
 	self assert: register size = 1.
+	self write: writer rexRM: register.
 	self write: writer opcodePlusRegister: register.
 	^ writer nextPutI8: value
 ]

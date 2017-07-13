@@ -33,12 +33,17 @@ SAsmInstructionLowerer class >> initialize [
 
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> allocateRegisters [
-	| callingConvention |
+	| callingConvention allocatableRegisters |
 	maxCallStackSize := 0.
 	function computeVirtualRegisterLiveRanges.
 	stackFrameLayout := function stackFrameLayout copy.
 	callingConvention := function callingConvention.
-	allocatableRegisterClasses := self buildRegisterClasses: callingConvention allocatableRegisters.
+	allocatableRegisters := callingConvention allocatableRegisters.
+	target hasPositionIndependentCode ifTrue: [ 
+		allocatableRegisters := allocatableRegisters copyWithout: target gotBaseRegister.
+	].
+	
+	allocatableRegisterClasses := self buildRegisterClasses: allocatableRegisters.
 	scratchRegisterClases := self buildRegisterClasses: callingConvention scratchRegisters.
 	usedRegisters := Set new.
 	self

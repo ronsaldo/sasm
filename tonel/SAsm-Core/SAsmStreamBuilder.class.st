@@ -470,6 +470,33 @@ SAsmStreamBuilder >> tacReturnVoid [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacSign: signed extend16: source into: result [
+	^ signed ifTrue: [
+		self tacSignExtend16: source into: result
+	] ifFalse: [
+		self tacZeroExtend16: source into: result
+	]
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacSign: signed extend32: source into: result [
+	^ signed ifTrue: [
+		self tacSignExtend32: source into: result
+	] ifFalse: [
+		self tacZeroExtend32: source into: result
+	]
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacSign: signed extend8: source into: result [
+	^ signed ifTrue: [
+		self tacSignExtend8: source into: result
+	] ifFalse: [
+		self tacZeroExtend8: source into: result
+	]
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacSignExtend16: value into: result [
 	^ self tacOperation: TacSignExtend16 result: result value: value
 ]

@@ -1,6 +1,9 @@
 Class {
 	#name : #SAsmCompilationTargetX86,
 	#superclass : #SAsmCompilationTarget,
+	#instVars : [
+		'positionIndependentCode'
+	],
 	#classVars : [
 		'R_386_32',
 		'R_386_COPY',
@@ -105,6 +108,22 @@ SAsmCompilationTargetX86 >> framePointerRegister [
 	^ EBP
 ]
 
+{ #category : #accessing }
+SAsmCompilationTargetX86 >> gotBaseRegister [
+	^ EBX
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86 >> hasPositionIndependentCode [
+	^ positionIndependentCode
+]
+
+{ #category : #initialization }
+SAsmCompilationTargetX86 >> initialize [
+	super initialize.
+	positionIndependentCode := false
+]
+
 { #category : #'virtual registers' }
 SAsmCompilationTargetX86 >> newDoubleFloatVirtualRegister [
 	^ SAsmFloatVirtualRegister new
@@ -145,6 +164,11 @@ SAsmCompilationTargetX86 >> pointerSize [
 	^ 4
 ]
 
+{ #category : #accessing }
+SAsmCompilationTargetX86 >> positionIndependentCode: anObject [
+	positionIndependentCode := anObject
+]
+
 { #category : #'as yet unclassified' }
 SAsmCompilationTargetX86 >> setupBinaryObjectWriter: writer [
 	writer cpuMode: #protected
@@ -158,4 +182,9 @@ SAsmCompilationTargetX86 >> stackPointerRegister [
 { #category : #accessing }
 SAsmCompilationTargetX86 >> usesElf64 [
 	^ false
+]
+
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86 >> withPositionIndependentCode [
+	self positionIndependentCode: true
 ]

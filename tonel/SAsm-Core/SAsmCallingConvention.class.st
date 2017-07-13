@@ -24,6 +24,11 @@ SAsmCallingConvention >> canBeFrameLess [
 	^ false
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCallingConvention >> enterFrameScratchRegister [
+	^ self scratchRegisters first
+]
+
 { #category : #'parameter passing' }
 SAsmCallingConvention >> floatArgumentRegisters [
 	^ #()
