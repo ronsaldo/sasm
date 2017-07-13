@@ -342,8 +342,16 @@ SAsmDWDebugLineWriter >> writeSourceLocations: sourceLocations with: writer [
 	programHeader := self generateProgramHeader.
 	program := self generateProgramFor: sourceLocations.
 	
+	pointerSize = 4 ifTrue: [ 
+		writer
+			nextPutC32: programHeader size + program size + pointerSize + 2.
+	] ifFalse: [ 
+		writer
+			nextPutC32: 16rffffffff;
+			nextPutC64: programHeader size + program size + pointerSize + 2.
+	].
+		
 	writer
-		nextPutC32: programHeader size + program size + pointerSize + 2;
 		nextPutC16: 4.
 	pointerSize = 4 ifTrue: [
 		writer nextPutC32: programHeader size
