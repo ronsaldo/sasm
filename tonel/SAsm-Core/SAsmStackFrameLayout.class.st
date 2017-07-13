@@ -95,8 +95,7 @@ SAsmStackFrameLayout >> buildLocalLayout [
 
 	size := size alignedTo: stackAlignment.
 	(dynamicRootCount > 0 and: [dynamicRootCount ~= localVariables size ]) ifTrue: [
-		"TODO: Ensure the dynamic roots come first"
-		self halt.
+		self assert: optimizedLocalVariables first dynamicRoot
 	]
 
 ]

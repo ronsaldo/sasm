@@ -161,7 +161,8 @@ SAsmBinaryObjectSection >> size: aSize [
 
 { #category : #writing }
 SAsmBinaryObjectSection >> writeOn: aStream [
-	aStream nextPutAll: data
+	loaded ifTrue: [ aStream nextPutAll: data ]
+	
 ]
 
 { #category : #accessing }

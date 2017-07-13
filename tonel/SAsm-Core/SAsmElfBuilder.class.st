@@ -280,5 +280,9 @@ SAsmElfBuilder >> writeToFileNamed: fileName [
 { #category : #writing }
 SAsmElfBuilder >> writeToStream: stream [
 	self prepareForWriting.
-	self allComponentsDo: [ :el | el writeOn: stream ].
+	self allComponentsDo: [ :el |
+		self assert: el fileOffset = stream position.
+		el writeOn: stream.
+		self assert: el fileOffset + el fileSize = stream position.
+	].
 ]
