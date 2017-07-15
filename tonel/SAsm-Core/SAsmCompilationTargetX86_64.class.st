@@ -119,13 +119,13 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section el
 	elfReloc
 		offset: relocation offset;
 		addend: relocation addend.
-	relocation isAbsoluteOffset32 ifTrue: [
+	(relocation isAbsoluteOffset32 or: [ relocation isSectionRelativeOffset32 ]) ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_32
 	].
 	relocation isRelativeSOffset32 ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_PC32
 	].
-	relocation isAbsoluteOffset64 ifTrue: [
+	(relocation isAbsoluteOffset64 or: [ relocation isSectionRelativeOffset64 ]) ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_64
 	].
 	relocation isRelativeSOffset64 ifTrue: [

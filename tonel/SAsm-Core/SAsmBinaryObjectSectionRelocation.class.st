@@ -16,12 +16,14 @@ Class {
 		'RelativeSOffset16',
 		'RelativeSOffset32',
 		'RelativeSOffset64',
-		'RelativeSOffset8'
+		'RelativeSOffset8',
+		'SectionRelativeOffset32',
+		'SectionRelativeOffset64'
 	],
 	#category : #'SAsm-Core-Binary'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #initialization }
 SAsmBinaryObjectSectionRelocation class >> initialize [
 	super initialize.
 	
@@ -29,6 +31,9 @@ SAsmBinaryObjectSectionRelocation class >> initialize [
 	AbsoluteOffset16 := #'absolute-offset16'.
 	AbsoluteOffset32 := #'absolute-offset32'.
 	AbsoluteOffset64 := #'absolute-offset64'.
+
+	SectionRelativeOffset32 := #'section-relative-offset32'.
+	SectionRelativeOffset64 := #'section-relative-offset64'.
 	
 	RelativeSOffset8 := #'relative-soffset8'.
 	RelativeSOffset16 := #'relative-soffset16'.
@@ -103,11 +108,11 @@ SAsmBinaryObjectSectionRelocation >> applyFullRelocationIn: targetSection [
 SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection [
 	| data |	
 	data := targetSection data.
-	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 ]) ifTrue: [ 
+	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 or: [self isSectionRelativeOffset64 ]]) ifTrue: [ 
 		data unsignedLongLongAt: offset + 1 put: (addend bitAnd: 16rFFFFFFFFFFFFFFFF)
 	].
 
-	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 ]) ifTrue: [
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 or: [self isSectionRelativeOffset32 ]]) ifTrue: [
 		data unsignedLongAt: offset + 1 put: (addend bitAnd: 16rFFFFFFFF)
 	].
 
@@ -117,11 +122,11 @@ SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection [
 SAsmBinaryObjectSectionRelocation >> clearImplicitAddendIn: targetSection [
 	| data |	
 	data := targetSection data.
-	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 ]) ifTrue: [ 
+	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 or: [self isSectionRelativeOffset64 ]]) ifTrue: [ 
 		data unsignedLongLongAt: offset + 1 put: 0
 	].
 
-	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 ]) ifTrue: [
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 or: [self isSectionRelativeOffset32 ]]) ifTrue: [
 		data unsignedLongAt: offset + 1 put: 0
 	].
 
@@ -175,6 +180,16 @@ SAsmBinaryObjectSectionRelocation >> isRelativeSOffset8 [
 	^ type == RelativeSOffset8
 ]
 
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isSectionRelativeOffset32 [
+	^ type == SectionRelativeOffset32
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isSectionRelativeOffset64 [
+	^ type == SectionRelativeOffset64
+]
+
 { #category : #accessing }
 SAsmBinaryObjectSectionRelocation >> offset [
 	^ offset
@@ -222,6 +237,16 @@ SAsmBinaryObjectSectionRelocation >> section [
 { #category : #accessing }
 SAsmBinaryObjectSectionRelocation >> section: anObject [
 	section := anObject
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> sectionRelativeOffset32 [
+	type := SectionRelativeOffset32
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> sectionRelativeOffset64 [
+	type := SectionRelativeOffset64
 ]
 
 { #category : #accessing }

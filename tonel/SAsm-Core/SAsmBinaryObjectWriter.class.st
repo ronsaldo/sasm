@@ -406,6 +406,11 @@ SAsmBinaryObjectWriter >> recordImmediateReloc16: immediate extraAddend: extraAd
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateReloc32: immediate extraAddend: extraAddend [
+	immediate sectionRelative ifTrue: [ 
+		^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+			sectionRelativeOffset32;
+			yourself
+	].
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		absoluteOffset32;
 		yourself
@@ -413,6 +418,11 @@ SAsmBinaryObjectWriter >> recordImmediateReloc32: immediate extraAddend: extraAd
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateReloc64: immediate extraAddend: extraAddend [
+	immediate sectionRelative ifTrue: [ 
+		^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+			sectionRelativeOffset64;
+			yourself
+	].
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		absoluteOffset64;
 		yourself

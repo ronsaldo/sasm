@@ -57,6 +57,7 @@ Class {
 		'IMAGE_REL_I386_DIR32NB',
 		'IMAGE_REL_I386_REL16',
 		'IMAGE_REL_I386_REL32',
+		'IMAGE_REL_I386_SECREL',
 		'IMAGE_REL_I386_SECTION',
 		'IMAGE_REL_I386_SEG12',
 		'IMAGE_SCN_ALIGN_1024BYTES',
@@ -189,6 +190,7 @@ SAsmCoffConstants class >> initializeI386Constants [
 	IMAGE_REL_I386_DIR32NB := 16r0007. "The target’s 32-bit relative virtual address."
 	IMAGE_REL_I386_SEG12 := 16r0009. "Not supported."
 	IMAGE_REL_I386_SECTION := 16r000A.
+	IMAGE_REL_I386_SECREL := 16r000B.
 	IMAGE_REL_I386_REL32 := 16r0014. "The 32-bit relative displacement to the target. This supports the x86 relative branch and call instructions."
 ]
 

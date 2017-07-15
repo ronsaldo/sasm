@@ -42,6 +42,15 @@ SAsmSymbol >> immediate: immediateSize [
 		yourself
 ]
 
+{ #category : #immediates }
+SAsmSymbol >> immediateSectionRelative: immediateSize [
+	^ SAsmImmediateSymbolWithAddend new
+		symbol: self;
+		size: immediateSize;
+		sectionRelative: true;
+		yourself
+]
+
 { #category : #accessing }
 SAsmSymbol >> immediateValue [
 	^ 0

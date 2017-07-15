@@ -84,6 +84,9 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section coffB
 	relocation isAbsoluteOffset32 ifTrue: [
 		^ coffReloc type: IMAGE_REL_I386_DIR32
 	].
+	relocation isSectionRelativeOffset32 ifTrue: [
+		^ coffReloc type: IMAGE_REL_I386_SECREL
+	].
 	relocation isRelativeSOffset32 ifTrue: [
 		^ coffReloc type: IMAGE_REL_I386_REL32
 	].
@@ -99,7 +102,7 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBu
 	elfReloc := table newEntry.
 	symbolIndex := elfBuilder indexOfRelocationSymbol: relocation symbol section: (elfBuilder sectionFromContent: relocation section).
 	elfReloc offset: relocation offset.
-	relocation isAbsoluteOffset32 ifTrue: [
+	(relocation isAbsoluteOffset32 or: [ relocation isSectionRelativeOffset32 ]) ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_386_32
 	].
 	relocation isRelativeSOffset32 ifTrue: [

@@ -108,6 +108,14 @@ SAsmStreamBuilder >> constI8: value [
 ]
 
 { #category : #constants }
+SAsmStreamBuilder >> constSectionRelative: value size: size [
+	^ self add: (SAsmConstantExpressionValue new
+		size: size;
+		value: value asSAsmConstantExpression;
+		yourself).
+]
+
+{ #category : #constants }
 SAsmStreamBuilder >> cstring: aString [
 	^ self addConstantExpressionValue: (SAsmConstantExpressionString new data: aString; hasExtraNullCharacter: true)
 ]

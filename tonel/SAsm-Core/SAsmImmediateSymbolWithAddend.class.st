@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'size',
 		'symbol',
-		'addend'
+		'addend',
+		'sectionRelative'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -69,6 +70,7 @@ SAsmImmediateSymbolWithAddend >> immediateValueRelativeTo: section position: imm
 SAsmImmediateSymbolWithAddend >> initialize [
 	super initialize.
 	addend := 0.
+	sectionRelative := false.
 ]
 
 { #category : #accessing }
@@ -157,6 +159,16 @@ SAsmImmediateSymbolWithAddend >> prettyPrintOn: aStream [
 SAsmImmediateSymbolWithAddend >> printOn: aStream [
 	aStream print: symbol.
 	addend ~= 0 ifTrue: [ aStream nextPutAll: ' + '; print: addend ]
+]
+
+{ #category : #accessing }
+SAsmImmediateSymbolWithAddend >> sectionRelative [
+	^ sectionRelative
+]
+
+{ #category : #accessing }
+SAsmImmediateSymbolWithAddend >> sectionRelative: anObject [
+	sectionRelative := anObject
 ]
 
 { #category : #accessing }
