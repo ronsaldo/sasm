@@ -1040,7 +1040,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	calledFunction := self virtualToPhysicalDirectRelativeImmediate: callInstruction called.
 	streamBuilder
 		x86: CALL with: calledFunction.
-	calledConvention isStackCleanedByCaller ifTrue: [ 
+	(calledConvention isStackCleanedByCaller and: [stackCleanUpSize ~= 0]) ifTrue: [ 
 		streamBuilder
 			x86: ADD dst: target stackPointerRegister src: stackCleanUpSize.
 	].

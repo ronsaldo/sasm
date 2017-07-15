@@ -93,12 +93,19 @@ SAsmCompilationTargetX86_64 class >> initializeElfRelocations [
 { #category : #'calling conventions' }
 SAsmCompilationTargetX86_64 >> callingConventionNamed: aCallingConventionName [
 	aCallingConventionName == #naked ifTrue: [ ^ SAsmX86_64CallingConventionNaked new ].
-	aCallingConventionName == #stdcall ifTrue: [ ^ SAsmX86CallingConventionCDecl new ].
-	aCallingConventionName == #cdecl ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
+	operatingSystemName == #win32 ifTrue: [ 
+		aCallingConventionName == #stdcall ifTrue: [ ^ SAsmX86_64CallingConventionCDeclWindows new ].
+		aCallingConventionName == #cdecl ifTrue: [ ^ SAsmX86_64CallingConventionCDeclWindows new ].
+		aCallingConventionName == #apicall ifTrue: [ ^ SAsmX86_64CallingConventionCDeclWindows new ].
+	] ifFalse: [ 
+		aCallingConventionName == #stdcall ifTrue: [ ^ SAsmX86CallingConventionCDecl new ].
+		aCallingConventionName == #cdecl ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
+		aCallingConventionName == #apicall ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
+	].
+
 	aCallingConventionName == #smalltalk ifTrue: [ ^ SAsmX86_64CallingConventionSmalltalk new ].
 	aCallingConventionName == #smalltalk_send ifTrue: [ ^ SAsmX86_64CallingConventionSmalltalkSend new ].
 	aCallingConventionName == #smalltalk_supersend ifTrue: [ ^ SAsmX86_64CallingConventionSmalltalkSuperSend new ].
-	aCallingConventionName == #apicall ifTrue: [ ^ SAsmX86_64CallingConventionCDecl new ].
 
 	self error: 'Unknown calling convention ' , aCallingConventionName
 ]

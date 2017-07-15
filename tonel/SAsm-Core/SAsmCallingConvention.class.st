@@ -99,6 +99,11 @@ SAsmCallingConvention >> sendSelectorRegister [
 	self subclassResponsibility
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCallingConvention >> shadowCallStackSpace [
+	^ 0
+]
+
 { #category : #stack }
 SAsmCallingConvention >> stackAlignment [
 	self subclassResponsibility

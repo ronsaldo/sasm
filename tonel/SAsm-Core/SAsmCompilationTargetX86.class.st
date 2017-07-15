@@ -71,7 +71,7 @@ SAsmCompilationTargetX86 >> coffMachine [
 { #category : #'elf relocations' }
 SAsmCompilationTargetX86 >> convertRelocation: relocation section: section coffBuilder: coffBuilder [
 	| table coffReloc symbolIndex |
-	relocation applyImplicitAddendIn: section.
+	relocation applyImplicitAddendIn: section relativeWithExtraAddend: 4.
 	table := coffBuilder relocationTableForSectionContent: section.
 	
 	coffReloc := table newEntry.
