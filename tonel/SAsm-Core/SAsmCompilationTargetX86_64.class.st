@@ -40,6 +40,7 @@ Class {
 		'R_X86_64_TPOFF64'
 	],
 	#pools : [
+		'SAsmCoffConstants',
 		'SAsmX86Constants'
 	],
 	#category : #'SAsm-Core-X86'
@@ -112,7 +113,36 @@ SAsmCompilationTargetX86_64 >> callingConventionNamed: aCallingConventionName [
 
 { #category : #'elf constants' }
 SAsmCompilationTargetX86_64 >> coffMachine [
-	^ 16r8664
+	^ IMAGE_FILE_MACHINE_AMD64
+]
+
+{ #category : #'elf relocations' }
+SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section coffBuilder: coffBuilder [
+	| table coffReloc symbolIndex |
+	relocation applyImplicitAddendIn: section relativeWithExtraAddend: 4.
+	table := coffBuilder relocationTableForSectionContent: section.
+	
+	coffReloc := table newEntry.
+	symbolIndex := coffBuilder indexOfRelocationSymbol: relocation symbol section: (coffBuilder sectionFromContent: relocation section).
+	
+	coffReloc
+		virtualAddress: relocation offset;
+		symbolTableIndex: symbolIndex.
+		
+	relocation isAbsoluteOffset32 ifTrue: [
+		^ coffReloc type: IMAGE_REL_AMD64_ADDR32
+	].
+	relocation isAbsoluteOffset64 ifTrue: [
+		^ coffReloc type: IMAGE_REL_AMD64_ADDR64
+	].
+	relocation isSectionRelativeOffset64 ifTrue: [
+		^ coffReloc type: IMAGE_REL_AMD64_SECREL
+	].
+	relocation isRelativeSOffset32 ifTrue: [
+		^ coffReloc type: IMAGE_REL_AMD64_REL32
+	].
+
+	self error: 'Unsupported relocation type.'
 ]
 
 { #category : #'elf relocations' }

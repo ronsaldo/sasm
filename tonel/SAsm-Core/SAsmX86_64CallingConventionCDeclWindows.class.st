@@ -32,7 +32,7 @@ SAsmX86_64CallingConventionCDeclWindows >> name [
 	^ #cdecl_win64
 ]
 
-{ #category : #'as yet unclassified' }
-SAsmX86_64CallingConventionCDeclWindows >> shadowCallStackSpace [
+{ #category : #'default abi' }
+SAsmX86_64CallingConventionCDeclWindows >> shadowCallSpaceSize [
 	^ 32
 ]

@@ -156,6 +156,7 @@ SAsmCoffConstants class >> initialize [
 	self
 		initializeImageConstants;
 		initializeI386Constants;
+		initializeAMD64Constants;
 		initializeSectionConstants;
 		intializeSymbolConstants
 ]

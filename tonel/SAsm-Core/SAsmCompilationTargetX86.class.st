@@ -65,7 +65,7 @@ SAsmCompilationTargetX86 >> callingConventionNamed: aCallingConventionName [
 
 { #category : #'elf constants' }
 SAsmCompilationTargetX86 >> coffMachine [
-	^ 16r14c
+	^ IMAGE_FILE_MACHINE_I386
 ]
 
 { #category : #'elf relocations' }

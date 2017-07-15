@@ -983,7 +983,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	].
 
 	"Compute the size of the arguments passed in the stack."	
-	stackPushedSize := 0.
+	stackPushedSize := calledConvention shadowCallSpaceSize.
 	stackArgumentsPadding := stackArguments collect: [ :arg |
 		| oldSize padding |
 		oldSize := stackPushedSize.
@@ -1035,6 +1035,11 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 				self error: 'Unsupported register argument type.'
 			]
 		]
+	].
+
+	"Mandatory shadow space allocation"
+	calledConvention shadowCallSpaceSize ~= 0 ifTrue: [ 
+		streamBuilder x86: SUB dst: target stackPointerRegister src: calledConvention shadowCallSpaceSize
 	].
 
 	calledFunction := self virtualToPhysicalDirectRelativeImmediate: callInstruction called.

@@ -99,8 +99,8 @@ SAsmCallingConvention >> sendSelectorRegister [
 	self subclassResponsibility
 ]
 
-{ #category : #'as yet unclassified' }
-SAsmCallingConvention >> shadowCallStackSpace [
+{ #category : #'default abi' }
+SAsmCallingConvention >> shadowCallSpaceSize [
 	^ 0
 ]
 
