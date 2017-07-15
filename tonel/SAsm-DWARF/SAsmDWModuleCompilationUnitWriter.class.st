@@ -98,7 +98,7 @@ SAsmDWModuleCompilationUnitWriter >> writeCompilationUnit: aCompilationUnit toSt
 			executable: false
 	].
 	streamBuilder label: debugLineStart.
-	compilationUnit stmtList: (debugLineStart immediate: pointerSize).
+	compilationUnit stmtList: (debugLineStart immediateSectionRelative: pointerSize).
 	
 	self prepareForWriting.
 
@@ -128,14 +128,14 @@ SAsmDWModuleCompilationUnitWriter >> writeDebugInfo [
 
 	version = 4 ifTrue: [ 
 		streamBuilder constI16: 4;
-			const: (abbreviationsStart immediate: pointerSize) size: pointerSize;
+			const: (abbreviationsStart immediateSectionRelative: pointerSize) size: pointerSize;
 			constI8: pointerSize.
 	].
 	version = 5 ifTrue: [ 
 		streamBuilder constI16: 5;
 			constI8: DW_UT_compile;
 			constI8: pointerSize;
-			const: (abbreviationsStart immediate: pointerSize) size: pointerSize.
+			const: (abbreviationsStart immediateSectionRelative: pointerSize) size: pointerSize.
 	].
 
 	self writeDebugInfoEntry: compilationUnit.
@@ -168,14 +168,14 @@ SAsmDWModuleCompilationUnitWriter >> writeDebugInfoEntry: debugInfoEntry [
 SAsmDWModuleCompilationUnitWriter >> writeReferenceToDIE: die [
 	| symbol |
 	symbol := debugInformationEntrySymbolDictionary at: die.
-	streamBuilder const: (symbol immediate: pointerSize) size: pointerSize
+	streamBuilder const: (symbol immediateSectionRelative: pointerSize) size: pointerSize
 ]
 
 { #category : #writing }
 SAsmDWModuleCompilationUnitWriter >> writeString: string [
 	| stringSymbol |
 	stringSymbol := stringTableDictionary at: string.
-	streamBuilder const: (stringSymbol immediate: pointerSize) size: pointerSize
+	streamBuilder const: (stringSymbol immediateSectionRelative: pointerSize) size: pointerSize
 ]
 
 { #category : #writing }
