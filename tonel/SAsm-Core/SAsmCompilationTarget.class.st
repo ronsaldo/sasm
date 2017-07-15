@@ -1,6 +1,9 @@
 Class {
 	#name : #SAsmCompilationTarget,
 	#superclass : #Object,
+	#instVars : [
+		'operatingSystemName'
+	],
 	#category : #'SAsm-Core-Generic'
 }
 
@@ -14,6 +17,11 @@ SAsmCompilationTarget >> cdeclCallingConvention [
 	^ self callingConventionNamed: #cdecl
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTarget >> csymbolPrefix [
+	^ ''
+]
+
 { #category : #'calling conventions' }
 SAsmCompilationTarget >> defaultCallingConvention [
 	^ self cdeclCallingConvention
@@ -22,6 +30,11 @@ SAsmCompilationTarget >> defaultCallingConvention [
 { #category : #'as yet unclassified' }
 SAsmCompilationTarget >> emitNopOfSize: paddingSize with: writer [
 	self subclassResponsibility
+]
+
+{ #category : #'operating systems' }
+SAsmCompilationTarget >> freebsd [
+	self operatingSystemName: #freebsd
 ]
 
 { #category : #accessing }
@@ -34,6 +47,12 @@ SAsmCompilationTarget >> hasPositionIndependentCode [
 	^ false
 ]
 
+{ #category : #initialization }
+SAsmCompilationTarget >> initialize [
+	super initialize.
+	operatingSystemName := #linux
+]
+
 { #category : #testing }
 SAsmCompilationTarget >> isBigEndian [
 	^ self isLittleEndian not
@@ -44,9 +63,29 @@ SAsmCompilationTarget >> isLittleEndian [
 	^ true
 ]
 
+{ #category : #'operating systems' }
+SAsmCompilationTarget >> linux [
+	self operatingSystemName: #linux
+]
+
 { #category : #'calling conventions' }
 SAsmCompilationTarget >> nakedCallingConvention [
 	^ self callingConventionNamed: #naked
+]
+
+{ #category : #accessing }
+SAsmCompilationTarget >> operatingSystemName [
+	^ operatingSystemName
+]
+
+{ #category : #accessing }
+SAsmCompilationTarget >> operatingSystemName: anObject [
+	operatingSystemName := anObject
+]
+
+{ #category : #'operating systems' }
+SAsmCompilationTarget >> osx [
+	self operatingSystemName: #osx
 ]
 
 { #category : #'calling conventions' }
@@ -62,4 +101,9 @@ SAsmCompilationTarget >> stdcallCallingConvention [
 { #category : #accessing }
 SAsmCompilationTarget >> usesElf64 [
 	self subclassResponsibility
+]
+
+{ #category : #'operating systems' }
+SAsmCompilationTarget >> win32 [
+	self operatingSystemName: #win32
 ]

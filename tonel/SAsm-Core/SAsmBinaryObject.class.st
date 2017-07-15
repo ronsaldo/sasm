@@ -17,7 +17,40 @@ SAsmBinaryObject >> = other [
 		and: [ symbols = other symbols ] ]
 ]
 
-{ #category : #writing }
+{ #category : #'writing coff' }
+SAsmBinaryObject >> buildCoffOn: builder [
+	| coffSection |
+	builder header
+		machine: compilationTarget coffMachine.
+		
+	builder createSymbolTable.
+	
+	sections do: [ :section |
+		coffSection := builder addSection: section named: section name.
+		coffSection virtualAddress: section base.
+		
+		"Ensure the local symbols come before the globals."
+		builder indexOfRelocationSymbol: nil section: coffSection.
+		
+		section loaded ifTrue: [ coffSection programBits ] ifFalse: [ coffSection nobits ].
+		section readable ifTrue: [ coffSection readable ].
+		section writeable ifTrue: [ coffSection writeable ].
+		section executable ifTrue: [ coffSection executableInstructions ].
+		coffSection addressAlign: section alignment.
+	].
+
+	symbols do: [ :symbol |
+		builder addSymbol: symbol.
+	].
+
+	sections do: [ :section |
+		section relocations do: [ :relocation |
+			compilationTarget convertRelocation: relocation section: section coffBuilder: builder
+		]
+	]
+]
+
+{ #category : #'writing elf' }
 SAsmBinaryObject >> buildElfOn: builder [
 	| elfSection |
 	builder header 
@@ -62,7 +95,7 @@ SAsmBinaryObject >> compilationTarget: anObject [
 	compilationTarget := anObject
 ]
 
-{ #category : #writing }
+{ #category : #'writing binary' }
 SAsmBinaryObject >> generateBinaryWithBase: baseAddress [
 	| stream |
 	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
@@ -70,7 +103,15 @@ SAsmBinaryObject >> generateBinaryWithBase: baseAddress [
 	^ stream contents
 ]
 
-{ #category : #writing }
+{ #category : #'writing coff' }
+SAsmBinaryObject >> generateCoff [
+	| stream |
+	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
+	self writeCoffToStream: stream.
+	^ stream contents
+]
+
+{ #category : #'writing elf' }
 SAsmBinaryObject >> generateElf32 [
 	| stream |
 	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
@@ -78,7 +119,7 @@ SAsmBinaryObject >> generateElf32 [
 	^ stream contents
 ]
 
-{ #category : #writing }
+{ #category : #'writing elf' }
 SAsmBinaryObject >> generateElf64 [
 	| stream |
 	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
@@ -124,7 +165,7 @@ SAsmBinaryObject >> symbols: anObject [
 	symbols := anObject
 ]
 
-{ #category : #writing }
+{ #category : #'writing binary' }
 SAsmBinaryObject >> writeBinaryBase: baseAddress toFileNamed: fileName [
 	fileName asFileReference writeStreamDo: [ :out |
 		out truncate; binary.
@@ -132,12 +173,12 @@ SAsmBinaryObject >> writeBinaryBase: baseAddress toFileNamed: fileName [
 	]
 ]
 
-{ #category : #writing }
+{ #category : #'writing binary' }
 SAsmBinaryObject >> writeBinaryToFileNamed: fileName [
 	^ self writeBinaryBase: 0 toFileNamed: fileName
 ]
 
-{ #category : #writing }
+{ #category : #'writing binary' }
 SAsmBinaryObject >> writeBinaryWithBase: baseAddress toStream: aStream [
 	"Set the section base addresses"
 	| destAddress padding |
@@ -159,7 +200,23 @@ SAsmBinaryObject >> writeBinaryWithBase: baseAddress toStream: aStream [
 
 ]
 
-{ #category : #writing }
+{ #category : #'writing coff' }
+SAsmBinaryObject >> writeCoffToFileNamed: fileName [
+	fileName asFileReference writeStreamDo: [ :out |
+		out truncate; binary.
+		out nextPutAll: self generateCoff
+	]
+]
+
+{ #category : #'writing coff' }
+SAsmBinaryObject >> writeCoffToStream: stream [
+	| builder |
+	builder := SAsmCoffBuilder new.
+	self buildCoffOn: builder.
+	builder writeToStream: stream
+]
+
+{ #category : #'writing elf' }
 SAsmBinaryObject >> writeElf32ToFileNamed: fileName [
 	fileName asFileReference writeStreamDo: [ :out |
 		out truncate; binary.
@@ -167,7 +224,7 @@ SAsmBinaryObject >> writeElf32ToFileNamed: fileName [
 	]
 ]
 
-{ #category : #writing }
+{ #category : #'writing elf' }
 SAsmBinaryObject >> writeElf32ToStream: stream [
 	| builder |
 	builder := SAsmElf32Builder new.
@@ -175,7 +232,7 @@ SAsmBinaryObject >> writeElf32ToStream: stream [
 	builder writeToStream: stream
 ]
 
-{ #category : #writing }
+{ #category : #'writing elf' }
 SAsmBinaryObject >> writeElf64ToFileNamed: fileName [
 	fileName asFileReference writeStreamDo: [ :out |
 		out truncate; binary.
@@ -183,7 +240,7 @@ SAsmBinaryObject >> writeElf64ToFileNamed: fileName [
 	]
 ]
 
-{ #category : #writing }
+{ #category : #'writing elf' }
 SAsmBinaryObject >> writeElf64ToStream: stream [
 	| builder |
 	builder := SAsmElf64Builder new.
@@ -191,20 +248,11 @@ SAsmBinaryObject >> writeElf64ToStream: stream [
 	builder writeToStream: stream
 ]
 
-{ #category : #writing }
+{ #category : #'writing elf' }
 SAsmBinaryObject >> writeElfToFileNamed: fileName [
 	compilationTarget usesElf64 ifTrue: [
 		self writeElf64ToFileNamed: fileName
 	] ifFalse: [
 		self writeElf32ToFileNamed: fileName
-	]
-]
-
-{ #category : #writing }
-SAsmBinaryObject >> writeToFileNamed: aFileName [
-	aFileName asFileReference writeStreamDo: [ :out | out binary.
-		sections do: [ :section |
-			out nextPutAll: section data
-		]
 	]
 ]

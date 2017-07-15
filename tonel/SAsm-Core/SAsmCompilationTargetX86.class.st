@@ -18,6 +18,7 @@ Class {
 		'R_386_RELATIVE'
 	],
 	#pools : [
+		'SAsmCoffConstants',
 		'SAsmX86Constants'
 	],
 	#category : #'SAsm-Core-X86'
@@ -62,6 +63,34 @@ SAsmCompilationTargetX86 >> callingConventionNamed: aCallingConventionName [
 	self error: 'Unknown calling convention ' , aCallingConventionName
 ]
 
+{ #category : #'elf constants' }
+SAsmCompilationTargetX86 >> coffMachine [
+	^ 16r14c
+]
+
+{ #category : #'elf relocations' }
+SAsmCompilationTargetX86 >> convertRelocation: relocation section: section coffBuilder: coffBuilder [
+	| table coffReloc symbolIndex |
+	relocation applyImplicitAddendIn: section.
+	table := coffBuilder relocationTableForSectionContent: section.
+	
+	coffReloc := table newEntry.
+	symbolIndex := coffBuilder indexOfRelocationSymbol: relocation symbol section: (coffBuilder sectionFromContent: relocation section).
+	
+	coffReloc
+		virtualAddress: relocation offset;
+		symbolTableIndex: symbolIndex.
+		
+	relocation isAbsoluteOffset32 ifTrue: [
+		^ coffReloc type: IMAGE_REL_I386_DIR32
+	].
+	relocation isRelativeSOffset32 ifTrue: [
+		^ coffReloc type: IMAGE_REL_I386_REL32
+	].
+
+	self error: 'Unsupported relocation type.'
+]
+
 { #category : #'elf relocations' }
 SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
 	| table elfReloc symbolIndex |
@@ -83,6 +112,12 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBu
 { #category : #'as yet unclassified' }
 SAsmCompilationTargetX86 >> createInstructionLowerer [
 	^ SAsmX86InstructionLowerer new target: self
+]
+
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86 >> csymbolPrefix [
+	(#(win32 osx) includes: operatingSystemName)  ifTrue: [^ #_ ].
+	^ ''
 ]
 
 { #category : #'elf constants' }

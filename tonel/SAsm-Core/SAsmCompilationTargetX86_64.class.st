@@ -103,6 +103,11 @@ SAsmCompilationTargetX86_64 >> callingConventionNamed: aCallingConventionName [
 	self error: 'Unknown calling convention ' , aCallingConventionName
 ]
 
+{ #category : #'elf constants' }
+SAsmCompilationTargetX86_64 >> coffMachine [
+	^ 16r8664
+]
+
 { #category : #'elf relocations' }
 SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
 	| table elfReloc symbolIndex |

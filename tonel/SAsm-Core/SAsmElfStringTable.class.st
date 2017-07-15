@@ -2,7 +2,6 @@ Class {
 	#name : #SAsmElfStringTable,
 	#superclass : #SAsmBinaryFileComponent,
 	#instVars : [
-		'outputOffset',
 		'content',
 		'stringDictionary'
 	],
