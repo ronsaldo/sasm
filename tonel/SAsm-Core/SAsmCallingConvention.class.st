@@ -9,6 +9,11 @@ SAsmCallingConvention >> allocatableRegisters [
 	^ self usableRegisters copyWithoutAll: self scratchRegisters
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCallingConvention >> argumentDescriptorFlags [
+	^ self hasContextMetadata ifTrue: [ 0 ] ifFalse: [ 1<<29 ]
+]
+
 { #category : #'register ownership' }
 SAsmCallingConvention >> calledRegisters [
 	^ self usableRegisters

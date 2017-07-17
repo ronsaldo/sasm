@@ -111,7 +111,7 @@ SAsmInstructionLowerer >> buildStackFrameLayout [
 		addLocalReservedSpace: 2 * pointerSize "Return pointer + frame pointer".
 		
 	stackFrameLayout addLocalReservedSpace: registersToPreserve size * pointerSize.
-	callingConvention hasContextMetadata ifTrue: [
+	(callingConvention hasContextMetadata or: [function contextMetaData isNotNil]) ifTrue: [
 		stackFrameLayout addLocalReservedSpace: ContextMetadataElementCount * pointerSize.
 	].
 
@@ -142,7 +142,7 @@ SAsmInstructionLowerer >> computeArgumentDescriptor [
 	nativeArgumentsSize := nativeArgumentsSize + alignmentPaddingSize.
 
 	self flag: 'Synchronize properly with SLVMFunctionType >> #argumentsDescriptorWithTarget:'.
-	^ oopArgumentCount | (nativeArgumentsSize << 8) | (((nativeArgumentAlignment highBit - target pointerSize highBit) max: 0) << 24)
+	^ oopArgumentCount | (nativeArgumentsSize << 8) | (((nativeArgumentAlignment highBit - target pointerSize highBit) max: 0) << 24) | callingConvention argumentDescriptorFlags
 ]
 
 { #category : #'register allocation' }

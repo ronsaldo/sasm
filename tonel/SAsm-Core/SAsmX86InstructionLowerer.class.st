@@ -18,8 +18,7 @@ SAsmX86InstructionLowerer >> alignmentOfValuePushedToTheStack: value calledConve
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> compiledMethodMetaData [
-	self flag: 'Implement myself'.
-	^ 0
+	^ function contextMetaData asSAsmInstructionOperand copyWithStreamBuilder: streamBuilder
 ]
 
 { #category : #arithmetic }
@@ -414,7 +413,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 		
 	"Fetch the nil pointer"
 	nilPointerRegister := nil.
-	(stackFrameLayout dynamicRootCount ~= 0 or: [callingConvention hasContextMetadata]) ifTrue: [
+	(stackFrameLayout dynamicRootCount ~= 0 or: [callingConvention hasContextMetadata or: [function contextMetaData isNotNil]]) ifTrue: [
 		nilPointer := 0."self nilGlobalSymbol".
 		nilPointer ~= 0 ifTrue: [ 
 			nilPointerRegister := scratchRegister.
@@ -426,7 +425,7 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	].
 
 	"Context meta data"
-	callingConvention hasContextMetadata ifTrue: [
+	(callingConvention hasContextMetadata or: [function contextMetaData isNotNil]) ifTrue: [
 		self assert: totalFrameSize <= 16rFFFF.
 		self assert: stackFrameLayout dynamicRootCount <= 16rfff.
 		
