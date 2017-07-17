@@ -4,6 +4,11 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
+{ #category : #accessing }
+SAsmX86RegisterInt8 >> alignment [
+	^ 1
+]
+
 { #category : #converting }
 SAsmX86RegisterInt8 >> byte [
 	^ self

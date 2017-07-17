@@ -121,14 +121,16 @@ SAsmInstructionLowerer >> buildStackFrameLayout [
 
 { #category : #'stack frame' }
 SAsmInstructionLowerer >> computeArgumentDescriptor [
-	| oopArgumentCount nativeArgumentsSize totalArgumentSize alignedArgumentSize alignmentPaddingSize callingConvention |
+	| oopArgumentCount nativeArgumentsSize totalArgumentSize alignedArgumentSize alignmentPaddingSize callingConvention nativeArgumentAlignment |
 	oopArgumentCount := 0.
 	nativeArgumentsSize := 0.
 	callingConvention := function callingConvention.
+	nativeArgumentAlignment := target pointerSize.
 	stackFrameLayout arguments doWithIndex: [ :arg :index |
 		arg dynamicRoot ifTrue: [
 			oopArgumentCount := oopArgumentCount + 1
 		] ifFalse: [
+			nativeArgumentAlignment := nativeArgumentAlignment max: arg alignment.
 			nativeArgumentsSize := nativeArgumentsSize + (arg size alignedTo: (arg alignment max: callingConvention stackArgumentAlignment))
 		]
 	].
@@ -139,7 +141,8 @@ SAsmInstructionLowerer >> computeArgumentDescriptor [
 	alignmentPaddingSize := alignedArgumentSize - totalArgumentSize.
 	nativeArgumentsSize := nativeArgumentsSize + alignmentPaddingSize.
 
-	^ nativeArgumentsSize << 16 | (oopArgumentCount - 1)
+	self flag: 'Synchronize properly with SLVMFunctionType >> #argumentsDescriptorWithTarget:'.
+	^ oopArgumentCount | (nativeArgumentsSize << 8) | (((nativeArgumentAlignment highBit - target pointerSize highBit) max: 0) << 24)
 ]
 
 { #category : #'register allocation' }

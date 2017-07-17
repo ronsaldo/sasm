@@ -168,7 +168,8 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section el
 	relocation isRelativeSOffset64 ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_PC64
 	].
-	self halt.
+
+	self error: 'Unsupported relocation type.'
 	
 
 ]

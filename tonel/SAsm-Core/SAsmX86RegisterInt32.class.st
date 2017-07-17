@@ -9,6 +9,11 @@ SAsmX86RegisterInt32 class >> canHoldVirtualRegisterData: virtualRegister [
 	^ virtualRegister isInteger and: [virtualRegister size <= 4]
 ]
 
+{ #category : #accessing }
+SAsmX86RegisterInt32 >> alignment [
+	^ 4
+]
+
 { #category : #converting }
 SAsmX86RegisterInt32 >> dword [
 	^ self

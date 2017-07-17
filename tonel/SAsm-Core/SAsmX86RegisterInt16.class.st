@@ -4,6 +4,11 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
+{ #category : #accessing }
+SAsmX86RegisterInt16 >> alignment [
+	^ 2
+]
+
 { #category : #testing }
 SAsmX86RegisterInt16 >> isRegisterI16 [
 	^ true

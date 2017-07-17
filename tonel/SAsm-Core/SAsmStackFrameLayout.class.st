@@ -120,6 +120,11 @@ SAsmStackFrameLayout >> createArgument: spillingClass registerClass: argumentReg
 	^ self createArgument: spillingClass first alignment: spillingClass second dynamicRoot: spillingClass third registerClass: argumentRegisterClass
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmStackFrameLayout >> createArgument: spillingClass registerClass: argumentRegisterClass dynamicRoot: dynamicRootOverride [
+	^ self createArgument: spillingClass first alignment: spillingClass second dynamicRoot: (spillingClass third or: [dynamicRootOverride]) registerClass: argumentRegisterClass
+]
+
 { #category : #'register allocation' }
 SAsmStackFrameLayout >> createLocal: spillingClass [
 	^ self createLocalSize: spillingClass first alignment: spillingClass second dynamicRoot: spillingClass third
