@@ -137,7 +137,7 @@ SAsmInstructionLowerer >> computeArgumentDescriptor [
 
 	"Align the arguments"
 	totalArgumentSize := nativeArgumentsSize + (oopArgumentCount * target pointerSize).
-	alignedArgumentSize := totalArgumentSize alignedTo: callingConvention stackAlignment.
+	alignedArgumentSize := totalArgumentSize alignedTo: nativeArgumentAlignment.
 	alignmentPaddingSize := alignedArgumentSize - totalArgumentSize.
 	nativeArgumentsSize := nativeArgumentsSize + alignmentPaddingSize.
 
