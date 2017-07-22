@@ -565,6 +565,7 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 
 { #category : #testing }
 SAsmX86InstructionLowerer >> needsToSpillThreeAddressInstruction: tacInstruction [
+	(tacInstruction operation isReturn and: [ (function callingConvention hasContextMetadata or: [function contextMetaData isNotNil])]) ifTrue: [ ^ true ].
 	^ tacInstruction operation isIntegerDivision or: [ tacInstruction operation isIntegerRemainder ]
 ]
 
@@ -1609,6 +1610,10 @@ SAsmX86InstructionLowerer >> visitTacRemainder: instruction [
 
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacReturn: returnInstruction [
+	(function callingConvention hasContextMetadata or: [function contextMetaData isNotNil]) ifTrue: [
+		self widowThisContextSpilling: returnInstruction activeRegisters.
+	].
+
 	self returnValue: returnInstruction left valueHigh: returnInstruction right.
 	self leaveFrame.
 	
@@ -1727,4 +1732,41 @@ SAsmX86InstructionLowerer >> visitTacZeroExtend32: instruction [
 { #category : #casting }
 SAsmX86InstructionLowerer >> visitTacZeroExtend8: instruction [
 	self emitMove: instruction withExtension: MOVZX size: 1
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> widowThisContext [
+	| doReturn widowThisContextFunction |
+	doReturn := streamBuilder newPrivateSymbol: #doReturn.
+	widowThisContextFunction := self runtimeProvidedFunction: target objectModel widowThisContextFunction.
+	streamBuilder
+		x86: CMP dst: (target framePointerRegister asX86PointerOfSize: target pointerSize) - (ThisContextPointerIndex * target pointerSize) src: 0;
+		x86: JZ with: doReturn;
+		x86: PUSH with: target framePointerRegister;
+		x86: CALL with: widowThisContextFunction;
+		x86: ADD dst: target stackPointerRegister src: 4;
+		label: doReturn
+		
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> widowThisContextSpilling: activeRegisters [
+	| doReturn widowThisContextFunction |
+	doReturn := streamBuilder newPrivateSymbol: #doReturn.
+	widowThisContextFunction := self runtimeProvidedFunction: target objectModel widowThisContextFunction.
+	streamBuilder
+		x86: CMP dst: (target framePointerRegister asX86PointerOfSize: target pointerSize) + (ThisContextPointerIndex * target pointerSize) src: 0;
+		x86: JZ with: doReturn.
+	
+	"Call the widowing function"	
+	self spillRegisters: activeRegisters.
+	streamBuilder
+		x86: PUSH with: target framePointerRegister;
+		x86: CALL with: widowThisContextFunction;
+		x86: ADD dst: target stackPointerRegister src: 4.
+	self unspillRegisters: activeRegisters.
+	
+	streamBuilder
+		label: doReturn
+		
 ]

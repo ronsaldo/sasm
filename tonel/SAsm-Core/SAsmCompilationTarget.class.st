@@ -2,7 +2,8 @@ Class {
 	#name : #SAsmCompilationTarget,
 	#superclass : #Object,
 	#instVars : [
-		'operatingSystemName'
+		'operatingSystemName',
+		'objectModel'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -71,6 +72,16 @@ SAsmCompilationTarget >> linux [
 { #category : #'calling conventions' }
 SAsmCompilationTarget >> nakedCallingConvention [
 	^ self callingConventionNamed: #naked
+]
+
+{ #category : #accessing }
+SAsmCompilationTarget >> objectModel [
+	^ objectModel
+]
+
+{ #category : #accessing }
+SAsmCompilationTarget >> objectModel: anObject [
+	objectModel := anObject
 ]
 
 { #category : #accessing }

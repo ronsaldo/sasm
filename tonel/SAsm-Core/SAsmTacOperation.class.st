@@ -29,6 +29,11 @@ SAsmTacOperation >> isIntegerRemainder [
 	^ false
 ]
 
+{ #category : #testing }
+SAsmTacOperation >> isReturn [
+	^ false
+]
+
 { #category : #printing }
 SAsmTacOperation >> mnemonic [
 	^ self subclassResponsibility

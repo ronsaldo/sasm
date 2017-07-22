@@ -96,7 +96,7 @@ SAsmModule >> globalNamed: aName [
 
 { #category : #'gt-inspector-extension' }
 SAsmModule >> gtInspectorItemsIn: composite [
-	<gtInspectorPresentationOrder: 1>
+	<gtInspectorPresentationOrder: 0>
 	^ elements gtInspectorItemsIn: composite
 ]
 
@@ -110,7 +110,7 @@ SAsmModule >> gtInspectorMachineCode: composite [
 
 { #category : #'gt-inspector-extension' }
 SAsmModule >> gtInspectorModuleText: composite [
-	<gtInspectorPresentationOrder: 0>  
+	<gtInspectorPresentationOrder: 1>
 	^ (composite text)
 		title: 'Assembly Module';
 		format: #fullPrintText

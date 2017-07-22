@@ -9,6 +9,11 @@ SAsmTacReturnOperation >> acceptInstruction: anInstruction with: aVisitor [
 	^ aVisitor visitTacReturn: anInstruction
 ]
 
+{ #category : #testing }
+SAsmTacReturnOperation >> isReturn [
+	^ true
+]
+
 { #category : #printing }
 SAsmTacReturnOperation >> mnemonic [
 	^ #return

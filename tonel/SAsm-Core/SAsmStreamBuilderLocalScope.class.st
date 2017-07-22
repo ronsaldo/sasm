@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'parent',
-		'table'
+		'table',
+		'nameTable'
 	],
 	#category : #'SAsm-Core-Builder'
 }
@@ -18,9 +19,16 @@ SAsmStreamBuilderLocalScope class >> parent: aParentScope [
 	^ self new parent: aParentScope; yourself
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #adding }
 SAsmStreamBuilderLocalScope >> addMapToObject: anObject symbol: symbol [
-	table at: anObject put: symbol
+	table at: anObject put: symbol.
+	symbol name ifNotNil: [ nameTable at: symbol name put: symbol ]
+]
+
+{ #category : #adding }
+SAsmStreamBuilderLocalScope >> addNamedSymbol: symbol [
+	self assert: symbol name isNotNil.
+	nameTable at: symbol name put: symbol
 ]
 
 { #category : #'as yet unclassified' }
@@ -40,9 +48,18 @@ SAsmStreamBuilderLocalScope >> findMappedSymbolRecursively: anObject ifAbsent: a
 ]
 
 { #category : #'as yet unclassified' }
+SAsmStreamBuilderLocalScope >> findNamedSymbolRecursively: aName ifAbsent: absentBlock [
+	^ nameTable at: aName ifAbsent: [
+		parent ifNil: [ ^ absentBlock value ].
+		^ parent findNamedSymbolRecursively: aName ifAbsent: absentBlock
+	]
+]
+
+{ #category : #initialization }
 SAsmStreamBuilderLocalScope >> initialize [
 	super initialize.
 	table := Dictionary new.
+	nameTable := Dictionary new.
 ]
 
 { #category : #accessing }
@@ -58,4 +75,9 @@ SAsmStreamBuilderLocalScope >> parent: anObject [
 { #category : #accessing }
 SAsmStreamBuilderLocalScope >> table [
 	^ table
+]
+
+{ #category : #'as yet unclassified' }
+SAsmStreamBuilderLocalScope >> topScope [
+	^ parent ifNil: [ self ] ifNotNil: [ parent topScope ]
 ]

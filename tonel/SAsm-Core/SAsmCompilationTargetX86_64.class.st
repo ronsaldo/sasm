@@ -250,7 +250,12 @@ SAsmCompilationTargetX86_64 >> newIntegerVirtualRegister [
 
 { #category : #'virtual registers' }
 SAsmCompilationTargetX86_64 >> newIntegerVirtualRegistersForSize: size [
-	^ (1 to: size + 7 // 8) collect: [ :i | self newIntegerVirtualRegister ]
+	^ self newIntegerVirtualRegistersForSize: size dynamicRoot: false
+]
+
+{ #category : #'virtual registers' }
+SAsmCompilationTargetX86_64 >> newIntegerVirtualRegistersForSize: size dynamicRoot: dynamicRoot [
+	^ (1 to: size + 7 // 8) collect: [ :i | self newIntegerVirtualRegister dynamicRoot: dynamicRoot ]
 ]
 
 { #category : #accessing }

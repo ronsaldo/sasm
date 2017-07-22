@@ -40,6 +40,16 @@ SAsmVirtualRegister >> alignment [
 ]
 
 { #category : #accessing }
+SAsmVirtualRegister >> dynamicRoot [
+	^ dynamicRoot
+]
+
+{ #category : #accessing }
+SAsmVirtualRegister >> dynamicRoot: anObject [
+	dynamicRoot := anObject
+]
+
+{ #category : #accessing }
 SAsmVirtualRegister >> end [
 	^ lastUsage
 ]

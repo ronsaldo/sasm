@@ -143,6 +143,18 @@ SAsmStreamBuilder >> debugSourceLocation: debugInformation [
 ]
 
 { #category : #symbols }
+SAsmStreamBuilder >> findOrCreateExternalSymbol: aSymbol type: symbolType [
+	| scope |
+	scope := self topLocalScope.
+	^ scope findNamedSymbolRecursively: aSymbol ifAbsent: [
+		scope addNamedSymbol: (SAsmSymbol new name: aSymbol;
+			type: symbolType;
+			makeExternal) 
+	]
+
+]
+
+{ #category : #symbols }
 SAsmStreamBuilder >> findSymbolForObject: anObject [
 	anObject ifNil: [ ^ nil ].
 	^ localScope findMappedSymbolRecursively: anObject
@@ -151,6 +163,16 @@ SAsmStreamBuilder >> findSymbolForObject: anObject [
 { #category : #symbols }
 SAsmStreamBuilder >> findSymbolForObject: anObject ifAbsent: aBlock [
 	^ localScope findMappedSymbolRecursively: anObject ifAbsent: aBlock
+]
+
+{ #category : #symbols }
+SAsmStreamBuilder >> findSymbolWithName: aName [
+	^ self findSymbolWithName: aName ifAbsent: [self error: 'Failed to find symbol named: aName']
+]
+
+{ #category : #symbols }
+SAsmStreamBuilder >> findSymbolWithName: aName ifAbsent: aBlock [
+	^ localScope findNamedSymbolRecursively: aName ifAbsent: aBlock
 ]
 
 { #category : #initialization }
@@ -593,6 +615,11 @@ SAsmStreamBuilder >> textSection [
 			readable: true;
 			writeable: false
 	]
+]
+
+{ #category : #symbols }
+SAsmStreamBuilder >> topLocalScope [
+	^ localScope topScope
 ]
 
 { #category : #constants }

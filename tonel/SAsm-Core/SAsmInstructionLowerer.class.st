@@ -17,7 +17,8 @@ Class {
 	#classVars : [
 		'ContextMetadataElementCount',
 		'StackPageSize',
-		'StackSwitchPointerRequired'
+		'StackSwitchPointerRequired',
+		'ThisContextPointerIndex'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -28,6 +29,7 @@ SAsmInstructionLowerer class >> initialize [
 	
 	ContextMetadataElementCount := 4.
 	StackSwitchPointerRequired := 4. "Frame Pointer, link pointer(optional), selector, argument description".
+	ThisContextPointerIndex := -2.
 	StackPageSize := 4096.
 ]
 
@@ -311,6 +313,7 @@ SAsmInstructionLowerer >> removeExpiredRangesUntil: date from: rangeList do: aBl
 
 { #category : #'runtime functions' }
 SAsmInstructionLowerer >> runtimeProvidedFunction: aSymbol [
+	aSymbol isSymbol ifTrue: [ ^ streamBuilder findOrCreateExternalSymbol: aSymbol type: #function].
 	self halt.
 ]
 
