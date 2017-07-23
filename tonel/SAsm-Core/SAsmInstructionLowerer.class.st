@@ -219,7 +219,7 @@ SAsmInstructionLowerer >> nilGlobalSymbol [
 
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
-	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange spillingPoints finalActiveRanges |
+	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange spillingPoints finalActiveRanges activeRangesAtSpillingPoint |
 	freeSpillLocations := Dictionary new.
 	freeRegisters := Dictionary new.
 	allocatableRegisterClasses keysAndValuesDo: [ :key :value |
@@ -290,8 +290,11 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 		].
 	
 		[spillingPoints isNotEmpty and: [spillingPoints first index <= virtualRegister firstUsage]] whileTrue: [
-			spillingPoints first activeRegisters: currentActiveRanges asArray.
-			currentActiveRanges do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
+			"Do not spill registers that are stil not live"
+			activeRangesAtSpillingPoint := (currentActiveRanges select: [ :active | active firstUsage <= spillingPoints first index]) asArray.
+		
+			spillingPoints first activeRegisters: activeRangesAtSpillingPoint.
+			activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
 			spillingPoints removeFirst
 		]
 	].

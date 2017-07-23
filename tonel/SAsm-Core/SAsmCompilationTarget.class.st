@@ -43,6 +43,11 @@ SAsmCompilationTarget >> functionEntryPointAlignment [
 	^ 16
 ]
 
+{ #category : #accessing }
+SAsmCompilationTarget >> functionExitPointAlignment [
+	^ 16
+]
+
 { #category : #testing }
 SAsmCompilationTarget >> hasPositionIndependentCode [
 	^ false

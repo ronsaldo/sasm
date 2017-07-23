@@ -61,6 +61,11 @@ SAsmStream >> build: aBlock [
 	^ self
 ]
 
+{ #category : #accessing }
+SAsmStream >> childrenNodes [
+	^ self
+]
+
 { #category : #enumerating }
 SAsmStream >> collect: aBlock [
 	| result |
@@ -129,6 +134,11 @@ SAsmStream >> last [
 { #category : #accessing }
 SAsmStream >> last: anObject [
 	last := anObject
+]
+
+{ #category : #accessing }
+SAsmStream >> nodeTitle [
+	^ 'instruction stream'
 ]
 
 { #category : #optimizing }

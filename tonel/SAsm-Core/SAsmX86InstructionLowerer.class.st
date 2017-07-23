@@ -247,6 +247,18 @@ SAsmX86InstructionLowerer >> emitComparisonIntegerInto:result left: left right: 
 	^ self emitComparison: CMP into: result left: left right: right branchTrue: branchTrue branchFalse: branchFalse
 ]
 
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> emitExitPoint [
+	self leaveFrame.
+	
+	function callingConvention isStackCleanedByCaller ifTrue: [ 
+		streamBuilder x86: RET
+	] ifFalse: [
+		streamBuilder x86: RET with: stackFrameLayout argumentsSize
+	]
+
+]
+
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> emitIntegerDivisionInto: result dividend: dividend divisor: divisor instruction: x86DivisionInstruction resultRegisterIndex: resultRegisterIndex activeRegisters: activeRegisters [
 	| dividendPhysical divisorPhysical resultPhysical dividendUpperRegister dividendLowerRegister touchedRegisters toSpill resultRegister divisorRegister |
@@ -561,6 +573,11 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 		^ streamBuilder x86: MOV dst: physical src: valuePhysical
 	]
 	
+]
+
+{ #category : #testing }
+SAsmX86InstructionLowerer >> needsToSpillReturnFromFrame: instruction [
+	^ function callingConvention hasContextMetadata or: [function contextMetaData isNotNil]
 ]
 
 { #category : #testing }
@@ -1615,14 +1632,40 @@ SAsmX86InstructionLowerer >> visitTacReturn: returnInstruction [
 	].
 
 	self returnValue: returnInstruction left valueHigh: returnInstruction right.
-	self leaveFrame.
+	function exitPoint ifNil: [ 
+		self emitExitPoint
+	] ifNotNil: [
+		streamBuilder x86: JMP with: (streamBuilder findSymbolForObject: function exitPoint)
+	].
 	
-	function callingConvention isStackCleanedByCaller ifTrue: [ 
-		streamBuilder x86: RET
+]
+
+{ #category : #visiting }
+SAsmX86InstructionLowerer >> visitTacReturnFromFrame: returnInstruction [
+	| newFrame exitPoint returnValues physicalFrame |
+	(function callingConvention hasContextMetadata or: [function contextMetaData isNotNil]) ifTrue: [
+		self widowThisContextSpilling: returnInstruction activeRegisters.
+	].
+
+	newFrame := returnInstruction newFrame.
+	exitPoint := returnInstruction exitPoint.
+	returnValues := returnInstruction returnValues.
+	
+	returnValues size = 1 ifTrue: [ 
+		self returnValue: returnValues first valueHigh: nil.
 	] ifFalse: [
-		streamBuilder x86: RET with: stackFrameLayout argumentsSize
-	]
+		self assert: returnValues size = 2.
+		self returnValue: returnValues first valueHigh: returnValues second.
+	].
 	
+	self pushValueToTheStack: exitPoint.
+	physicalFrame := self virtualToPhysical: newFrame.
+	
+	self flag: 'TODO: Allow adjusting the stack pointer'.
+	streamBuilder
+		x86: MOV dst: target framePointerRegister src: physicalFrame;
+		x86: RET.
+
 ]
 
 { #category : #casting }

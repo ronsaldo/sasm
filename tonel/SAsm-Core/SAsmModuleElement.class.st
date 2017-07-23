@@ -5,7 +5,8 @@ Class {
 	#classTraits : 'TSAsmVisibility classTrait',
 	#instVars : [
 		'visibility',
-		'target'
+		'target',
+		'debugName'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -16,6 +17,16 @@ SAsmModuleElement >> asSAsmInstructionOperand [
 		symbol: self;
 		size: target pointerSize;
 		yourself
+]
+
+{ #category : #accessing }
+SAsmModuleElement >> debugName [
+	^ debugName
+]
+
+{ #category : #accessing }
+SAsmModuleElement >> debugName: anObject [
+	debugName := anObject
 ]
 
 { #category : #'as yet unclassified' }

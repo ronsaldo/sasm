@@ -79,6 +79,11 @@ SAsmBasicBlock >> name: anObject [
 	name := anObject
 ]
 
+{ #category : #accessing }
+SAsmBasicBlock >> nodeTitle [
+	^ 'basic block ' , self validName
+]
+
 { #category : #writing }
 SAsmBasicBlock >> prepareWriteToStream: aStreamBuilder [
 	aStreamBuilder addPrivateSymbol: name for: self.

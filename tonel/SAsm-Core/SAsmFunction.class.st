@@ -11,7 +11,8 @@ Class {
 		'constantZone',
 		'constantZoneBuilder',
 		'contextMetaData',
-		'debugSourceLocation'
+		'debugSourceLocation',
+		'exitPoint'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -87,6 +88,11 @@ SAsmFunction >> callingConventionNamed: aName [
 { #category : #'calling conventions' }
 SAsmFunction >> cdecl [
 	self callingConvention: target cdeclCallingConvention
+]
+
+{ #category : #'gt-inspector-extension' }
+SAsmFunction >> childrenNodes [
+	^ basicBlocks
 ]
 
 { #category : #'as yet unclassified' }
@@ -174,6 +180,11 @@ SAsmFunction >> enumerateInstructionPositions [
 
 ]
 
+{ #category : #accessing }
+SAsmFunction >> exitPoint [
+	^ exitPoint
+]
+
 { #category : #printing }
 SAsmFunction >> fullPrintOn: aStream [
 	self isEmpty ifTrue: [
@@ -192,17 +203,21 @@ SAsmFunction >> fullPrintOn: aStream [
 ]
 
 { #category : #'gt-inspector-extension' }
-SAsmFunction >> gtInspectorItemsIn: composite [
-	<gtInspectorPresentationOrder: 1>
-	^ basicBlocks gtInspectorItemsIn: composite
-]
-
-{ #category : #'gt-inspector-extension' }
 SAsmFunction >> gtInspectorModuleText: composite [
 	<gtInspectorPresentationOrder: 0>  
 	^ (composite text)
 		title: 'Function Assembly';
 		format: #fullPrintText
+]
+
+{ #category : #'gt-inspector-extension' }
+SAsmFunction >> gtTreeViewIn: composite [
+	<gtInspectorPresentationOrder: 1>
+	composite tree 
+		title: 'Nodes';
+		display: [ :node | node ];
+		children: [ :each | each childrenNodes];
+		format: [ :node | node nodeTitle ]
 ]
 
 { #category : #initialization }
@@ -292,6 +307,20 @@ SAsmFunction >> newLocal: size alignment: alignment dynamicRoot: dynamicRoot [
 	^ stackFrameLayout createLocalSize: size alignment: alignment dynamicRoot: dynamicRoot
 ]
 
+{ #category : #accessing }
+SAsmFunction >> nodeTitle [
+	^ 'function ' , self validName
+]
+
+{ #category : #writing }
+SAsmFunction >> prepareWriteToStream: streamBuilder [
+	super prepareWriteToStream: streamBuilder.
+	exitPoint ifNotNil: [ 
+		(streamBuilder addSymbol: nil for: exitPoint)
+			visibility: #private.
+	].
+]
+
 { #category : #printing }
 SAsmFunction >> prettyPrintOn: aStream [
 	aStream putKeyword: 'function'; space; putIdentifier: self validName
@@ -300,6 +329,12 @@ SAsmFunction >> prettyPrintOn: aStream [
 { #category : #printing }
 SAsmFunction >> printOn: aStream [
 	aStream nextPutAll: 'function '; nextPutAll: self validName
+]
+
+{ #category : #accessing }
+SAsmFunction >> requiredExitPoint [
+	^ exitPoint ifNil: [ exitPoint := SAsmFunctionExitPoint new function: self ]
+
 ]
 
 { #category : #'calling conventions' }
@@ -353,6 +388,14 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 			
 		instructionLowerer enterFrame.
 		basicBlocks do: [ :bb | bb writeToStream: aStreamBuilder ].
+		
+		exitPoint ifNotNil: [
+			aStreamBuilder
+				alignCode: target functionExitPointAlignment;
+				label: (aStreamBuilder findSymbolForObject: exitPoint).
+			instructionLowerer emitExitPoint.
+		].
+		
 		aStreamBuilder labelEnd: (aStreamBuilder findSymbolForObject: self).
 		
 		constantZone ifNotNil: [

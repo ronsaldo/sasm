@@ -25,6 +25,11 @@ SAsmStreamElement >> asSAsmStreamElement [
 SAsmStreamElement >> blockSuccessorsDo: aBlock [
 ]
 
+{ #category : #accessing }
+SAsmStreamElement >> childrenNodes [
+	^ #()
+]
+
 { #category : #'as yet unclassified' }
 SAsmStreamElement >> computeMaximalSize [
 ]
@@ -118,6 +123,11 @@ SAsmStreamElement >> next [
 { #category : #accessing }
 SAsmStreamElement >> next: anObject [
 	next := anObject
+]
+
+{ #category : #accessing }
+SAsmStreamElement >> nodeTitle [
+	^ self fullPrintString
 ]
 
 { #category : #accessing }

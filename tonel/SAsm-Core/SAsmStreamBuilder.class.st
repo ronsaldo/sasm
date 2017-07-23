@@ -495,6 +495,15 @@ SAsmStreamBuilder >> tacReturn: value [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacReturnFromFrame: newFrame exitPoint: exitPoint value: returnValue [
+	^ self add: (SAsmTacReturnFromFrame new
+		newFrame: newFrame asSAsmInstructionOperand;
+		exitPoint: exitPoint asSAsmInstructionOperand;
+		returnValues: (returnValue collect: #asSAsmInstructionOperand);
+		yourself)
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacReturnVoid [
 	^ self tacOperation: TacReturn
 ]
