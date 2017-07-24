@@ -12,6 +12,12 @@ SAsmLabel >> accept: aVisitor [
 	^ aVisitor visitLabel: self
 ]
 
+{ #category : #accessing }
+SAsmLabel >> computeMaximalSize [
+	symbol value: position 
+
+]
+
 { #category : #printing }
 SAsmLabel >> fullPrintOn: aStream [
 	aStream withLessIndentationLevel: [
