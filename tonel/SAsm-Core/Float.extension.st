@@ -9,3 +9,8 @@ Float >> asSAsmConstantExpression [
 Float >> asSAsmInstructionOperand [
 	^ SAsmImmediateConstant new value: self
 ]
+
+{ #category : #'*SAsm-Core' }
+Float >> sasmOperandHasFixedSize [
+	^ true
+]

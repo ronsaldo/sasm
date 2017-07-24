@@ -34,6 +34,11 @@ SAsmStreamElement >> childrenNodes [
 SAsmStreamElement >> computeMaximalSize [
 ]
 
+{ #category : #testing }
+SAsmStreamElement >> hasFixedSize [
+	^ false
+]
+
 { #category : #accessing }
 SAsmStreamElement >> index [
 	^ index

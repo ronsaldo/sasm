@@ -12,6 +12,11 @@ SAsmLabelEnd >> accept: aVisitor [
 	^ aVisitor visitLabelEnd: self
 ]
 
+{ #category : #testing }
+SAsmLabelEnd >> hasFixedSize [
+	^ true
+]
+
 { #category : #visiting }
 SAsmLabelEnd >> prepareWriteToStream: aStreamBuilder [
 	aStreamBuilder addSymbolCopy: symbol

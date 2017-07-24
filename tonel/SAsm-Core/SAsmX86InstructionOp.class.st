@@ -18,7 +18,7 @@ SAsmX86InstructionOp >> canWriteInstruction: anInstruction [
 
 { #category : #accessing }
 SAsmX86InstructionOp >> maxSize [
-	^ 1
+	^ opcode size
 ]
 
 { #category : #writing }

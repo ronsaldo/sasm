@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'first',
 		'last',
-		'target'
+		'target',
+		'hasFixedSize'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -117,6 +118,25 @@ SAsmStream >> gtInspectorAssemblyStreamText: composite [
 ]
 
 { #category : #testing }
+SAsmStream >> hasFixedSize [
+	hasFixedSize ifNotNil: [ ^ hasFixedSize ].
+	(#('.debug_line') includes: self splitedSectionName) ifTrue: [ 
+		^ hasFixedSize := false.
+	].
+
+	hasFixedSize := true.
+	self do: [:instruction |
+		(instruction isDebugInstruction or: [instruction hasFixedSize]) ifFalse: [
+			hasFixedSize := false.
+			^ false
+		].
+	].
+
+	^ hasFixedSize
+
+]
+
+{ #category : #testing }
 SAsmStream >> isEmpty [
 	^ first isNil
 ]
@@ -186,6 +206,34 @@ SAsmStream >> select: aBlock thenDo: doBlock [
 	].
 	^ result
 
+]
+
+{ #category : #'as yet unclassified' }
+SAsmStream >> splitInSections [
+	| sectionDictionary currentSection sectionStreams |
+	sectionStreams := OrderedCollection new.
+	sectionDictionary := Dictionary new.
+	currentSection := nil.
+	self do: [ :instruction |
+		instruction isSection ifTrue: [ 
+			currentSection := sectionDictionary at: instruction name ifAbsentPut: [
+				|sectionStream|
+				sectionStream := SAsmStream new target: target.
+				sectionStreams add: sectionStream.
+				sectionStream add: instruction copy.
+				sectionStream
+			]
+		] ifFalse: [ 
+			currentSection add: instruction copy.
+		].
+	].
+
+	^ sectionStreams
+]
+
+{ #category : #testing }
+SAsmStream >> splitedSectionName [
+	^ self first name
 ]
 
 { #category : #accessing }

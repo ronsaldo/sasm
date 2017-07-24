@@ -4,7 +4,9 @@ Class {
 	#instVars : [
 		'size',
 		'template',
-		'arguments'
+		'arguments',
+		'bestTemplateAlternative',
+		'argumentsHaveFixedSize'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -29,6 +31,26 @@ SAsmInstruction >> arguments: anObject [
 	arguments := anObject
 ]
 
+{ #category : #accessing }
+SAsmInstruction >> argumentsHaveFixedSize [
+	argumentsHaveFixedSize ifNotNil: [ ^ argumentsHaveFixedSize ].
+	arguments do: [ :arg |
+		arg hasFixedSize ifFalse: [ ^ argumentsHaveFixedSize := false ]
+	].
+
+	^ argumentsHaveFixedSize := true
+]
+
+{ #category : #accessing }
+SAsmInstruction >> bestTemplateAlternative [
+	^ bestTemplateAlternative
+]
+
+{ #category : #accessing }
+SAsmInstruction >> bestTemplateAlternative: anObject [
+	bestTemplateAlternative := anObject
+]
+
 { #category : #'as yet unclassified' }
 SAsmInstruction >> computeMaximalSize [
 	size := template computeMaximalSizeFor: self
@@ -47,6 +69,11 @@ SAsmInstruction >> fullPrintOn: aStream [
 		aStream space.
 		arg prettyPrintOn: aStream
 	]
+]
+
+{ #category : #testing }
+SAsmInstruction >> hasFixedSize [
+	^ false
 ]
 
 { #category : #accessing }

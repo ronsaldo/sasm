@@ -15,6 +15,11 @@ SAsmX86InstructionOpALI8 >> canWriteInstruction: anInstruction [
 ]
 
 { #category : #testing }
+SAsmX86InstructionOpALI8 >> maxSize [
+	^ opcode size + 1
+]
+
+{ #category : #testing }
 SAsmX86InstructionOpALI8 >> writeInstruction: instruction with: writer [
 	writer nextPutAll: opcode.
 	writer nextPutI8: instruction arguments second

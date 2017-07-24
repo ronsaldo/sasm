@@ -95,6 +95,20 @@ SAsmBinaryObject >> compilationTarget: anObject [
 	compilationTarget := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmBinaryObject >> concretizePendingSymbolWith: objectWriter [
+	sections do: [ :sec | sec concretizePendingSymbolWith: objectWriter ]
+	
+]
+
+{ #category : #accessing }
+SAsmBinaryObject >> fullCodeSize [
+	| fullCodeSize |
+	fullCodeSize := 0.
+	sections do: [ :sec | fullCodeSize := fullCodeSize + sec size ].
+	^ fullCodeSize
+]
+
 { #category : #'writing binary' }
 SAsmBinaryObject >> generateBinaryWithBase: baseAddress [
 	| stream |
@@ -153,6 +167,14 @@ SAsmBinaryObject >> sections [
 { #category : #accessing }
 SAsmBinaryObject >> sections: anObject [
 	sections := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObject >> showSectionSizesInTranscript [
+	sections do: [ :sec |
+		Transcript show: sec name; space; show: sec size; space.
+	].
+	Transcript cr.
 ]
 
 { #category : #accessing }

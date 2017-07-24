@@ -49,6 +49,11 @@ SAsmSection >> fullPrintOn: aStream [
 	]
 ]
 
+{ #category : #testing }
+SAsmSection >> hasFixedSize [
+	^ true
+]
+
 { #category : #initialization }
 SAsmSection >> initialize [
 	super initialize.

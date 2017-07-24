@@ -57,6 +57,12 @@ SAsmBinaryObjectSection >> base: anObject [
 	base := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSection >> concretizePendingSymbolWith: objectWriter [
+	relocations do: [ :rel | rel concretizePendingSymbolWith: objectWriter ]
+	
+]
+
 { #category : #accessing }
 SAsmBinaryObjectSection >> currentDataSize [
 	^ data position
@@ -132,6 +138,11 @@ SAsmBinaryObjectSection >> name: anObject [
 { #category : #'data writing' }
 SAsmBinaryObjectSection >> nextPutZeros: count [
 	1 to: count do: [ :i | data nextPut: 0 ]
+]
+
+{ #category : #printing }
+SAsmBinaryObjectSection >> printOn: aStream [
+	aStream nextPutAll: 'section '; nextPutAll: name
 ]
 
 { #category : #accessing }

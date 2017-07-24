@@ -7,6 +7,11 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #testing }
+SAsmImmediateConstant >> hasFixedSize [
+	^ true
+]
+
 { #category : #accessing }
 SAsmImmediateConstant >> immediateValue [
 	^ self value

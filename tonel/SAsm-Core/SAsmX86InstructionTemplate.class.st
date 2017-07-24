@@ -27,8 +27,13 @@ SAsmX86InstructionTemplate >> computeMaximalSizeFor: anInstruction [
 
 { #category : #'as yet unclassified' }
 SAsmX86InstructionTemplate >> findBestAlternativeFor: anInstruction [
+	anInstruction bestTemplateAlternative ifNotNil: [ :alt | ^ alt ].
+	
 	alternatives do: [ :alternative |
 		(alternative canWriteInstruction: anInstruction) ifTrue: [
+			anInstruction argumentsHaveFixedSize ifTrue: [
+				anInstruction bestTemplateAlternative: alternative
+			].
 			^ alternative
 		].
 	].

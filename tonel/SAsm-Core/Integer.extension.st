@@ -9,3 +9,8 @@ Integer >> asSAsmConstantExpression [
 Integer >> asSAsmInstructionOperand [
 	^ SAsmImmediateConstant new value: self
 ]
+
+{ #category : #'*SAsm-Core' }
+Integer >> sasmOperandHasFixedSize [
+	^ true
+]

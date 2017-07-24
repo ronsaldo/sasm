@@ -19,6 +19,11 @@ SAsmConstantExpressionValue >> fullPrintOn: aStream [
 	value fullPrintOn: aStream
 ]
 
+{ #category : #accessing }
+SAsmConstantExpressionValue >> hasFixedSize [
+	^ true
+]
+
 { #category : #testing }
 SAsmConstantExpressionValue >> isConstantExpressionValue [
 	^ true
@@ -31,7 +36,7 @@ SAsmConstantExpressionValue >> size [
 
 { #category : #accessing }
 SAsmConstantExpressionValue >> size: anObject [
-	size := anObject
+	size := anObject.
 ]
 
 { #category : #accessing }

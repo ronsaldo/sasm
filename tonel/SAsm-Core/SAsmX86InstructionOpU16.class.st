@@ -18,7 +18,7 @@ SAsmX86InstructionOpU16 >> canWriteInstruction: anInstruction [
 
 { #category : #accessing }
 SAsmX86InstructionOpU16 >> maxSize [
-	^ 3
+	^ opcode size + 2
 ]
 
 { #category : #'as yet unclassified' }

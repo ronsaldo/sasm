@@ -28,6 +28,11 @@ SAsmAlignInstruction >> fullPrintOn: aStream [
 	aStream putKeyword: 'align '; print: alignment
 ]
 
+{ #category : #testing }
+SAsmAlignInstruction >> hasFixedSize [
+	^ true
+]
+
 { #category : #initialization }
 SAsmAlignInstruction >> initialize [
 	super initialize.

@@ -13,6 +13,12 @@ SAsmX86InstructionOppR >> canWriteInstruction: anInstruction [
 		and: [ anInstruction first isRegisterWord]
 ]
 
+{ #category : #accessing }
+SAsmX86InstructionOppR >> maxSize [
+	self assert: opcode size = 1.
+	^ 2
+]
+
 { #category : #'as yet unclassified' }
 SAsmX86InstructionOppR >> writeInstruction: instruction with: writer [
 	| register |

@@ -21,6 +21,11 @@ SAsmLabel >> fullPrintOn: aStream [
 ]
 
 { #category : #testing }
+SAsmLabel >> hasFixedSize [
+	^ true
+]
+
+{ #category : #testing }
 SAsmLabel >> isLabel [
 	^ true
 ]

@@ -13,6 +13,11 @@ SAsmX86InstructionOpS8 >> canWriteInstruction: anInstruction [
 		and: [ anInstruction first isImmediateS8 ]
 ]
 
+{ #category : #accessing }
+SAsmX86InstructionOpS8 >> maxSize [
+	^ opcode size + 1
+]
+
 { #category : #'as yet unclassified' }
 SAsmX86InstructionOpS8 >> writeInstruction: instruction with: writer [
 	writer nextPutAll: opcode; nextPutI8: instruction arguments first

@@ -18,6 +18,11 @@ SAsmConstantZeros >> fullPrintOn: aStream [
 ]
 
 { #category : #testing }
+SAsmConstantZeros >> hasFixedSize [
+	^ true
+]
+
+{ #category : #testing }
 SAsmConstantZeros >> isConstantZeros [
 	^ true
 ]

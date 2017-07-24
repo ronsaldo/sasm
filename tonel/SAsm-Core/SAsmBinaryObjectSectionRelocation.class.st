@@ -6,7 +6,8 @@ Class {
 		'offset',
 		'addend',
 		'symbol',
-		'type'
+		'type',
+		'pendingSymbol'
 	],
 	#classVars : [
 		'AbsoluteOffset16',
@@ -145,6 +146,16 @@ SAsmBinaryObjectSectionRelocation >> clearImplicitAddendIn: targetSection [
 
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSectionRelocation >> concretizePendingSymbolWith: writer [
+	pendingSymbol ifNil: [ ^ self ].
+	
+	addend := addend + pendingSymbol value.
+	section := writer getSectionNamed: pendingSymbol sectionName.
+	pendingSymbol := nil
+
+]
+
 { #category : #initialization }
 SAsmBinaryObjectSectionRelocation >> initialize [
 	super initialize.
@@ -211,6 +222,16 @@ SAsmBinaryObjectSectionRelocation >> offset [
 { #category : #accessing }
 SAsmBinaryObjectSectionRelocation >> offset: anObject [
 	offset := anObject
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSectionRelocation >> pendingSymbol [
+	^ pendingSymbol
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectSectionRelocation >> pendingSymbol: anObject [
+	pendingSymbol := anObject
 ]
 
 { #category : #testing }
