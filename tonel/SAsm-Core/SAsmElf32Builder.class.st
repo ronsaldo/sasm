@@ -36,7 +36,7 @@ SAsmElf32Builder >> sectionHeaderClass [
 
 { #category : #'format classes' }
 SAsmElf32Builder >> stringTableClass [
-	^ SAsmElfStringTable
+	^ SAsmBinaryFileCStringTable
 ]
 
 { #category : #'format classes' }

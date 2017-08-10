@@ -126,7 +126,7 @@ SAsmBinaryObjectWriter >> generateFixedSizeStreams: aCollectionOfStreams [
 	symbolSet := Set new.
 	debugSourceLocationsList := OrderedCollection new.
 	
-	aCollectionOfStreams first target setupBinaryObjectWriter: self.
+	compilationTarget setupBinaryObjectWriter: self.
 
 	"Create the sections."
 	currentSection := nil.	

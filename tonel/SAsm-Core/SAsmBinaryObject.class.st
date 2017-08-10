@@ -7,8 +7,29 @@ Class {
 		'symbols',
 		'moduleType'
 	],
+	#classVars : [
+		'MachOSectionToSegmentMap'
+	],
 	#category : #'SAsm-Core-Binary'
 }
+
+{ #category : #initialization }
+SAsmBinaryObject class >> initialize [
+	MachOSectionToSegmentMap := Dictionary newFromPairs: #(
+		'.text' '__TEXT'
+		'.data' '__DATA'
+		'.rodata' '__DATA'
+		'.bss' '__DATA'
+		
+		'.oop' '__OOP'
+		
+		'.debug_abbrev' '__DWARF'
+		'.debug_line' '__DWARF'
+		'.debug_info' '__DWARF'
+		'.debug_loc' '__DWARF'
+		'.debug_str' '__DWARF'
+	).
+]
 
 { #category : #comparing }
 SAsmBinaryObject >> = other [
@@ -85,6 +106,44 @@ SAsmBinaryObject >> buildElfOn: builder [
 	]
 ]
 
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> buildMachOOn: builder [
+	| objectSegment machoSection segmentName baseAddress |
+	builder header
+		cputype: compilationTarget machCPUType;
+		cpusubtype: compilationTarget machCPUSubType.
+	self isObjectCode ifTrue: [ builder setObjectCode].
+	
+	baseAddress := 0.
+	objectSegment := builder newSegment.
+	sections do: [ :section |
+		machoSection := builder addDataComponent: section inSegment: objectSegment.
+		segmentName := self machoSegmentNameFor: section.
+		machoSection
+			name: (self machoSectionNameFor: section);
+			segmentName: segmentName;
+			align: (section alignment highBit - 1);
+			addr: baseAddress.
+		baseAddress := baseAddress + section size.
+		
+		section loaded ifFalse: [ machoSection zeroFill ].
+		section executable ifTrue: [
+			machoSection pureInstructions.
+			objectSegment executable.
+		].
+		section readable ifTrue: [ objectSegment readable ].
+		section writeable ifTrue: [ objectSegment writeable ].
+	].
+
+	builder createSymbolTable.
+	
+	symbols do: [ :symbol |
+		builder addSymbol: symbol.
+	].
+
+
+]
+
 { #category : #accessing }
 SAsmBinaryObject >> compilationTarget [
 	^ compilationTarget
@@ -141,6 +200,22 @@ SAsmBinaryObject >> generateElf64 [
 	^ stream contents
 ]
 
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> generateMachO32 [
+	| stream |
+	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
+	self writeMachO32ToStream: stream.
+	^ stream contents
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> generateMachO64 [
+	| stream |
+	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
+	self writeMachO64ToStream: stream.
+	^ stream contents
+]
+
 { #category : #initialization }
 SAsmBinaryObject >> initialize [
 	super initialize.
@@ -157,6 +232,18 @@ SAsmBinaryObject >> isFullProgram [
 { #category : #testing }
 SAsmBinaryObject >> isObjectCode [
 	^ moduleType == #object
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> machoSectionNameFor: section [
+	^ section name first = $. ifTrue: [ '__' , section name allButFirst ] ifFalse: [ section name ]
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> machoSegmentNameFor: section [
+	MachOSectionToSegmentMap at: section name ifPresent: [ :segmentName | ^ segmentName ].
+	self halt
+
 ]
 
 { #category : #accessing }
@@ -276,5 +363,46 @@ SAsmBinaryObject >> writeElfToFileNamed: fileName [
 		self writeElf64ToFileNamed: fileName
 	] ifFalse: [
 		self writeElf32ToFileNamed: fileName
+	]
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> writeMachO32ToFileNamed: fileName [
+	fileName asFileReference writeStreamDo: [ :out |
+		out truncate; binary.
+		out nextPutAll: self generateMachO32
+	]
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> writeMachO32ToStream: stream [
+	| builder |
+	builder := SAsmMachO32Builder new.
+	self buildMachOOn: builder.
+	builder writeToStream: stream
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> writeMachO64ToFileNamed: fileName [
+	fileName asFileReference writeStreamDo: [ :out |
+		out truncate; binary.
+		out nextPutAll: self generateMachO64
+	]
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> writeMachO64ToStream: stream [
+	| builder |
+	builder := SAsmMachO64Builder new.
+	self buildMachOOn: builder.
+	builder writeToStream: stream
+]
+
+{ #category : #'writing mach-o' }
+SAsmBinaryObject >> writeMachOToFileNamed: fileName [
+	compilationTarget usesMachO64 ifTrue: [
+		self writeMachO64ToFileNamed: fileName
+	] ifFalse: [
+		self writeMachO32ToFileNamed: fileName
 	]
 ]

@@ -119,6 +119,11 @@ SAsmCompilationTarget >> usesElf64 [
 	self subclassResponsibility
 ]
 
+{ #category : #accessing }
+SAsmCompilationTarget >> usesMachO64 [
+	self subclassResponsibility
+]
+
 { #category : #'operating systems' }
 SAsmCompilationTarget >> win32 [
 	self operatingSystemName: #win32

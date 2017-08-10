@@ -63,7 +63,7 @@ SAsmCompilationTargetX86 >> callingConventionNamed: aCallingConventionName [
 	self error: 'Unknown calling convention ' , aCallingConventionName
 ]
 
-{ #category : #'elf constants' }
+{ #category : #coff }
 SAsmCompilationTargetX86 >> coffMachine [
 	^ IMAGE_FILE_MACHINE_I386
 ]
@@ -162,6 +162,16 @@ SAsmCompilationTargetX86 >> initialize [
 	positionIndependentCode := false
 ]
 
+{ #category : #'mach-o' }
+SAsmCompilationTargetX86 >> machCPUSubType [
+	^ SAsmMachConstants CPU_SUBTYPE_I386_ALL
+]
+
+{ #category : #'mach-o' }
+SAsmCompilationTargetX86 >> machCPUType [
+	^ SAsmMachConstants CPU_TYPE_X86
+]
+
 { #category : #'virtual registers' }
 SAsmCompilationTargetX86 >> newDoubleFloatVirtualRegister [
 	^ SAsmFloatVirtualRegister new
@@ -224,6 +234,11 @@ SAsmCompilationTargetX86 >> stackPointerRegister [
 
 { #category : #accessing }
 SAsmCompilationTargetX86 >> usesElf64 [
+	^ false
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86 >> usesMachO64 [
 	^ false
 ]
 

@@ -1,15 +1,15 @@
 Class {
-	#name : #SAsmElfStringTable,
+	#name : #SAsmBinaryFileCStringTable,
 	#superclass : #SAsmBinaryFileComponent,
 	#instVars : [
 		'content',
 		'stringDictionary'
 	],
-	#category : #'SAsm-Core-Elf'
+	#category : #'SAsm-Core-Binary'
 }
 
 { #category : #adding }
-SAsmElfStringTable >> addString: aString [
+SAsmBinaryFileCStringTable >> addString: aString [
 	| result |
 	^ stringDictionary at: aString ifAbsentPut: [ 
 		result := content position.
@@ -20,12 +20,12 @@ SAsmElfStringTable >> addString: aString [
 ]
 
 { #category : #accessing }
-SAsmElfStringTable >> contents [
+SAsmBinaryFileCStringTable >> contents [
 	^ content contents
 ]
 
 { #category : #initialization }
-SAsmElfStringTable >> initialize [
+SAsmBinaryFileCStringTable >> initialize [
 	super initialize.
 	content := WriteStream on: (ByteArray new: 100).
 	stringDictionary := Dictionary new.
@@ -33,11 +33,11 @@ SAsmElfStringTable >> initialize [
 ]
 
 { #category : #accessing }
-SAsmElfStringTable >> size [
+SAsmBinaryFileCStringTable >> size [
 	^ content size
 ]
 
 { #category : #'as yet unclassified' }
-SAsmElfStringTable >> writeOn: aStream [
+SAsmBinaryFileCStringTable >> writeOn: aStream [
 	aStream nextPutAll: self contents
 ]

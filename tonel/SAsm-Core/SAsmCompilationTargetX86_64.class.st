@@ -218,6 +218,16 @@ SAsmCompilationTargetX86_64 >> initialize [
 	positionIndependentCode := false
 ]
 
+{ #category : #'mach-o' }
+SAsmCompilationTargetX86_64 >> machCPUSubType [
+	^ SAsmMachConstants CPU_SUBTYPE_I386_ALL
+]
+
+{ #category : #'mach-o' }
+SAsmCompilationTargetX86_64 >> machCPUType [
+	^ SAsmMachConstants CPU_TYPE_X86_64
+]
+
 { #category : #'virtual registers' }
 SAsmCompilationTargetX86_64 >> newDoubleFloatVirtualRegister [
 	^ SAsmFloatVirtualRegister new
@@ -275,6 +285,11 @@ SAsmCompilationTargetX86_64 >> stackPointerRegister [
 
 { #category : #accessing }
 SAsmCompilationTargetX86_64 >> usesElf64 [
+	^ true
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86_64 >> usesMachO64 [
 	^ true
 ]
 
