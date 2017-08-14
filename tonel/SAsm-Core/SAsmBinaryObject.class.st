@@ -141,7 +141,14 @@ SAsmBinaryObject >> buildMachOOn: builder [
 		builder addSymbol: symbol.
 	].
 
-
+	builder
+		computeSymbolIndices;
+		computeSectionOffsets.
+	sections do: [ :section |
+		section relocations do: [ :relocation |
+			compilationTarget convertRelocation: relocation section: section machoBuilder: builder
+		]
+	]
 ]
 
 { #category : #accessing }

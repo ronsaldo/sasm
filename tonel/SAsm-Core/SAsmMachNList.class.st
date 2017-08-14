@@ -6,7 +6,8 @@ Class {
 		'n_type',
 		'n_sect',
 		'n_desc',
-		'n_value'
+		'n_value',
+		'index'
 	],
 	#pools : [
 		'SAsmMachConstants'
@@ -17,6 +18,16 @@ Class {
 { #category : #'as yet unclassified' }
 SAsmMachNList class >> entrySize [
 	^ 12
+]
+
+{ #category : #accessing }
+SAsmMachNList >> index [
+	^ index
+]
+
+{ #category : #accessing }
+SAsmMachNList >> index: anObject [
+	index := anObject
 ]
 
 { #category : #initialization }

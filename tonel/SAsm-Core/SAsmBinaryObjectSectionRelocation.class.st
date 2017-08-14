@@ -107,11 +107,16 @@ SAsmBinaryObjectSectionRelocation >> applyFullRelocationIn: targetSection [
 
 { #category : #'as yet unclassified' }
 SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection [
-	self applyImplicitAddendIn: targetSection relativeWithExtraAddend: 0
+	self applyImplicitAddendIn: targetSection absoluteWithExtraAddend: 0 relativeWithExtraAddend: 0
 ]
 
 { #category : #'as yet unclassified' }
-SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection relativeWithExtraAddend: extraRelativeAddend [
+SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection absoluteWithExtraAddend: extraAbsoluteAddend [ 
+	self applyImplicitAddendIn: targetSection absoluteWithExtraAddend: extraAbsoluteAddend relativeWithExtraAddend: 0
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection absoluteWithExtraAddend: extraAbsoluteAddend relativeWithExtraAddend: extraRelativeAddend [
 	| data |	
 	data := targetSection data.
 	self isRelativeSOffset64 ifTrue: [ 
@@ -122,14 +127,20 @@ SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection relati
 		^ data unsignedLongAt: offset + 1 put: (addend + extraRelativeAddend bitAnd: 16rFFFFFFFF)
 	].
 
-	(self isAbsoluteOffset64 or: [ self isSectionRelativeOffset64 ]) ifTrue: [ 
-		^ data unsignedLongLongAt: offset + 1 put: (addend bitAnd: 16rFFFFFFFFFFFFFFFF)
+	(self isAbsoluteOffset64 or: [ self isSectionRelativeOffset64 ])ifTrue: [ 
+		^ data unsignedLongLongAt: offset + 1 put: (addend + extraAbsoluteAddend bitAnd: 16rFFFFFFFFFFFFFFFF)
 	].
 
 	(self isAbsoluteOffset32 or: [ self isSectionRelativeOffset32 ]) ifTrue: [
-		^ data unsignedLongAt: offset + 1 put: (addend bitAnd: 16rFFFFFFFF)
+		^ data unsignedLongAt: offset + 1 put: (addend + extraAbsoluteAddend bitAnd: 16rFFFFFFFF)
 	].
 
+	self error: 'unsupported relocation'
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection relativeWithExtraAddend: extraRelativeAddend [
+	self applyImplicitAddendIn: targetSection absoluteWithExtraAddend: 0 relativeWithExtraAddend: extraRelativeAddend
 ]
 
 { #category : #'as yet unclassified' }

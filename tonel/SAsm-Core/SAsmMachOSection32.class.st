@@ -12,7 +12,9 @@ Class {
 		'nreloc',
 		'flags',
 		'content',
-		'index'
+		'index',
+		'relocationTable',
+		'sectionOffset'
 	],
 	#pools : [
 		'SAsmMachConstants'
@@ -117,6 +119,11 @@ SAsmMachOSection32 >> offset: anObject [
 
 { #category : #writing }
 SAsmMachOSection32 >> prepareForWritingToFile [
+	relocationTable ifNotNil: [ 
+		reloff := relocationTable fileOffset.
+		nreloc := relocationTable entryCount.
+	].
+
 	content ifNotNil: [ 
 		offset := content fileOffset.
 		sectionSize := content size
@@ -129,6 +136,16 @@ SAsmMachOSection32 >> pureInstructions [
 ]
 
 { #category : #accessing }
+SAsmMachOSection32 >> relocationTable [
+	^ relocationTable
+]
+
+{ #category : #accessing }
+SAsmMachOSection32 >> relocationTable: anObject [
+	relocationTable := anObject
+]
+
+{ #category : #accessing }
 SAsmMachOSection32 >> reloff [
 	^ reloff
 ]
@@ -136,6 +153,16 @@ SAsmMachOSection32 >> reloff [
 { #category : #accessing }
 SAsmMachOSection32 >> reloff: anObject [
 	reloff := anObject
+]
+
+{ #category : #accessing }
+SAsmMachOSection32 >> sectionOffset [
+	^ sectionOffset
+]
+
+{ #category : #accessing }
+SAsmMachOSection32 >> sectionOffset: anObject [
+	sectionOffset := anObject
 ]
 
 { #category : #accessing }
@@ -178,6 +205,16 @@ SAsmMachOSection32 >> size [
 SAsmMachOSection32 >> type: aType [
 	flags := (flags & SECTION_ATTRIBUTES) | aType
 
+]
+
+{ #category : #'as yet unclassified' }
+SAsmMachOSection32 >> withExternalRelocations [
+	flags := flags | S_ATTR_EXT_RELOC
+]
+
+{ #category : #'as yet unclassified' }
+SAsmMachOSection32 >> withLocalRelocations [
+	flags := flags | S_ATTR_LOC_RELOC
 ]
 
 { #category : #writing }

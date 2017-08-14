@@ -36,8 +36,9 @@ SAsmMachOSymbolTable >> addSymbol: symbol sectionDictionary: sectionIndexDiction
 		machoSection := sectionIndexDictionary at: symbol section.
 		machoSymbol
 			n_value: machoSymbol n_value + machoSection addr;
-			n_type: N_SECT;
-			n_sect: machoSection index.
+			n_type: N_SECT  | N_EXT;
+			n_sect: machoSection index;
+			n_desc: REFERENCE_FLAG_DEFINED.
 
 		(symbol isExternal or: [ symbol isPublic ]) ifTrue: [
 			externalSymbols add: machoSymbol
@@ -47,6 +48,17 @@ SAsmMachOSymbolTable >> addSymbol: symbol sectionDictionary: sectionIndexDiction
 	].
 
 	^ machoSymbol
+]
+
+{ #category : #'as yet unclassified' }
+SAsmMachOSymbolTable >> computeSymbolIndices [
+	| index block |
+	index := 0.
+	
+	block := [ :sym | sym index: index . index := index + 1 ].
+	localSymbols do: block.
+	externalSymbols do: block.
+	undefinedSymbols do: block.
 ]
 
 { #category : #accessing }

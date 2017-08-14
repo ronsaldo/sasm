@@ -125,6 +125,12 @@ Class {
 		'CPU_TYPE_VAX',
 		'CPU_TYPE_X86',
 		'CPU_TYPE_X86_64',
+		'GENERIC_RELOC_LOCAL_SECTDIFF',
+		'GENERIC_RELOC_PAIR',
+		'GENERIC_RELOC_PB_LA_PTR',
+		'GENERIC_RELOC_SECTDIFF',
+		'GENERIC_RELOC_TLV',
+		'GENERIC_RELOC_VANILLA',
 		'LC_CODE_SIGNATURE',
 		'LC_DATA_IN_CODE',
 		'LC_DYLD_ENVIRONMENT',
@@ -227,6 +233,14 @@ Class {
 		'N_STAB',
 		'N_TYPE',
 		'N_UNDF',
+		'REFERENCE_FLAG_DEFINED',
+		'REFERENCE_FLAG_PRIVATE_DEFINED',
+		'REFERENCE_FLAG_PRIVATE_UNDEFINED_LAZY',
+		'REFERENCE_FLAG_PRIVATE_UNDEFINED_NON_LAZY',
+		'REFERENCE_FLAG_UNDEFINED_LAZY',
+		'REFERENCE_FLAG_UNDEFINED_NON_LAZY',
+		'REFERENCE_TYPE',
+		'R_ABS',
 		'SECTION_ATTRIBUTES',
 		'SECTION_ATTRIBUTES_SYS',
 		'SECTION_ATTRIBUTES_USR',
@@ -288,7 +302,17 @@ Class {
 		'VM_PROT_EXECUTE',
 		'VM_PROT_NONE',
 		'VM_PROT_READ',
-		'VM_PROT_WRITE'
+		'VM_PROT_WRITE',
+		'X86_64_RELOC_BRANCH',
+		'X86_64_RELOC_GOT',
+		'X86_64_RELOC_GOT_LOAD',
+		'X86_64_RELOC_SIGNED',
+		'X86_64_RELOC_SIGNED_1',
+		'X86_64_RELOC_SIGNED_2',
+		'X86_64_RELOC_SIGNED_4',
+		'X86_64_RELOC_SUBTRACTOR',
+		'X86_64_RELOC_TLV',
+		'X86_64_RELOC_UNSIGNED'
 	],
 	#category : #'SAsm-Core-MachO'
 }
@@ -308,6 +332,31 @@ SAsmMachConstants class >> CPU_TYPE_X86_64 [
 	^ CPU_TYPE_X86_64
 ]
 
+{ #category : #accessing }
+SAsmMachConstants class >> GENERIC_RELOC_LOCAL_SECTDIFF [
+	^ GENERIC_RELOC_LOCAL_SECTDIFF
+]
+
+{ #category : #'as yet unclassified' }
+SAsmMachConstants class >> GENERIC_RELOC_PAIR [
+	^ GENERIC_RELOC_PAIR
+]
+
+{ #category : #accessing }
+SAsmMachConstants class >> GENERIC_RELOC_SECTDIFF [
+	^ GENERIC_RELOC_SECTDIFF
+]
+
+{ #category : #accessing }
+SAsmMachConstants class >> GENERIC_RELOC_VANILLA [
+	^ GENERIC_RELOC_VANILLA
+]
+
+{ #category : #accessing }
+SAsmMachConstants class >> X86_64_RELOC_UNSIGNED [
+	^ X86_64_RELOC_UNSIGNED
+]
+
 { #category : #initialization }
 SAsmMachConstants class >> cpu_subtype_intel: f with: m [
 	^ (f) + ((m) << 4)
@@ -322,7 +371,8 @@ SAsmMachConstants class >> initialize [
 		initializeSectionConstants;
 		initializeMemoryConstants;
 		initializeCpuConstants;
-		initializeSymbolConstants
+		initializeSymbolConstants;
+		initializeRelocationsConstants
 ]
 
 { #category : #initialization }
@@ -773,6 +823,29 @@ SAsmMachConstants class >> initializeMemoryConstants [
 ]
 
 { #category : #initialization }
+SAsmMachConstants class >> initializeRelocationsConstants [
+	R_ABS := 0.
+	
+	GENERIC_RELOC_VANILLA := 0.
+	GENERIC_RELOC_PAIR := 1.
+	GENERIC_RELOC_SECTDIFF := 2.
+	GENERIC_RELOC_PB_LA_PTR := 3.
+	GENERIC_RELOC_LOCAL_SECTDIFF := 4.
+	GENERIC_RELOC_TLV := 5.
+	
+	X86_64_RELOC_UNSIGNED := 0. "for absolute addresses"	       
+   X86_64_RELOC_SIGNED := 1. "for signed 32-bit displacement"
+	X86_64_RELOC_BRANCH := 2. "a CALL/JMP instruction with 32-bit displacement"   
+	X86_64_RELOC_GOT_LOAD := 3. "a MOVQ load of a GOT entry"	   
+	X86_64_RELOC_GOT := 4. "other GOT references"	 
+	X86_64_RELOC_SUBTRACTOR := 5. "must be followed by a X86_64_RELOC_UNSIGNED"
+	X86_64_RELOC_SIGNED_1 := 6. "for signed 32-bit displacement with a -1 addend"
+	X86_64_RELOC_SIGNED_2 := 7. "for signed 32-bit displacement with a -2 addend"
+	X86_64_RELOC_SIGNED_4 := 8. "for signed 32-bit displacement with a -4 addend"
+	X86_64_RELOC_TLV := 9.
+]
+
+{ #category : #initialization }
 SAsmMachConstants class >> initializeSectionConstants [
 "
  * The flags field of a section structure is separated into two parts a section
@@ -955,6 +1028,14 @@ SAsmMachConstants class >> initializeSymbolConstants [
 	N_PBUD	:= 16rc.		" prebound undefined (defined in a dylib) "
 	N_INDR	:= 16ra.		" indirect "
 				
+	REFERENCE_TYPE := 16r7.
+	REFERENCE_FLAG_UNDEFINED_NON_LAZY := 0.
+	REFERENCE_FLAG_UNDEFINED_LAZY := 1.
+	REFERENCE_FLAG_DEFINED := 2.
+	REFERENCE_FLAG_PRIVATE_DEFINED := 3.
+	REFERENCE_FLAG_PRIVATE_UNDEFINED_NON_LAZY := 4.
+	REFERENCE_FLAG_PRIVATE_UNDEFINED_LAZY := 5.
+	
 	NO_SECT := 0. " symbol is not in any section "
 	MAX_SEC := 255.	" 1 thru 255 inclusive "
 ]

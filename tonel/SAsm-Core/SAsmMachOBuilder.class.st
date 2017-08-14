@@ -65,6 +65,16 @@ SAsmMachOBuilder >> computeFileBinaryElementsOffsets [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmMachOBuilder >> computeSectionOffsets [
+	segments do: #computeSectionOffsets
+]
+
+{ #category : #'as yet unclassified' }
+SAsmMachOBuilder >> computeSymbolIndices [
+	symbolTable ifNotNil: [ symbolTable computeSymbolIndices ]
+]
+
 { #category : #private }
 SAsmMachOBuilder >> createSymbolTable [
 	| symbolTableStrings symbolTableCommand dySymbolTableCommand |
@@ -105,6 +115,20 @@ SAsmMachOBuilder >> headerMagic [
 	self subclassResponsibility
 ]
 
+{ #category : #accessing }
+SAsmMachOBuilder >> indexOfRelocationSymbol: symbol section: sectionHeader [
+	symbol ifNil: [
+		^ sectionHeader index
+	].
+
+	^ self indexOfSymbol: symbol
+]
+
+{ #category : #accessing }
+SAsmMachOBuilder >> indexOfSymbol: symbol [
+	^ (symbolDictionary at: symbol) index
+]
+
 { #category : #initialization }
 SAsmMachOBuilder >> initialize [
 	super initialize.
@@ -143,9 +167,28 @@ SAsmMachOBuilder >> prepareForWriting [
 		sizeofcmds: commandsSize
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmMachOBuilder >> relocationTableFor: sectionData [
+	| section relocationTable |
+	section := sectionDictionary at: sectionData.
+	relocationTable := section relocationTable.
+	relocationTable ifNotNil: [ ^ relocationTable ].
+	
+	relocationTable := SAsmMachORelocationTable new.
+	metaDataComponents add: relocationTable.
+	section relocationTable: relocationTable.
+	^ relocationTable
+]
+
 { #category : #accessing }
 SAsmMachOBuilder >> sectionClass [
 	self subclassResponsibility
+]
+
+{ #category : #accessing }
+SAsmMachOBuilder >> sectionFromContent: content [
+	content ifNil: [ ^ nil ].
+	^ sectionDictionary at: content
 ]
 
 { #category : #'as yet unclassified' }

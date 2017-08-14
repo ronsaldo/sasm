@@ -21,6 +21,16 @@ SAsmMachOSegmentCommand >> addSection: aSection [
 	sections add: aSection
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmMachOSegmentCommand >> computeSectionOffsets [
+	| sectionOffset |
+	sectionOffset := 0.
+	sections do: [ :sec |
+		sec sectionOffset: sectionOffset.
+		sectionOffset := sectionOffset + sec content size.
+	]
+]
+
 { #category : #'memory protections' }
 SAsmMachOSegmentCommand >> executable [
 	initprot := initprot | VM_PROT_EXECUTE.

@@ -112,6 +112,45 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBu
 	self error: 'Unsupported relocation type.'
 ]
 
+{ #category : #'elf relocations' }
+SAsmCompilationTargetX86 >> convertRelocation: relocation section: section machoBuilder: machBuilder [
+	| table machReloc pcrel length machSection extern symbolnum machRelocatedSection type |
+	relocation isSectionRelativeOffset32 ifTrue: [
+		"Do not emit a relocation for this case."
+		relocation applyImplicitAddendIn: section.
+		^ self
+	].
+
+	machSection := machBuilder sectionFromContent: relocation section.
+
+	relocation applyImplicitAddendIn: section absoluteWithExtraAddend: (machSection ifNil: [0] ifNotNil: [machSection sectionOffset]).
+	table := machBuilder relocationTableFor: section.
+	
+	extern := relocation symbol isNotNil.
+	symbolnum := machBuilder indexOfRelocationSymbol: relocation symbol section: machSection.
+	self assert: symbolnum isNotNil.
+	
+	machReloc := table newEntry.
+	type := SAsmMachConstants GENERIC_RELOC_VANILLA.
+	(relocation isAbsoluteOffset32 or: [relocation isRelativeSOffset32 ]) ifTrue: [
+		pcrel := relocation isRelativeSOffset32.
+		length := 2.
+	] ifFalse: [
+		self error: 'Unsupported relocation type'
+	].
+
+	machRelocatedSection := machBuilder sectionFromContent: section.
+	extern ifTrue: [
+		machRelocatedSection withExternalRelocations
+	] ifFalse: [
+		machRelocatedSection withLocalRelocations
+	].
+	
+	machReloc
+		address: relocation offset;
+		symbolnum: symbolnum pcrel: pcrel length: length extern: extern type: type
+]
+
 { #category : #'as yet unclassified' }
 SAsmCompilationTargetX86 >> createInstructionLowerer [
 	^ SAsmX86InstructionLowerer new target: self
