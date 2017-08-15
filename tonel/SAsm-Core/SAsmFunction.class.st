@@ -12,7 +12,8 @@ Class {
 		'constantZoneBuilder',
 		'contextMetaData',
 		'debugSourceLocation',
-		'exitPoint'
+		'exitPoint',
+		'endingLabel'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -163,6 +164,11 @@ SAsmFunction >> debugSourceLocation [
 { #category : #accessing }
 SAsmFunction >> debugSourceLocation: anObject [
 	debugSourceLocation := anObject
+]
+
+{ #category : #accessing }
+SAsmFunction >> endingLabel [
+	^ endingLabel
 ]
 
 { #category : #'linear scan' }
@@ -319,6 +325,10 @@ SAsmFunction >> prepareWriteToStream: streamBuilder [
 		(streamBuilder addSymbol: nil for: exitPoint)
 			visibility: #private.
 	].
+	endingLabel ifNotNil: [ 
+		(streamBuilder addSymbol: nil for: endingLabel)
+			visibility: #private.
+	].
 ]
 
 { #category : #printing }
@@ -329,6 +339,12 @@ SAsmFunction >> prettyPrintOn: aStream [
 { #category : #printing }
 SAsmFunction >> printOn: aStream [
 	aStream nextPutAll: 'function '; nextPutAll: self validName
+]
+
+{ #category : #accessing }
+SAsmFunction >> requiredEndingLabel [
+	^ endingLabel ifNil: [ endingLabel := SAsmFunctionEndingLabel new function: self ]
+
 ]
 
 { #category : #accessing }
@@ -396,6 +412,10 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 			instructionLowerer emitExitPoint.
 		].
 		
+		endingLabel ifNotNil: [
+			aStreamBuilder
+				label: (aStreamBuilder findSymbolForObject: endingLabel)
+		].
 		aStreamBuilder labelEnd: (aStreamBuilder findSymbolForObject: self).
 		
 		constantZone ifNotNil: [
