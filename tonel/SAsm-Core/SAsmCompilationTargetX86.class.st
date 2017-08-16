@@ -49,6 +49,18 @@ SAsmCompilationTargetX86 class >> initialize [
 	
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86 >> cFunctionPrefix [
+	(#(win32 osx) includes: operatingSystemName)  ifTrue: [^ #_ ].
+	^ ''
+]
+
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86 >> cVariablePrefix [
+	(#(win32 osx) includes: operatingSystemName)  ifTrue: [^ #_ ].
+	^ ''
+]
+
 { #category : #'calling conventions' }
 SAsmCompilationTargetX86 >> callingConventionNamed: aCallingConventionName [
 	aCallingConventionName == #naked ifTrue: [ ^ SAsmX86CallingConventionNaked new ].
@@ -122,8 +134,9 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section macho
 	].
 
 	machSection := machBuilder sectionFromContent: relocation section.
+	machRelocatedSection := machBuilder sectionFromContent: section.
 
-	relocation applyImplicitAddendIn: section absoluteWithExtraAddend: (machSection ifNil: [0] ifNotNil: [machSection sectionOffset]).
+	relocation applyImplicitAddendIn: section absoluteWithExtraAddend: (machSection ifNil: [0] ifNotNil: [machSection sectionOffset]) relativeWithExtraAddend: relocation offset negated - machRelocatedSection sectionOffset.
 	table := machBuilder relocationTableFor: section.
 	
 	extern := relocation symbol isNotNil.
@@ -139,7 +152,6 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section macho
 		self error: 'Unsupported relocation type'
 	].
 
-	machRelocatedSection := machBuilder sectionFromContent: section.
 	extern ifTrue: [
 		machRelocatedSection withExternalRelocations
 	] ifFalse: [
@@ -154,12 +166,6 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section macho
 { #category : #'as yet unclassified' }
 SAsmCompilationTargetX86 >> createInstructionLowerer [
 	^ SAsmX86InstructionLowerer new target: self
-]
-
-{ #category : #'as yet unclassified' }
-SAsmCompilationTargetX86 >> csymbolPrefix [
-	(#(win32 osx) includes: operatingSystemName)  ifTrue: [^ #_ ].
-	^ ''
 ]
 
 { #category : #'elf constants' }

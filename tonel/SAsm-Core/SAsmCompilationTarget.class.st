@@ -8,6 +8,16 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTarget >> cFunctionPrefix [
+	^ ''
+]
+
+{ #category : #'as yet unclassified' }
+SAsmCompilationTarget >> cVariablePrefix [
+	^ ''
+]
+
 { #category : #'calling conventions' }
 SAsmCompilationTarget >> callingConventionNamed: aCallingConventionName [
 	self subclassResponsibility
@@ -16,11 +26,6 @@ SAsmCompilationTarget >> callingConventionNamed: aCallingConventionName [
 { #category : #'calling conventions' }
 SAsmCompilationTarget >> cdeclCallingConvention [
 	^ self callingConventionNamed: #cdecl
-]
-
-{ #category : #'as yet unclassified' }
-SAsmCompilationTarget >> csymbolPrefix [
-	^ ''
 ]
 
 { #category : #'calling conventions' }
