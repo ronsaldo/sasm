@@ -177,7 +177,7 @@ SAsmX86Instructions class >> initializeInstructions [
 		)
 		
 		(CALL
-			(OpIrw 16rE8)
+			(OpBranch32 16rE8)
 			(OpRm 16rFF 2)
 		)
 
@@ -295,7 +295,7 @@ SAsmX86Instructions class >> initializeInstructions [
 		
 		(JMP
 			(OpIr8 16rEB)
-			(OpIrw 16rE9)
+			(OpBranch32 16rE9)
 			(OpRm 16rFF 4)
 		)
 		

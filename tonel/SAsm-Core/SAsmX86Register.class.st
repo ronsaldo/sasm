@@ -11,6 +11,11 @@ Class {
 	#category : #'SAsm-Core-X86'
 }
 
+{ #category : #accessing }
+SAsmX86Register class >> registerClass [
+	^ self
+]
+
 { #category : #'as yet unclassified' }
 SAsmX86Register >> encodeModRMWithOpcode: opcode immediate: immediateSize longMode: longMod into: writer [
 	| mod |

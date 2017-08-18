@@ -3,9 +3,12 @@ Class {
 	#superclass : #SAsmModuleElement,
 	#instVars : [
 		'name',
+		'headerContent',
 		'content',
 		'size',
-		'alignment'
+		'alignment',
+		'customSection',
+		'header'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -30,6 +33,16 @@ SAsmGlobalVariable >> content: anObject [
 	content := anObject
 ]
 
+{ #category : #accessing }
+SAsmGlobalVariable >> customSection [
+	^ customSection
+]
+
+{ #category : #accessing }
+SAsmGlobalVariable >> customSection: anObject [
+	customSection := anObject
+]
+
 { #category : #printing }
 SAsmGlobalVariable >> fullPrintOn: aStream [
 	self isEmpty ifTrue: [
@@ -43,6 +56,16 @@ SAsmGlobalVariable >> fullPrintOn: aStream [
 		content fullPrintOn: aStream.
 	].
 	aStream nextPutAll: '}'; lf
+]
+
+{ #category : #accessing }
+SAsmGlobalVariable >> headerContent [
+	^ headerContent
+]
+
+{ #category : #accessing }
+SAsmGlobalVariable >> headerContent: anObject [
+	headerContent := anObject
 ]
 
 { #category : #testing }
@@ -60,6 +83,16 @@ SAsmGlobalVariable >> name: anObject [
 	name := anObject
 ]
 
+{ #category : #writing }
+SAsmGlobalVariable >> prepareWriteToStream: streamBuilder [
+	super prepareWriteToStream: streamBuilder.
+	header ifNotNil: [ 
+		(streamBuilder addSymbol: nil for: header)
+			visibility: #private
+	]
+
+]
+
 { #category : #printing }
 SAsmGlobalVariable >> prettyPrintOn: aStream [
 	aStream putKeyword: 'variable'; space; putIdentifier: self validName
@@ -68,6 +101,12 @@ SAsmGlobalVariable >> prettyPrintOn: aStream [
 { #category : #printing }
 SAsmGlobalVariable >> printOn: aStream [
 	aStream nextPutAll: 'variable '; nextPutAll: self validName
+]
+
+{ #category : #accessing }
+SAsmGlobalVariable >> requiredHeader [
+	^ header ifNil: [ header := SAsmGlobalVariableHeader new globalVariable: self ]
+
 ]
 
 { #category : #accessing }
@@ -90,19 +129,32 @@ SAsmGlobalVariable >> writeToStream: aStreamBuilder [
 	(self isEmpty and: [self isExternal]) ifTrue: [ ^ self ].
 	
 	aStreamBuilder withNewLocalScope: [
-		content ifNil: [
+		(content isNil and: [header isNil and: [headerContent isNil and: [customSection isNil]]]) ifTrue: [
 			aStreamBuilder bssSection.
 			aStreamBuilder
 				align: alignment;
 				label: (aStreamBuilder findSymbolForObject: self);
 				zeros: size.
-		] ifNotNil: [ 
-			aStreamBuilder dataSection.
+		] ifFalse: [ 
+			aStreamBuilder dataSectionNamed: customSection.
+			header ifNotNil: [
+				aStreamBuilder
+					label: (aStreamBuilder findSymbolForObject: header).
+			].
+		
+			headerContent ifNotNil: [
+				headerContent writeToStream: aStreamBuilder
+			].
+		
 			aStreamBuilder
 				align: alignment;
 				label: (aStreamBuilder findSymbolForObject: self).
 		
-			content writeToStream: aStreamBuilder.
+			content ifNotNil: [ 
+				content writeToStream: aStreamBuilder
+			] ifNil: [
+				aStreamBuilder zeros: size.
+			]
 		]
 	]
 ]

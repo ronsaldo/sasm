@@ -9,6 +9,12 @@ SAsmMachOSegmentCommand64 >> headerSize [
 	^ 72
 ]
 
+{ #category : #initialization }
+SAsmMachOSegmentCommand64 >> initialize [
+	super initialize.
+	cmd := LC_SEGMENT_64.
+]
+
 { #category : #writing }
 SAsmMachOSegmentCommand64 >> writeOn: aStream [
 	aStream

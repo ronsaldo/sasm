@@ -132,7 +132,7 @@ SAsmMachOSection32 >> prepareForWritingToFile [
 
 { #category : #'as yet unclassified' }
 SAsmMachOSection32 >> pureInstructions [
-	flags := flags | S_ATTR_PURE_INSTRUCTIONS
+	flags := flags | S_ATTR_SOME_INSTRUCTIONS | S_ATTR_PURE_INSTRUCTIONS
 ]
 
 { #category : #accessing }

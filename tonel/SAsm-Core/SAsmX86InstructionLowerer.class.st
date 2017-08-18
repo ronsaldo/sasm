@@ -441,8 +441,8 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 		self assert: totalFrameSize <= 16rFFFF.
 		self assert: stackFrameLayout dynamicRootCount <= 16rfff.
 		
+		self pushIntegerToTheStack: self compiledMethodMetaData scratchIndex: 0.
 		streamBuilder
-			x86: PUSH with: (self compiledMethodMetaData);
 			x86: PUSH with: nilPointerRegister; "Context object"
 			x86: PUSH with: argumentDescriptor;
 			x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (registersToPreserve size << 12))
@@ -466,6 +466,22 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 
 	"Emit the argument loads."
 	self emitPrologueLoads
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86InstructionLowerer >> immediateConstant64ToConstantZone: immediateConstant [
+	self halt
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86InstructionLowerer >> immediateConstant64ToConstantZone: immediateConstant orToScratchRegister: scratchIndex [
+	| scratchRegister |
+	self assert: target pointerSize = 8.
+	self assert: target hasPositionIndependentCode not.
+	scratchRegister := self scratchRegister: scratchIndex for: SAsmX86RegisterInt64.
+	streamBuilder x86: MOV dst: scratchRegister src: immediateConstant.
+	^ scratchRegister
+
 ]
 
 { #category : #'abstract instruction generation' }
@@ -494,6 +510,11 @@ SAsmX86InstructionLowerer >> leaveFramefullMethod [
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> lowerConditional: condition branch: branch [
 	condition operation acceptCondition: condition withBranch: branch asConditionWith: self 
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86InstructionLowerer >> moveImmediateConstant64: immediate toScratchRegister: scratchRegisterIndex [
+	self halt
 ]
 
 { #category : #memory }
@@ -587,7 +608,17 @@ SAsmX86InstructionLowerer >> needsToSpillThreeAddressInstruction: tacInstruction
 ]
 
 { #category : #'procedure call' }
-SAsmX86InstructionLowerer >> pushValueToTheStack: value [
+SAsmX86InstructionLowerer >> pushIntegerToTheStack: valuePhysical scratchIndex: scratchIndex [
+	(target pointerSize = 8 and: [valuePhysical isImmediate and: [valuePhysical isImmediateS32 not]]) ifTrue: [
+		^ streamBuilder x86: PUSH with: (self immediateConstant64ToConstantZone: valuePhysical orToScratchRegister: scratchIndex)
+		].
+		
+	streamBuilder x86: PUSH with: valuePhysical.
+	
+]
+
+{ #category : #'procedure call' }
+SAsmX86InstructionLowerer >> pushValueToTheStack: value scratchIndex: scratchIndex [
 	| valuePhysical |
 	valuePhysical := self virtualToPhysical: value.
 	value isFloatingPointRegister ifTrue: [ 
@@ -611,9 +642,8 @@ SAsmX86InstructionLowerer >> pushValueToTheStack: value [
 		] ifFalse: [
 			self halt.
 		].
-
 	] ifFalse: [ 
-		streamBuilder x86: PUSH with: valuePhysical.
+		self pushIntegerToTheStack: valuePhysical scratchIndex: scratchIndex
 	]
 	
 ]
@@ -634,7 +664,7 @@ SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 			valuePhysical isRegisterAddress ifTrue: [ 
 				streamBuilder x86: FLD with: valuePhysical
 			] ifFalse: [ 
-				self pushValueToTheStack: value.
+				self pushValueToTheStack: value scratchIndex: 0.
 				streamBuilder x86: FLD with: (target stackPointerRegister asX86PointerOfSize: value size)
 			]
 		] ifNotNil: [
@@ -1025,7 +1055,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 		padding ~= 0 ifTrue: [ 
 			streamBuilder x86: SUB dst: target stackPointerRegister src: padding
 		].
-		self pushValueToTheStack: arg
+		self pushValueToTheStack: arg scratchIndex: 0.
 	].
 	
 	"Pass some arguments in registers"
@@ -1658,7 +1688,7 @@ SAsmX86InstructionLowerer >> visitTacReturnFromFrame: returnInstruction [
 		self returnValue: returnValues first valueHigh: returnValues second.
 	].
 	
-	self pushValueToTheStack: exitPoint.
+	self pushValueToTheStack: exitPoint scratchIndex: 1.
 	physicalFrame := self virtualToPhysical: newFrame.
 	
 	self flag: 'TODO: Allow adjusting the stack pointer'.

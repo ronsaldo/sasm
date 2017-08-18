@@ -80,7 +80,7 @@ SAsmX86RegisterAddress >> displacement [
 
 { #category : #accessing }
 SAsmX86RegisterAddress >> displacement: anObject [
-	displacement := anObject.
+	displacement := anObject
 ]
 
 { #category : #'as yet unclassified' }

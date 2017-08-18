@@ -99,7 +99,7 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section coffB
 	relocation isSectionRelativeOffset32 ifTrue: [
 		^ coffReloc type: IMAGE_REL_I386_SECREL
 	].
-	relocation isRelativeSOffset32 ifTrue: [
+	relocation isRelativeSOffset32OrBranch32 ifTrue: [
 		^ coffReloc type: IMAGE_REL_I386_REL32
 	].
 
@@ -117,7 +117,7 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBu
 	(relocation isAbsoluteOffset32 or: [ relocation isSectionRelativeOffset32 ]) ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_386_32
 	].
-	relocation isRelativeSOffset32 ifTrue: [
+	relocation isRelativeSOffset32OrBranch32 ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_386_PC32
 	].
 
@@ -145,18 +145,18 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section macho
 	
 	machReloc := table newEntry.
 	type := SAsmMachConstants GENERIC_RELOC_VANILLA.
-	(relocation isAbsoluteOffset32 or: [relocation isRelativeSOffset32 ]) ifTrue: [
-		pcrel := relocation isRelativeSOffset32.
+	(relocation isAbsoluteOffset32 or: [relocation isRelativeSOffset32OrBranch32 ]) ifTrue: [
+		pcrel := relocation isRelativeSOffset32OrBranch32.
 		length := 2.
 	] ifFalse: [
 		self error: 'Unsupported relocation type'
 	].
 
-	extern ifTrue: [
+	"extern ifTrue: [
 		machRelocatedSection withExternalRelocations
 	] ifFalse: [
 		machRelocatedSection withLocalRelocations
-	].
+	]."
 	
 	machReloc
 		address: relocation offset;

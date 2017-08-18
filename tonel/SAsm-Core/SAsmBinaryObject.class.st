@@ -21,7 +21,8 @@ SAsmBinaryObject class >> initialize [
 		'.rodata' '__DATA'
 		'.bss' '__DATA'
 		
-		'.oop' '__OOP'
+		'.oop' '__DATA'
+		'.oopRef' '__DATA'
 		
 		'.debug_abbrev' '__DWARF'
 		'.debug_line' '__DWARF'

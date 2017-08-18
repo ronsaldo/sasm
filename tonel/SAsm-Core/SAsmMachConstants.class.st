@@ -353,6 +353,16 @@ SAsmMachConstants class >> GENERIC_RELOC_VANILLA [
 ]
 
 { #category : #accessing }
+SAsmMachConstants class >> X86_64_RELOC_BRANCH [
+	^ X86_64_RELOC_BRANCH
+]
+
+{ #category : #accessing }
+SAsmMachConstants class >> X86_64_RELOC_SIGNED [
+	^ X86_64_RELOC_SIGNED
+]
+
+{ #category : #accessing }
 SAsmMachConstants class >> X86_64_RELOC_UNSIGNED [
 	^ X86_64_RELOC_UNSIGNED
 ]

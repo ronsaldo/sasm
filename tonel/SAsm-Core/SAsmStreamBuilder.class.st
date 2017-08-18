@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'stream',
 		'localScope',
-		'currentSection'
+		'currentSection',
+		'sectionStack'
 	],
 	#pools : [
 		'SAsmTacOperations'
@@ -128,7 +129,12 @@ SAsmStreamBuilder >> currentSectionName [
 
 { #category : #sections }
 SAsmStreamBuilder >> dataSection [
-	^ self startSection: #'.data' attributes: [ :section |
+	^ self dataSectionNamed: nil
+]
+
+{ #category : #sections }
+SAsmStreamBuilder >> dataSectionNamed: customSectionName [
+	^ self startSection: (customSectionName ifNil: [#'.data']) attributes: [ :section |
 		section 
 			loaded: true;
 			executable: false;
@@ -178,7 +184,8 @@ SAsmStreamBuilder >> findSymbolWithName: aName ifAbsent: aBlock [
 { #category : #initialization }
 SAsmStreamBuilder >> initialize [
 	super initialize.
-	localScope := SAsmStreamBuilderLocalScope empty
+	localScope := SAsmStreamBuilderLocalScope empty.
+	sectionStack := Stack new.
 ]
 
 { #category : #symbols }
@@ -202,6 +209,18 @@ SAsmStreamBuilder >> newPrivateSymbol: name [
 		name: name;
 		makePrivate;
 		yourself
+]
+
+{ #category : #sections }
+SAsmStreamBuilder >> popSection [
+	| oldSection |
+	oldSection := sectionStack pop.
+	^ self startSection: oldSection attributes: [ :sec | ]
+]
+
+{ #category : #sections }
+SAsmStreamBuilder >> pushSection [
+	sectionStack add: currentSection
 ]
 
 { #category : #sections }
@@ -642,6 +661,12 @@ SAsmStreamBuilder >> withNewLocalScope: aBlock [
 	oldLocalScope := localScope.
 	localScope  := SAsmStreamBuilderLocalScope parent: localScope.
 	aBlock ensure: [ localScope := oldLocalScope ]
+]
+
+{ #category : #sections }
+SAsmStreamBuilder >> withNewSection: aBlock [
+	self pushSection.
+	aBlock ensure: [ self popSection ]
 ]
 
 { #category : #x86 }

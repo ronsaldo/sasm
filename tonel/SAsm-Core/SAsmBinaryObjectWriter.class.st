@@ -352,6 +352,8 @@ SAsmBinaryObjectWriter >> nextPutI16: anImmediate [
 { #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutI32: anImmediate [
 	| value |
+	anImmediate isInteger ifTrue: [ ^ self nextPutC32: anImmediate ].
+	
 	(self needsRelocation: anImmediate) ifTrue: [ 
 		self recordImmediateReloc32: anImmediate extraAddend: 0.
 		self nextPutC32: 0
@@ -397,6 +399,23 @@ SAsmBinaryObjectWriter >> nextPutIPRelative64: immediate extraOffset: extraOffse
 	] ifFalse: [
 		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
 		self nextPutC64: immediateValue.
+	]
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeBranch32: immediate [
+	self nextPutIPRelativeBranch32: immediate extraOffset: 4
+]
+
+{ #category : #'byte writing' }
+SAsmBinaryObjectWriter >> nextPutIPRelativeBranch32: immediate extraOffset: extraOffset [
+	| immediateValue |
+	(self needsRelativeRelocation: immediate) ifTrue: [
+		self recordImmediateRelativeRelocBranch32: immediate extraAddend: extraOffset negated.
+		self nextPutC32: 0.
+	] ifFalse: [
+		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
+		self nextPutC32: immediateValue.
 	]
 ]
 
@@ -492,6 +511,13 @@ SAsmBinaryObjectWriter >> recordImmediateRelativeReloc64: immediate extraAddend:
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc8: immediate extraAddend: extraAddend [
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		relativeSOffset8;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeRelocBranch32: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		relativeBranch32;
 		yourself
 ]
 

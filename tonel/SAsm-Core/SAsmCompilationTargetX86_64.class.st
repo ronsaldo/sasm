@@ -91,6 +91,18 @@ SAsmCompilationTargetX86_64 class >> initializeElfRelocations [
 	R_X86_64_IRELATIVE := 37.
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86_64 >> cFunctionPrefix [
+	(#(osx) includes: operatingSystemName)  ifTrue: [^ #_ ].
+	^ ''
+]
+
+{ #category : #'as yet unclassified' }
+SAsmCompilationTargetX86_64 >> cVariablePrefix [
+	(#(osx) includes: operatingSystemName)  ifTrue: [^ #_ ].
+	^ ''
+]
+
 { #category : #'calling conventions' }
 SAsmCompilationTargetX86_64 >> callingConventionNamed: aCallingConventionName [
 	aCallingConventionName == #naked ifTrue: [ ^ SAsmX86_64CallingConventionNaked new ].
@@ -138,7 +150,7 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section co
 	relocation isSectionRelativeOffset64 ifTrue: [
 		^ coffReloc type: IMAGE_REL_AMD64_SECREL
 	].
-	relocation isRelativeSOffset32 ifTrue: [
+	relocation isRelativeSOffset32OrBranch32 ifTrue: [
 		^ coffReloc type: IMAGE_REL_AMD64_REL32
 	].
 
@@ -159,7 +171,7 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section el
 	(relocation isAbsoluteOffset32 or: [ relocation isSectionRelativeOffset32 ]) ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_32
 	].
-	relocation isRelativeSOffset32 ifTrue: [
+	relocation isRelativeSOffset32OrBranch32 ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_PC32
 	].
 	(relocation isAbsoluteOffset64 or: [ relocation isSectionRelativeOffset64 ]) ifTrue: [
@@ -172,6 +184,56 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section el
 	self error: 'Unsupported relocation type.'
 	
 
+]
+
+{ #category : #'elf relocations' }
+SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section machoBuilder: machBuilder [
+	| table machReloc pcrel length machSection extern symbolnum machRelocatedSection type |
+	relocation applyImplicitAddendIn: section relativeWithExtraAddend: 4.
+	(relocation isSectionRelativeOffset32 or: [ relocation isSectionRelativeOffset64 ]) ifTrue: [
+		"Do not emit a relocation for this case."
+		^ self
+	].
+
+	machSection := machBuilder sectionFromContent: relocation section.
+	machRelocatedSection := machBuilder sectionFromContent: section.
+
+	table := machBuilder relocationTableFor: section.
+	
+	extern := relocation symbol isNotNil.
+	symbolnum := machBuilder indexOfRelocationSymbol: relocation symbol section: machSection.
+	self assert: symbolnum isNotNil.
+	
+	machReloc := table newEntry.
+	type := SAsmMachConstants X86_64_RELOC_UNSIGNED.
+	(relocation isRelativeSOffset32 or: [ relocation isRelativeSOffset64 ]) ifTrue: [ 
+		type := SAsmMachConstants X86_64_RELOC_SIGNED.
+	].
+
+	(relocation isAbsoluteOffset32 or: [relocation isRelativeSOffset32OrBranch32 ]) ifTrue: [
+		pcrel := relocation isRelativeSOffset32OrBranch32.	
+		length := 2.
+		relocation isRelativeBranch32 ifTrue: [
+			type := SAsmMachConstants X86_64_RELOC_BRANCH
+		].
+	] ifFalse: [
+		(relocation isAbsoluteOffset64 or: [relocation isRelativeSOffset64 ]) ifTrue: [
+			pcrel := relocation isRelativeSOffset64.
+			length := 3.
+		] ifFalse: [
+			self error: 'Unsupported relocation type'
+		]
+	].
+
+	"extern ifTrue: [
+		machRelocatedSection withExternalRelocations
+	] ifFalse: [
+		machRelocatedSection withLocalRelocations
+	]."
+	
+	machReloc
+		address: relocation offset;
+		symbolnum: symbolnum pcrel: pcrel length: length extern: extern type: type
 ]
 
 { #category : #'as yet unclassified' }

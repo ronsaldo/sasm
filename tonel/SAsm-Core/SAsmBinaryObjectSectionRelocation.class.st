@@ -14,6 +14,7 @@ Class {
 		'AbsoluteOffset32',
 		'AbsoluteOffset64',
 		'AbsoluteOffset8',
+		'RelativeBranch32',
 		'RelativeSOffset16',
 		'RelativeSOffset32',
 		'RelativeSOffset64',
@@ -40,6 +41,8 @@ SAsmBinaryObjectSectionRelocation class >> initialize [
 	RelativeSOffset16 := #'relative-soffset16'.
 	RelativeSOffset32 := #'relative-soffset32'.
 	RelativeSOffset64 := #'relative-soffset64'.
+	
+	RelativeBranch32 := #'relative-branch32'.
 ]
 
 { #category : #comparing }
@@ -99,7 +102,7 @@ SAsmBinaryObjectSectionRelocation >> applyFullRelocationIn: targetSection [
 		data unsignedLongLongAt: offset + 1 put: (base + addend bitAnd: 16rFFFFFFFFFFFFFFFF)
 	].
 
-	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 ]) ifTrue: [
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32OrBranch32 ]) ifTrue: [
 		data unsignedLongAt: offset + 1 put: (addend + (targetSection base - base) bitAnd: 16rFFFFFFFF)
 	].
 
@@ -123,7 +126,7 @@ SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection absolu
 		^ data unsignedLongLongAt: offset + 1 put: (addend + extraRelativeAddend bitAnd: 16rFFFFFFFFFFFFFFFF)
 	].
 
-	self isRelativeSOffset32 ifTrue: [ 
+	self isRelativeSOffset32OrBranch32 ifTrue: [ 
 		^ data unsignedLongAt: offset + 1 put: (addend + extraRelativeAddend bitAnd: 16rFFFFFFFF)
 	].
 
@@ -151,7 +154,7 @@ SAsmBinaryObjectSectionRelocation >> clearImplicitAddendIn: targetSection [
 		data unsignedLongLongAt: offset + 1 put: 0
 	].
 
-	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 or: [self isSectionRelativeOffset32 ]]) ifTrue: [
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 or: [self isSectionRelativeOffset32 or: [self isRelativeBranch32] ]]) ifTrue: [
 		data unsignedLongAt: offset + 1 put: 0
 	].
 
@@ -196,6 +199,11 @@ SAsmBinaryObjectSectionRelocation >> isAbsoluteOffset8 [
 ]
 
 { #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isRelativeBranch32 [
+	^ type == RelativeBranch32
+]
+
+{ #category : #testing }
 SAsmBinaryObjectSectionRelocation >> isRelativeSOffset16 [
 	^ type == RelativeSOffset16
 ]
@@ -203,6 +211,11 @@ SAsmBinaryObjectSectionRelocation >> isRelativeSOffset16 [
 { #category : #testing }
 SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32 [
 	^ type == RelativeSOffset32
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32OrBranch32 [
+	^ type == RelativeSOffset32 or: [ type == RelativeBranch32 ]
 ]
 
 { #category : #testing }
@@ -243,6 +256,11 @@ SAsmBinaryObjectSectionRelocation >> pendingSymbol [
 { #category : #accessing }
 SAsmBinaryObjectSectionRelocation >> pendingSymbol: anObject [
 	pendingSymbol := anObject
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> relativeBranch32 [
+	type := RelativeBranch32
 ]
 
 { #category : #testing }
