@@ -272,6 +272,17 @@ SAsmBinaryObject >> showSectionSizesInTranscript [
 	Transcript cr.
 ]
 
+{ #category : #sorting }
+SAsmBinaryObject >> sortSections [
+	| normalSections debugSections sortBlock |
+	normalSections := sections reject: [ :sec | sec name beginsWith: '.debug' ].
+	debugSections := sections select: [ :sec | sec name beginsWith: '.debug' ].
+	sortBlock := [ :a :b | a name <= b name ].
+	normalSections sort: sortBlock.
+	debugSections sort: sortBlock.
+	sections := normalSections, debugSections
+]
+
 { #category : #accessing }
 SAsmBinaryObject >> symbols [
 	^ symbols

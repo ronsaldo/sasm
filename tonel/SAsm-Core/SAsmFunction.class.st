@@ -386,7 +386,11 @@ SAsmFunction >> virtualRegisters [
 
 { #category : #writing }
 SAsmFunction >> writeToStream: aStreamBuilder [
-	self isEmpty ifTrue: [ ^ self ].
+	self isEmpty ifTrue: [
+		self assert: exitPoint isNil.
+		self assert: endingLabel isNil.
+		^ self
+	].
 	
 	aStreamBuilder withNewLocalScope: [
 		aStreamBuilder textSection.

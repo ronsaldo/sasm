@@ -1251,6 +1251,12 @@ SAsmX86InstructionLowerer >> visitTacEqual: instruction [
 
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> visitTacEqual: instruction withBranch: branch [
+	instruction left isIntegerRegister ifFalse: [ 
+		self assert: instruction right isIntegerRegister.
+		^ self emitComparison: branch left: instruction right right: instruction left 
+			branchTrue: JE destination: branch trueDestination branchFalse: JNE destination: branch falseDestination		
+	].
+
 	^ self emitComparison: branch left: instruction left right: instruction right 
 			branchTrue: JE destination: branch trueDestination branchFalse: JNE destination: branch falseDestination
 ]

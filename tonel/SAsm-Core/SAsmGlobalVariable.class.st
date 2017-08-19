@@ -86,7 +86,7 @@ SAsmGlobalVariable >> name: anObject [
 { #category : #writing }
 SAsmGlobalVariable >> prepareWriteToStream: streamBuilder [
 	super prepareWriteToStream: streamBuilder.
-	header ifNotNil: [ 
+	header ifNotNil: [
 		(streamBuilder addSymbol: nil for: header)
 			visibility: #private
 	]
@@ -126,7 +126,10 @@ SAsmGlobalVariable >> validName [
 
 { #category : #writing }
 SAsmGlobalVariable >> writeToStream: aStreamBuilder [
-	(self isEmpty and: [self isExternal]) ifTrue: [ ^ self ].
+	(self isEmpty and: [self isExternal]) ifTrue: [
+		self assert: header isNil.
+		^ self
+	].
 	
 	aStreamBuilder withNewLocalScope: [
 		(content isNil and: [header isNil and: [headerContent isNil and: [customSection isNil]]]) ifTrue: [

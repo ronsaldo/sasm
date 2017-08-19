@@ -198,12 +198,33 @@ SAsmBinaryObjectWriter >> generateStreams: aCollectionOfStreams [
 		section size: section currentDataSize.
 		section data: section data contents
 	].
-	pendingLocalSymbolRelocations ifNotEmpty: [ self error: 'Undefined local symbols' ].
-	^ SAsmBinaryObject new compilationTarget: compilationTarget; sections: sectionList asArray; symbols: symbolList asArray.
+	^ SAsmBinaryObject new
+		compilationTarget: compilationTarget;
+		sections: sectionList asArray;
+		symbols: symbolList asArray;
+		sortSections
 ]
 
 { #category : #generation }
 SAsmBinaryObjectWriter >> generateUntilConvergence: aCollectionOfStreams [
+	| oldResult newResult iterationCount |
+	
+	oldResult := 1.
+	newResult := nil.
+	iterationCount := 0.
+	[ newResult ~= oldResult ] whileTrue: [ 
+		oldResult := newResult.
+		newResult := self generateStreams: aCollectionOfStreams.
+		iterationCount := iterationCount + 1.
+	].
+
+	"Transcript show: 'Binary object iterations: ' ; show: iterationCount; cr."
+	newResult concretizePendingSymbolWith: self.
+	^ newResult
+]
+
+{ #category : #generation }
+SAsmBinaryObjectWriter >> generateUntilSizeConvergence: aCollectionOfStreams [
 	| oldResult newResult iterationCount fixedSizeStreams variableSizeStreams |
 	fixedSizeStreams := aCollectionOfStreams select: #hasFixedSize.
 	variableSizeStreams := aCollectionOfStreams reject: #hasFixedSize.
@@ -221,7 +242,6 @@ SAsmBinaryObjectWriter >> generateUntilConvergence: aCollectionOfStreams [
 	].
 
 	"Transcript show: 'Binary object iterations: ' ; show: iterationCount; cr."
-	newResult concretizePendingSymbolWith: self.
 	^ newResult
 ]
 
@@ -671,5 +691,11 @@ SAsmBinaryObjectWriter >> writeStreamInstructions: aStream [
 	sectionStreams := aStream splitInSections.
 	self processSectionStreams: sectionStreams.
 	self computeInitialPositionEstimate: sectionStreams.
+	
+	"We conduct multiple passes. We first divide the sections that have a fixed size from the sections with a variable size, for performance reasons"
+	self generateUntilSizeConvergence: sectionStreams.
+	
+	"Then we recompile everything to ensure the evaluation of expressions that depend on the size of some elements are evaluated to the correct value.
+	are evaluate"
 	^ self generateUntilConvergence: sectionStreams
 ]

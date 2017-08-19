@@ -7,6 +7,11 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
+{ #category : #converting }
+SAsmImmediateConstant >> asSAsmConstantExpression [
+	^ SAsmConstantExpressionConstantInteger new value: value; size: 4
+]
+
 { #category : #testing }
 SAsmImmediateConstant >> hasFixedSize [
 	^ true
