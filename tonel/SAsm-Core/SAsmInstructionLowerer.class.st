@@ -254,20 +254,39 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 			self mapVirtualRegister: virtualRegister toSpillLocation: virtualRegister spillLocation.
 			activeMemoryRanges add: virtualRegister.
 		].
+
+		"Store the active registers in the mandated spilling points"
+		[spillingPoints isNotEmpty and: [spillingPoints first index < virtualRegister firstUsage]] whileTrue: [
+			"Do not spill registers that are stil not live"
+			activeRangesAtSpillingPoint := Array streamContents: [:out |
+				activeRangeClasses valuesDo: [ :ranges |
+					ranges do: [ :range |
+						range firstUsage <= spillingPoints first index ifTrue: [ 
+							out nextPut: range
+						]
+					]
+				]
+			].
+		
+			spillingPoints first activeRegisters: activeRangesAtSpillingPoint.
+			activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
+			spillingPoints removeFirst
+		].
 	
 		"Allocate the register"
 		registerClass := virtualRegister registerClass.
 		registerClass ifNotNil: [ 
-			activeRangeClasses valuesDo: [ :activeRanges |
-				self removeExpiredRangesUntil: virtualRegister firstUsage from: activeRanges do: [:expiredRange |
-					self freeRegister: expiredRange register.
-				].
-			].
-		
 			currentActiveRanges := activeRangeClasses at: registerClass ifAbsentPut: [
 				SortedCollection sortBlock: [ :a :b | a end < b end ]
 			].
 			
+		"Allocate the register"
+			activeRangeClasses valuesDo: [ :activeRanges |
+				self removeExpiredRangesUntil: virtualRegister firstUsage from: activeRanges do: [:expiredRange |			
+					self freeRegister: expiredRange register.
+				].
+			].
+					
 			availableRegisters := freeRegisters at: registerClass.
 			availableRegisters ifEmpty: [
 				"Spill here."
@@ -289,20 +308,21 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 			]
 		].
 	
-		[spillingPoints isNotEmpty and: [spillingPoints first index <= virtualRegister firstUsage]] whileTrue: [
-			"Do not spill registers that are stil not live"
-			activeRangesAtSpillingPoint := (currentActiveRanges select: [ :active | active firstUsage <= spillingPoints first index]) asArray.
-		
-			spillingPoints first activeRegisters: activeRangesAtSpillingPoint.
-			activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
-			spillingPoints removeFirst
-		]
 	].
 
-	currentActiveRanges ifNil: [ ^ self ].
-	finalActiveRanges := currentActiveRanges asArray.
+	activeRangesAtSpillingPoint := Array streamContents: [:out |
+		activeRangeClasses valuesDo: [ :ranges |
+			ranges do: [ :range |  out nextPut: range ]
+		]
+	].
+		
+	activeRangesAtSpillingPoint ifEmpty: [ ^ self ].
+	spillingPoints ifEmpty: [ ^ self ].
+	
+	activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
 	spillingPoints do: [ :point |
-		point activeRegisters: finalActiveRanges.
+		self assert: point activeRegisters isEmptyOrNil.
+		point activeRegisters: activeRangesAtSpillingPoint.
 	]
 ]
 
