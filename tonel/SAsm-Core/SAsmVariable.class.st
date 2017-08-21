@@ -14,7 +14,8 @@ Class {
 		'virtualRegisters',
 		'usedDirectly',
 		'argumentPassingRegister',
-		'argumentRegisterClass'
+		'argumentRegisterClass',
+		'explicitLocalVariable'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -82,6 +83,16 @@ SAsmVariable >> dynamicRoot: anObject [
 ]
 
 { #category : #accessing }
+SAsmVariable >> explicitLocalVariable [
+	^ explicitLocalVariable
+]
+
+{ #category : #accessing }
+SAsmVariable >> explicitLocalVariable: anObject [
+	explicitLocalVariable := anObject
+]
+
+{ #category : #accessing }
 SAsmVariable >> index [
 	^ index
 ]
@@ -101,6 +112,7 @@ SAsmVariable >> initialize [
 	dynamicRoot := false.
 	usedDirectly := false.
 	virtualRegisters := #().
+	explicitLocalVariable := false.
 ]
 
 { #category : #testing }

@@ -14,7 +14,8 @@ Class {
 		'reservedLocalsSpace',
 		'optimizedLocalVariables',
 		'stackAlignment',
-		'argumentsAlignment'
+		'argumentsAlignment',
+		'explicitDynamicRootCount'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -73,18 +74,26 @@ SAsmStackFrameLayout >> buildLayout [
 SAsmStackFrameLayout >> buildLocalLayout [
 	optimizedLocalVariables sort: [ :a :b |
 		a dynamicRoot ~= b dynamicRoot ifTrue: [ 
-			a dynamicRoot asBit > b dynamicRoot asBit
+			a dynamicRoot asBit >= b dynamicRoot asBit
 		] ifFalse: [ 
-			a alignment < b alignment
+			a explicitLocalVariable ~= b explicitLocalVariable ifTrue: [ 
+				a explicitLocalVariable asBit >= b explicitLocalVariable asBit
+			] ifFalse: [ 
+				a alignment <= b alignment
+			]
 		]
 	].
 
 	alignment := stackAlignment.
 	size := reservedLocalsSpace.
 	dynamicRootCount := 0.
+	explicitDynamicRootCount := 0.
 	optimizedLocalVariables do: [ :var |
 		var dynamicRoot ifTrue: [ 
 			dynamicRootCount := dynamicRootCount + 1.
+			var explicitLocalVariable ifTrue: [ 
+				explicitDynamicRootCount := explicitDynamicRootCount + 1.
+			].
 		].
 	
 		alignment := alignment max: var alignment.
@@ -146,6 +155,11 @@ SAsmStackFrameLayout >> createLocalSize: localSize alignment: localAlignment dyn
 { #category : #accessing }
 SAsmStackFrameLayout >> dynamicRootCount [
 	^ dynamicRootCount
+]
+
+{ #category : #accessing }
+SAsmStackFrameLayout >> explicitDynamicRootCount [
+	^ explicitDynamicRootCount
 ]
 
 { #category : #accessing }
