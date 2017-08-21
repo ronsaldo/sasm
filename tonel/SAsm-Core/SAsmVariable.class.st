@@ -128,6 +128,14 @@ SAsmVariable >> offset: anObject [
 	offset := anObject
 ]
 
+{ #category : #printing }
+SAsmVariable >> printOn: aStream [
+	aStream nextPutAll: 'local '.
+	argument ifTrue: [ aStream nextPutAll: 'argument ' ].
+	dynamicRoot ifTrue: [ aStream nextPutAll: 'dynroot ' ].
+	aStream print: offset
+]
+
 { #category : #accessing }
 SAsmVariable >> size [
 	^ size

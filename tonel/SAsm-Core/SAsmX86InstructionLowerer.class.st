@@ -448,21 +448,21 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 			x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (registersToPreserve size << 12))
 	].
 
-	"Initialize the object variables with nil."
-	1 to: stackFrameLayout dynamicRootCount do: [ :i |
-		streamBuilder x86: PUSH with: nilPointerRegister
-	].
-
 	"Store the registers that have to be preserved."
 	registersToPreserve do: [ :register |
 		streamBuilder x86: PUSH with: register
+	].
+
+	"Initialize the object variables with nil."
+	1 to: stackFrameLayout dynamicRootCount do: [ :i |
+		streamBuilder x86: PUSH with: nilPointerRegister
 	].
 
 	"Allocate the native size."
 	nativeSizeToAllocate ~= 0 ifTrue: [
 		streamBuilder x86: SUB with: target stackPointerRegister with: nativeSizeToAllocate.
 	].
-	stackSizeToRestoreBeforeReturn := nativeSizeToAllocate.
+	stackSizeToRestoreBeforeReturn := nativeSizeToAllocate + (stackFrameLayout dynamicRootCount*target pointerSize).
 
 	"Emit the argument loads."
 	self emitPrologueLoads
@@ -1546,7 +1546,6 @@ SAsmX86InstructionLowerer >> visitTacLoadLocalAddress: instruction [
 	result := self virtualToPhysical: instruction result.
 	variable := self virtualToPhysical: instruction left.
 	self assert: variable isRegisterAddress.
-	
 	result isRegisterAddress ifTrue: [ 
 		scratch := self scratchRegister: 0 for: instruction result.
 		streamBuilder
