@@ -60,6 +60,7 @@ SAsmMachOBuilder >> computeFileBinaryElementsOffsets [
 	| offset |
 	offset := 0.
 	self allComponentsDo: [ :component |
+		offset := offset alignedTo: component alignment.
 		component fileOffset: offset.
 		offset := offset + component fileSize
 	]
@@ -218,8 +219,12 @@ SAsmMachOBuilder >> symbolTableEntryClass [
 
 { #category : #writing }
 SAsmMachOBuilder >> writeToStream: stream [
+	| padding |
 	self prepareForWriting.
 	self allComponentsDo: [ :el |
+		padding := (stream position alignedTo: el alignment) - stream position.
+		1 to: padding do: [ :i | stream nextPut: 0 ].
+		
 		self assert: el fileOffset = stream position.
 		el writeOn: stream.
 		self assert: el fileOffset + el fileSize = stream position.

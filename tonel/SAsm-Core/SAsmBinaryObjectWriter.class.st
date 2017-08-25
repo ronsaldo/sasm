@@ -621,7 +621,9 @@ SAsmBinaryObjectWriter >> visitAlignInstruction: alignInstruction [
 		compilationTarget emitNopOfSize: paddingSize with: self
 	] ifFalse: [ 
 		self nextPutZeros: paddingSize.
-	]
+	].
+
+	self assert: (currentSection currentDataSize % alignment) = 0
 	
 ]
 

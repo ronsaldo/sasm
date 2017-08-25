@@ -22,6 +22,11 @@ SAsmDebugLocation >> data: anObject [
 	data := anObject
 ]
 
+{ #category : #printing }
+SAsmDebugLocation >> fullPrintOn: aStream [
+	aStream putKeyword: 'loc '; print: data
+]
+
 { #category : #accessing }
 SAsmDebugLocation >> size [
 	^ 0

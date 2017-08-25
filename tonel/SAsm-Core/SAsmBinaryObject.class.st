@@ -277,7 +277,14 @@ SAsmBinaryObject >> sortSections [
 	| normalSections debugSections sortBlock |
 	normalSections := sections reject: [ :sec | sec name beginsWith: '.debug' ].
 	debugSections := sections select: [ :sec | sec name beginsWith: '.debug' ].
-	sortBlock := [ :a :b | a name <= b name ].
+	sortBlock := [ :a :b |
+		a alignment = b alignment ifTrue: [ 
+			a name <= b name
+		] ifFalse: [
+			a alignment >= b alignment
+		]
+	].
+
 	normalSections sort: sortBlock.
 	debugSections sort: sortBlock.
 	sections := normalSections, debugSections

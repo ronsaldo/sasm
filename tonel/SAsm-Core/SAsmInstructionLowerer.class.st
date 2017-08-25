@@ -64,6 +64,7 @@ SAsmInstructionLowerer >> allocateSpillLocationForVirtualRegister: virtualRegist
 	freeLocations ifNotEmpty: [
 		spillLocation := freeLocations last.
 		freeLocations removeLast.
+		self assert: spillLocation dynamicRoot = virtualRegister dynamicRoot
 	] ifEmpty: [
 		spillLocation := self createLocal: spillClass
 	].
@@ -161,6 +162,7 @@ SAsmInstructionLowerer >> freeRegister: register [
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> freeSpillLocation: spillLocation [
 	spillLocation ifNil: [ ^ self ].
+	spillLocation explicitLocalVariable ifTrue: [ ^ self ].
 	(freeSpillLocations at: spillLocation spillClass) add: spillLocation.
 ]
 
@@ -219,7 +221,7 @@ SAsmInstructionLowerer >> nilGlobalSymbol [
 
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
-	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange spillingPoints finalActiveRanges activeRangesAtSpillingPoint |
+	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange spillingPoints activeRangesAtSpillingPoint |
 	freeSpillLocations := Dictionary new.
 	freeRegisters := Dictionary new.
 	allocatableRegisterClasses keysAndValuesDo: [ :key :value |
@@ -261,7 +263,7 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 			activeRangesAtSpillingPoint := Array streamContents: [:out |
 				activeRangeClasses valuesDo: [ :ranges |
 					ranges do: [ :range |
-						range firstUsage <= spillingPoints first index ifTrue: [ 
+						range firstUsage < spillingPoints first index ifTrue: [ 
 							out nextPut: range
 						]
 					]
@@ -322,7 +324,8 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 	activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
 	spillingPoints do: [ :point |
 		self assert: point activeRegisters isEmptyOrNil.
-		point activeRegisters: activeRangesAtSpillingPoint.
+		self flag: 'Is this select needed?'.
+		point activeRegisters: (activeRangesAtSpillingPoint select: [:range | range firstUsage < point index]).
 	]
 ]
 

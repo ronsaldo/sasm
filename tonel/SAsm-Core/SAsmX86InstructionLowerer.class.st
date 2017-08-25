@@ -445,12 +445,12 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 		streamBuilder
 			x86: PUSH with: nilPointerRegister; "Context object"
 			x86: PUSH with: argumentDescriptor.
-		target objectModel isReferenceCounted ifTrue: [ 
+		target objectModel isReferenceCounted ifTrue: [
 			streamBuilder
-				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (registersToPreserve size << 12)).
+				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout explicitDynamicRootCount) | (registersToPreserve size << 12)).
 		] ifFalse: [ 
 			streamBuilder
-				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout explicitDynamicRootCount) | (registersToPreserve size << 12))
+				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (registersToPreserve size << 12))
 		].
 	].
 

@@ -145,7 +145,7 @@ SAsmVariable >> printOn: aStream [
 	aStream nextPutAll: 'local '.
 	argument ifTrue: [ aStream nextPutAll: 'argument ' ].
 	dynamicRoot ifTrue: [ aStream nextPutAll: 'dynroot ' ].
-	aStream print: offset
+	aStream print: offset hex
 ]
 
 { #category : #accessing }

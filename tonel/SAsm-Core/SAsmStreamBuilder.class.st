@@ -460,6 +460,7 @@ SAsmStreamBuilder >> tacLogicalShiftRight: left with: right into: result [
 
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacMove: source into: destination [
+	self assert: destination asSAsmInstructionOperand isImmediate not.
 	^ self tacOperation: TacMove result: destination value: source
 ]
 
