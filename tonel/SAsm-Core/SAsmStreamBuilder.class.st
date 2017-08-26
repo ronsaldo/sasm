@@ -387,6 +387,26 @@ SAsmStreamBuilder >> tacGreaterOrEqual: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacInt32: value intoDouble: result [
+	^ self tacOperation: TacInt32ToDouble result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacInt32: value intoFloat: result [
+	^ self tacOperation: TacInt32ToFloat result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacInt64: value intoDouble: result [
+	^ self tacOperation: TacInt64ToDouble result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacInt64: value intoFloat: result [
+	^ self tacOperation: TacInt64ToFloat result: result value: value
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacIntRegister [
 	^ stream function newIntegerVirtualRegister.
 ]
@@ -628,6 +648,26 @@ SAsmStreamBuilder >> tacTruncate32: value into: result [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacTruncate8: value into: result [
 	^ self tacOperation: TacTruncate8 result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacUInt32: value intoDouble: result [
+	^ self tacOperation: TacUInt32ToDouble result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacUInt32: value intoFloat: result [
+	^ self tacOperation: TacUInt32ToFloat result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacUInt64: value intoDouble: result [
+	^ self tacOperation: TacUInt64ToDouble result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacUInt64: value intoFloat: result [
+	^ self tacOperation: TacUInt64ToFloat result: result value: value
 ]
 
 { #category : #'three address code' }

@@ -283,6 +283,11 @@ SAsmX86InstructionLowerer >> emitFloatCast: instruction withInstruction: castIns
 	]
 ]
 
+{ #category : #casting }
+SAsmX86InstructionLowerer >> emitIntToFloatCast: instruction withInstruction: castInstruction [
+	^ self emitFloatCast: instruction withInstruction: castInstruction
+]
+
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> emitIntegerDivisionInto: result dividend: dividend divisor: divisor instruction: x86DivisionInstruction resultRegisterIndex: resultRegisterIndex activeRegisters: activeRegisters [
 	| dividendPhysical divisorPhysical resultPhysical dividendUpperRegister dividendLowerRegister touchedRegisters toSpill resultRegister divisorRegister |
@@ -707,7 +712,9 @@ SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 				streamBuilder x86: FLD with: valuePhysical
 			] ifFalse: [ 
 				self pushValueToTheStack: value scratchIndex: 0.
-				streamBuilder x86: FLD with: (target stackPointerRegister asX86PointerOfSize: value size)
+				streamBuilder
+					x86: FLD with: (target stackPointerRegister asX86PointerOfSize: value size);
+					x86: ADD dst: target stackPointerRegister src: value size.
 			]
 		] ifNotNil: [
 			self
@@ -1568,6 +1575,34 @@ SAsmX86InstructionLowerer >> visitTacGreaterOrEqual: instruction withBranch: bra
 			branchTrue: JGE destination: branch trueDestination branchFalse: JL destination: branch falseDestination
 ]
 
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacInt32ToDouble: instruction [
+	^ self emitIntToFloatCast: instruction withInstruction: CVTSI2SD
+]
+
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacInt32ToFloat: instruction [
+	^ self emitIntToFloatCast: instruction withInstruction: CVTSI2SS
+]
+
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacInt64ToDouble: instruction [
+	target pointerSize = 8 ifTrue: [ 
+		^ self emitIntToFloatCast: instruction withInstruction: CVTSI2SD
+	].
+	self halt
+
+]
+
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacInt64ToFloat: instruction [
+	target pointerSize = 8 ifTrue: [ 
+		^ self emitIntToFloatCast: instruction withInstruction: CVTSI2SS
+	].
+	self halt
+
+]
+
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacJumpInstruction: branch [
 	| destination |
@@ -1614,6 +1649,44 @@ SAsmX86InstructionLowerer >> visitTacLoad: instruction [
 	] ifFalse: [ 
 		self assert: value isRegisterOrRegisterAddressWord.
 		streamBuilder x86: MOV dst: value src: pointer
+	]
+
+	
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacLoadDouble: instruction [
+	| value pointer valueTemp |
+	value := self virtualToPhysical: instruction result.
+	pointer := self virtualToPhysical: instruction left pointerOfSize: 8 scratchIndex: 0.
+	pointer vectorRegister: true.
+	(value isRegisterAddress and: [ pointer isRegisterAddress ]) ifTrue: [
+		valueTemp := self scratchRegister: 0 for: value.
+		streamBuilder
+			x86: MOVSD dst: valueTemp src: pointer;
+			x86: MOVSD dst: value src: valueTemp
+	] ifFalse: [ 
+		self assert: value isRegisterOrRegisterAddress.
+		streamBuilder x86: MOVSD dst: value src: pointer
+	]
+
+	
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacLoadFloat: instruction [
+	| value pointer valueTemp |
+	value := self virtualToPhysical: instruction result.
+	pointer := self virtualToPhysical: instruction left pointerOfSize: 4 scratchIndex: 0.
+	pointer vectorRegister: true.
+	(value isRegisterAddress and: [ pointer isRegisterAddress ]) ifTrue: [
+		valueTemp := self scratchRegister: 0 for: value.
+		streamBuilder
+			x86: MOVSS dst: valueTemp src: pointer;
+			x86: MOVSS dst: value src: valueTemp
+	] ifFalse: [ 
+		self assert: value isRegisterOrRegisterAddress.
+		streamBuilder x86: MOVSS dst: value src: pointer
 	]
 
 	
@@ -1813,6 +1886,36 @@ SAsmX86InstructionLowerer >> visitTacStore: instruction [
 ]
 
 { #category : #memory }
+SAsmX86InstructionLowerer >> visitTacStoreDouble: instruction [
+	| value pointer |
+	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
+	pointer := self virtualToPhysical: instruction right pointerOfSize: target pointerSize scratchIndex: 1.
+	pointer vectorRegister: true.
+	value isRegisterAddress ifTrue: [
+		value := self movePhysical: value toScratchRegister: 0
+	].
+
+	self assert: value isRegisterAddress not.
+	streamBuilder x86: MOVSD dst: pointer src: value
+	
+]
+
+{ #category : #memory }
+SAsmX86InstructionLowerer >> visitTacStoreFloat: instruction [
+	| value pointer |
+	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
+	pointer := self virtualToPhysical: instruction right pointerOfSize: target pointerSize scratchIndex: 1.
+	pointer vectorRegister: true.
+	value isRegisterAddress ifTrue: [
+		value := self movePhysical: value toScratchRegister: 0
+	].
+
+	self assert: value isRegisterAddress not.
+	streamBuilder x86: MOVSS dst: pointer src: value
+	
+]
+
+{ #category : #memory }
 SAsmX86InstructionLowerer >> visitTacStoreTruncate16: instruction [
 	| value pointer |
 	value := self virtualToPhysical: instruction left scratchRegisterIndex: 0.
@@ -1870,6 +1973,11 @@ SAsmX86InstructionLowerer >> visitTacUDivide: instruction [
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
 ]
 
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacUInt32ToDouble: instruction [
+	self halt
+]
+
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacURemainder: instruction [
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: DIV resultRegisterIndex: 2 activeRegisters: instruction activeRegisters
@@ -1894,10 +2002,6 @@ SAsmX86InstructionLowerer >> visitTacZeroExtend8: instruction [
 { #category : #visiting }
 SAsmX86InstructionLowerer >> widowThisContextSpilling: activeRegisters [
 	| doReturn widowThisContextFunction |
-	(activeRegisters isNotEmpty and: [ (activeRegisters detect: #isFloatingPointRegister ifNone: [nil]) isNotNil]) ifTrue: [ 
-		self halt
-	].
-
 	doReturn := streamBuilder newPrivateSymbol: #doReturn.
 	widowThisContextFunction := self runtimeProvidedFunction: target objectModel widowThisContextFunction.
 	streamBuilder

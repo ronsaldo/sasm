@@ -40,6 +40,10 @@ Class {
 		'TacFloatUnorderedNotEqual',
 		'TacGreater',
 		'TacGreaterOrEqual',
+		'TacInt32ToDouble',
+		'TacInt32ToFloat',
+		'TacInt64ToDouble',
+		'TacInt64ToFloat',
 		'TacLess',
 		'TacLessOrEqual',
 		'TacLoad',
@@ -74,6 +78,10 @@ Class {
 		'TacTruncate32',
 		'TacTruncate8',
 		'TacUDivide',
+		'TacUInt32ToDouble',
+		'TacUInt32ToFloat',
+		'TacUInt64ToDouble',
+		'TacUInt64ToFloat',
 		'TacURemainder',
 		'TacZeroExtend16',
 		'TacZeroExtend32',
@@ -175,4 +183,14 @@ SAsmTacOperations class >> initialize [
 	
 	TacFloatToDouble := SAsmTacFloatToDoubleOperation new.
 	TacDoubleToFloat := SAsmTacDoubleToFloatOperation new.
+	
+	TacInt32ToFloat := SAsmTacInt32ToFloatOperation new.
+	TacInt32ToDouble := SAsmTacInt32ToDoubleOperation new.
+	TacInt64ToFloat := SAsmTacInt64ToFloatOperation new.
+	TacInt64ToDouble := SAsmTacInt64ToDoubleOperation new.
+	TacUInt32ToFloat := SAsmTacUInt32ToFloatOperation new.
+	TacUInt32ToDouble := SAsmTacUInt32ToDoubleOperation new.
+	TacUInt64ToFloat := SAsmTacUInt64ToFloatOperation new.
+	TacUInt64ToDouble := SAsmTacUInt64ToDoubleOperation new.
+	
 ]
