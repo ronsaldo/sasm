@@ -6,6 +6,7 @@ Class {
 		'index',
 		'firstUsage',
 		'lastUsage',
+		'alignment',
 		'size',
 		'register',
 		'spillLocation',
@@ -36,7 +37,12 @@ SAsmVirtualRegister >> <= other [
 
 { #category : #accessing }
 SAsmVirtualRegister >> alignment [
-	^ size
+	^ alignment
+]
+
+{ #category : #accessing }
+SAsmVirtualRegister >> alignment: anAlignment [
+	alignment := anAlignment
 ]
 
 { #category : #accessing }
@@ -173,7 +179,7 @@ SAsmVirtualRegister >> spillLocation: anObject [
 
 { #category : #accessing }
 SAsmVirtualRegister >> spillingClass [
-	^ {size . size . dynamicRoot }
+	^ {size . alignment . dynamicRoot }
 ]
 
 { #category : #accessing }

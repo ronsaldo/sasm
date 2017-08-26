@@ -259,11 +259,13 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 
 		"Store the active registers in the mandated spilling points"
 		[spillingPoints isNotEmpty and: [spillingPoints first index < virtualRegister firstUsage]] whileTrue: [
+			|point|
+			point := spillingPoints first.
 			"Do not spill registers that are stil not live"
 			activeRangesAtSpillingPoint := Array streamContents: [:out |
 				activeRangeClasses valuesDo: [ :ranges |
 					ranges do: [ :range |
-						range firstUsage < spillingPoints first index ifTrue: [ 
+						(range firstUsage < point index and: [point index <= range lastUsage]) ifTrue: [ 
 							out nextPut: range
 						]
 					]
@@ -324,8 +326,8 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 	activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
 	spillingPoints do: [ :point |
 		self assert: point activeRegisters isEmptyOrNil.
-		self flag: 'Is this select needed?'.
-		point activeRegisters: (activeRangesAtSpillingPoint select: [:range | range firstUsage < point index]).
+		point activeRegisters: (activeRangesAtSpillingPoint select: [:range |
+			range firstUsage < point index and: [point index <= range lastUsage]]).
 	]
 ]
 
@@ -377,6 +379,7 @@ SAsmInstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualRegi
 { #category : #'abstract instruction generation' }
 SAsmInstructionLowerer >> virtualToPhysical: register [
 	register isVariable ifTrue: [ ^ self virtualRegisterLocationToPhysicalLocation: register ].
+	register isConstantPointer ifTrue: [ ^ register asX86PointerWithBuilder: streamBuilder ].
 	register isVirtualRegister ifFalse: [ ^ register copyWithStreamBuilder: streamBuilder ].
 	register register ifNotNil: [ ^ register register ].
 	^ self virtualRegisterLocationToPhysicalLocation: register

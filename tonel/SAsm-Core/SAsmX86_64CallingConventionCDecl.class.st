@@ -87,7 +87,7 @@ SAsmX86_64CallingConventionCDecl >> stackAlignment [
 
 { #category : #stack }
 SAsmX86_64CallingConventionCDecl >> stackArgumentAlignment [
-	^ 4
+	^ 8
 ]
 
 { #category : #'register allocation' }

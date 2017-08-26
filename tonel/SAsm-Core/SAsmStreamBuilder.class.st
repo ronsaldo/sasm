@@ -352,6 +352,11 @@ SAsmStreamBuilder >> tacDivide: left with: right into: result [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacDouble: value intoFloat: result [
+	^ self tacOperation: TacDoubleToFloat result: result value: value
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacDoubleFloatRegister [
 	^ stream function newDoubleFloatVirtualRegister.
 ]
@@ -359,6 +364,11 @@ SAsmStreamBuilder >> tacDoubleFloatRegister [
 { #category : #'three address code' }
 SAsmStreamBuilder >> tacEqual: left with: right into: result [
 	^ self tacOperation: TacEqual result: result left: left right: right
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacFloat: value intoDouble: result [
+	^ self tacOperation: TacFloatToDouble result: result value: value
 ]
 
 { #category : #'three address code' }

@@ -20,6 +20,11 @@ SAsmInstructionOperand >> hasFixedSize [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isConstantPointer [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isDoubleFloatRegister [
 	^ false
 ]

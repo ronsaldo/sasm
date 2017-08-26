@@ -17,6 +17,7 @@ Class {
 		'TacBitXor',
 		'TacContextReplaceFunction',
 		'TacDivide',
+		'TacDoubleToFloat',
 		'TacEqual',
 		'TacFloatAdd',
 		'TacFloatDivide',
@@ -30,6 +31,7 @@ Class {
 		'TacFloatOrderedNotEqual',
 		'TacFloatSqrt',
 		'TacFloatSubtract',
+		'TacFloatToDouble',
 		'TacFloatUnorderedEqual',
 		'TacFloatUnorderedGreater',
 		'TacFloatUnorderedGreaterOrEqual',
@@ -170,4 +172,7 @@ SAsmTacOperations class >> initialize [
 	TacFloatUnorderedLessOrEqual := SAsmTacComparisonFloatUnorderedLessOrEqual new.
 	TacFloatUnorderedGreaterOrEqual := SAsmTacComparisonFloatUnorderedGreaterOrEqual new.
 	TacFloatUnorderedGreater := SAsmTacComparisonFloatUnorderedGreater new.
+	
+	TacFloatToDouble := SAsmTacFloatToDoubleOperation new.
+	TacDoubleToFloat := SAsmTacDoubleToFloatOperation new.
 ]

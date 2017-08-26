@@ -221,6 +221,7 @@ SAsmCompilationTargetX86 >> machCPUType [
 SAsmCompilationTargetX86 >> newDoubleFloatVirtualRegister [
 	^ SAsmFloatVirtualRegister new
 		size: 8;
+		alignment: (self isWin32 ifTrue: [ 8 ] ifFalse: [4]);
 		registerClass: SAsmX86RegisterVector;
 		yourself
 ]
@@ -229,6 +230,7 @@ SAsmCompilationTargetX86 >> newDoubleFloatVirtualRegister [
 SAsmCompilationTargetX86 >> newFloatVirtualRegister [
 	^ SAsmFloatVirtualRegister new
 		size: 4;
+		alignment: 4;
 		registerClass: SAsmX86RegisterVector;
 		yourself
 ]
@@ -243,6 +245,7 @@ SAsmCompilationTargetX86 >> newFloatVirtualRegistersForSize: size [
 { #category : #'virtual registers' }
 SAsmCompilationTargetX86 >> newIntegerVirtualRegister [
 	^ SAsmIntegerVirtualRegister new size: 4;
+		alignment: 4;
 		registerClass: SAsmX86RegisterInt32;
 		yourself
 ]

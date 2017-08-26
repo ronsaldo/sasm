@@ -12,6 +12,11 @@ SAsmImmediate >> addend [
 	^ 0
 ]
 
+{ #category : #converting }
+SAsmImmediate >> asConstantPointerOfSize: pointerSize [
+	^ SAsmConstantPointer new address: self; size: pointerSize 
+]
+
 { #category : #'as yet unclassified' }
 SAsmImmediate >> immediateValueRelativeTo: section position: immediateWritePosition offset: relativeCheckOffset [
 	self subclassResponsibility

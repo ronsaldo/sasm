@@ -14,9 +14,9 @@ Class {
 	#category : #'SAsm-Core-Generic'
 }
 
-{ #category : #immediates }
-SAsmSymbol >> asPointer: pointerSize [
-	^ self immediateSize: pointerSize
+{ #category : #converting }
+SAsmSymbol >> asConstantPointerOfSize: pointerSize [
+	^ (self immediate: pointerSize) asConstantPointerOfSize: pointerSize
 ]
 
 { #category : #converting }

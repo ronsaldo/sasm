@@ -38,10 +38,10 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 	].
 
 	result isDoubleFloatRegister ifTrue: [
-		streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister.
+		streamBuilder x86: doubleInstruction with: resultPhysical with: rightRegister.
 	].
 	result isFloatRegister ifTrue: [ 
-		streamBuilder x86: doubleInstruction with: resultPhysical with: rightRegister.
+		streamBuilder x86: floatInstruction with: resultPhysical with: rightRegister.
 	]
 
 ]
@@ -77,10 +77,10 @@ SAsmX86InstructionLowerer >> emitArithmeticUnaryInto: result value: value float:
 	resultPhysical := self virtualToPhysical: result.
 
 	result isDoubleFloatRegister ifTrue: [
-		streamBuilder x86: resultPhysical with: doubleInstruction
+		streamBuilder x86: doubleInstruction with: resultPhysical
 	].
 	result isFloatRegister ifTrue: [ 
-		streamBuilder x86: resultPhysical with: floatInstruction
+		streamBuilder x86: floatInstruction with: resultPhysical
 	]
 
 ]
@@ -257,6 +257,25 @@ SAsmX86InstructionLowerer >> emitExitPoint [
 		streamBuilder x86: RET with: stackFrameLayout argumentsSize
 	]
 
+]
+
+{ #category : #casting }
+SAsmX86InstructionLowerer >> emitFloatCast: instruction withInstruction: castInstruction [
+	| operand resultPhysical resultRegister |
+	operand := self virtualToPhysical: instruction left.
+	resultPhysical := self virtualToPhysical: instruction result.
+	
+	resultRegister := resultPhysical.
+	resultPhysical isRegisterAddress ifTrue: [ 
+		resultRegister := self scratchRegister: 0 for: resultPhysical.
+		self halt
+	].
+
+	streamBuilder x86: castInstruction dst: resultRegister src: operand.
+	
+	resultPhysical ~~ resultRegister ifTrue: [
+		streamBuilder x86: MOVAPD dst: resultPhysical src: resultRegister
+	]
 ]
 
 { #category : #arithmetic }
@@ -581,6 +600,9 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 	physical := self virtualToPhysical: register.
 	self assert: physical isRegisterOrRegisterAddress.
 	value isImmediate ifTrue: [
+		register isFloatingPointRegister ifTrue: [
+			self error: 'Cannot move an immediate toward a float register directly.'		
+		].
 		^ streamBuilder x86: MOV dst: physical src: (value copyWithStreamBuilder: streamBuilder)
 	].
 
@@ -591,15 +613,24 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 	].
 
 	physical isVectorRegister ifTrue: [
-		valuePhysical isVectorRegister ifTrue: [ 
+		valuePhysical isVectorRegister ifTrue: [
 			^ streamBuilder x86: MOVAPS dst: physical src: valuePhysical
 		].
 	
-		self halt
+		value size = 4 ifTrue: [ 
+			^ streamBuilder x86: MOVSS dst: physical src: valuePhysical
+		].
+		value size = 8 ifTrue: [
+			^ streamBuilder x86: MOVSD dst: physical src: valuePhysical
+		].
+		value size = 16 ifTrue: [
+			^ streamBuilder x86: MOVAPD dst: physical src: valuePhysical
+		].
 	] ifFalse: [
 		^ streamBuilder x86: MOV dst: physical src: valuePhysical
-	]
+	].
 	
+	self error: 'Unsupported value to move'
 ]
 
 { #category : #testing }
@@ -643,7 +674,7 @@ SAsmX86InstructionLowerer >> pushValueToTheStack: value scratchIndex: scratchInd
 				].
 				^ streamBuilder
 						x86: SUB dst: target stackPointerRegister src: 4;
-						x86: MOVSD dst: (target stackPointerRegister asX86PointerOfSize: 4) src: valuePhysical.
+						x86: MOVSS dst: (target stackPointerRegister asX86PointerOfSize: 4) src: valuePhysical.
 			]
 		] ifFalse: [
 			self halt.
@@ -1038,10 +1069,12 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	"Compute the size of the arguments passed in the stack."	
 	stackPushedSize := calledConvention shadowCallSpaceSize.
 	stackArgumentsPadding := stackArguments collect: [ :arg |
-		| oldSize padding |
+		| oldSize padding argumentAlignment |
 		oldSize := stackPushedSize.
-		stackPushedSize := stackPushedSize alignedTo: (self alignmentOfValuePushedToTheStack: arg calledConvention: calledConvention).
-
+		argumentAlignment:= self alignmentOfValuePushedToTheStack: arg calledConvention: calledConvention.
+		
+		stackPushedSize := stackPushedSize alignedTo: argumentAlignment.
+		
 		padding := stackPushedSize - oldSize.
 		stackPushedSize := stackPushedSize + (self sizeOfValuePushedToTheStack: arg calledConvention: calledConvention).
 		padding.
@@ -1057,11 +1090,11 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 	stackArguments size to: 1 by: -1 do: [ :index |
 		| arg padding |
 		arg := stackArguments at: index.
+		self pushValueToTheStack: arg scratchIndex: 0.
 		padding := stackArgumentsPadding at: index.
 		padding ~= 0 ifTrue: [ 
 			streamBuilder x86: SUB dst: target stackPointerRegister src: padding
 		].
-		self pushValueToTheStack: arg scratchIndex: 0.
 	].
 	
 	"Pass some arguments in registers"
@@ -1249,6 +1282,11 @@ SAsmX86InstructionLowerer >> visitTacDivide: instruction [
 	self emitIntegerDivisionInto: instruction result dividend: instruction left divisor: instruction right instruction: IDIV resultRegisterIndex: 1 activeRegisters: instruction activeRegisters
 ]
 
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacDoubleToFloat: instruction [
+	^ self emitFloatCast: instruction withInstruction: CVTSD2SS
+]
+
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacEqual: instruction [
 	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
@@ -1384,13 +1422,40 @@ SAsmX86InstructionLowerer >> visitTacFloatOrderedNotEqual: instruction withBranc
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacFloatSqrt: instruction [
-	^ self emitArithmeticUnaryInto: instruction result value: instruction left float: SQRTSS double: SQRTSD
+	| result operand resultPhysical operandPhysical resultRegister |
+	result := instruction result.
+	operand := instruction left.
+	
+	resultPhysical := self virtualToPhysical: result.
+	operandPhysical := self virtualToPhysical: operand.
+	
+	resultRegister := resultPhysical.
+	resultPhysical isRegisterAddress ifTrue: [
+		resultRegister := self scratchRegister: 0 for: resultPhysical.
+		self halt
+	].
+
+	operand isFloatRegister ifTrue: [ 
+		streamBuilder x86: SQRTSS dst: resultRegister src: operandPhysical.
+	].
+	operand isDoubleFloatRegister ifTrue: [ 
+		streamBuilder x86: SQRTSD dst: resultRegister src: operandPhysical.
+	].
+
+	resultPhysical ~~ resultRegister ifTrue: [
+		streamBuilder x86: MOVAPD dst: resultPhysical src: resultRegister
+	]
 ]
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> visitTacFloatSubtract: instruction [
 	^ self emitArithmeticInto: instruction result left: instruction left right: instruction right 
 			float: SUBSS double: SUBSD
+]
+
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacFloatToDouble: instruction [
+	^ self emitFloatCast: instruction withInstruction: CVTSS2SD
 ]
 
 { #category : #'conditional branchs' }
@@ -1669,7 +1734,7 @@ SAsmX86InstructionLowerer >> visitTacRemainder: instruction [
 { #category : #visiting }
 SAsmX86InstructionLowerer >> visitTacReturn: returnInstruction [
 	(function callingConvention hasContextMetadata or: [function contextMetaData isNotNil]) ifTrue: [
-		self widowThisContextSpilling: returnInstruction activeRegisters.
+		self widowThisContextSpilling: (returnInstruction activeRegisters ifNil: [#()]).
 	].
 
 	self returnValue: returnInstruction left valueHigh: returnInstruction right.
@@ -1819,23 +1884,12 @@ SAsmX86InstructionLowerer >> visitTacZeroExtend8: instruction [
 ]
 
 { #category : #visiting }
-SAsmX86InstructionLowerer >> widowThisContext [
-	| doReturn widowThisContextFunction |
-	doReturn := streamBuilder newPrivateSymbol: #doReturn.
-	widowThisContextFunction := self runtimeProvidedFunction: target objectModel widowThisContextFunction.
-	streamBuilder
-		x86: CMP dst: (target framePointerRegister asX86PointerOfSize: target pointerSize) - (ThisContextPointerIndex * target pointerSize) src: 0;
-		x86: JZ with: doReturn;
-		x86: PUSH with: target framePointerRegister;
-		x86: CALL with: widowThisContextFunction;
-		x86: ADD dst: target stackPointerRegister src: 4;
-		label: doReturn
-		
-]
-
-{ #category : #visiting }
 SAsmX86InstructionLowerer >> widowThisContextSpilling: activeRegisters [
 	| doReturn widowThisContextFunction |
+	(activeRegisters isNotEmpty and: [ (activeRegisters detect: #isFloatingPointRegister ifNone: [nil]) isNotNil]) ifTrue: [ 
+		self halt
+	].
+
 	doReturn := streamBuilder newPrivateSymbol: #doReturn.
 	widowThisContextFunction := self runtimeProvidedFunction: target objectModel widowThisContextFunction.
 	streamBuilder

@@ -74,6 +74,11 @@ SAsmCompilationTarget >> isLittleEndian [
 	^ true
 ]
 
+{ #category : #testing }
+SAsmCompilationTarget >> isWin32 [
+	^ operatingSystemName = #win32
+]
+
 { #category : #'operating systems' }
 SAsmCompilationTarget >> linux [
 	self operatingSystemName: #linux
