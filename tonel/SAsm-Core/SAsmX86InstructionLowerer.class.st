@@ -261,20 +261,25 @@ SAsmX86InstructionLowerer >> emitExitPoint [
 
 { #category : #casting }
 SAsmX86InstructionLowerer >> emitFloatCast: instruction withInstruction: castInstruction [
-	| operand resultPhysical resultRegister |
+	| operand resultPhysical resultRegister result |
 	operand := self virtualToPhysical: instruction left.
+	result := instruction result.
 	resultPhysical := self virtualToPhysical: instruction result.
 	
 	resultRegister := resultPhysical.
 	resultPhysical isRegisterAddress ifTrue: [ 
-		resultRegister := self scratchRegister: 0 for: resultPhysical.
-		self halt
+		resultRegister := self scratchRegister: 0 for: resultPhysical
 	].
 
 	streamBuilder x86: castInstruction dst: resultRegister src: operand.
 	
 	resultPhysical ~~ resultRegister ifTrue: [
-		streamBuilder x86: MOVAPD dst: resultPhysical src: resultRegister
+		result isFloatRegister ifTrue: [
+			streamBuilder x86: MOVSS dst: resultPhysical src: resultRegister
+		].
+		result isDoubleFloatRegister ifTrue: [
+			streamBuilder x86: MOVSD dst: resultPhysical src: resultRegister
+		].
 	]
 ]
 
@@ -662,7 +667,7 @@ SAsmX86InstructionLowerer >> pushValueToTheStack: value scratchIndex: scratchInd
 		target pointerSize = 4 ifTrue: [
 			valuePhysical isRegisterAddress ifTrue: [
 				value isDoubleFloatRegister ifTrue: [ 
-					^ streamBuilder x86: PUSH with: valuePhysical dword + 4.
+					streamBuilder x86: PUSH with: valuePhysical dword + 4.
 				].
 			
 				^ streamBuilder x86: PUSH with: valuePhysical dword.
@@ -793,9 +798,9 @@ SAsmX86InstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualR
 	| variable |
 	virtualRegister isVariable ifTrue: [
 		variable := stackFrameLayout importVariable: virtualRegister.
-		^ (target framePointerRegister asX86PointerOfSize: virtualRegister size) + (variable offset)
+		^ (target framePointerRegister asX86PointerOfSize: virtualRegister size vectorRegister: virtualRegister isFloatingPointRegister) + (variable offset)
 	].
-	^ (target framePointerRegister asX86PointerOfSize: virtualRegister size) + (virtualRegister spillLocation offset + virtualRegister variableOffset)
+	^ (target framePointerRegister asX86PointerOfSize: virtualRegister size vectorRegister: virtualRegister isFloatingPointRegister) + (virtualRegister spillLocation offset + virtualRegister variableOffset)
 ]
 
 { #category : #'abstract instruction generation' }
@@ -1431,20 +1436,23 @@ SAsmX86InstructionLowerer >> visitTacFloatSqrt: instruction [
 	
 	resultRegister := resultPhysical.
 	resultPhysical isRegisterAddress ifTrue: [
-		resultRegister := self scratchRegister: 0 for: resultPhysical.
-		self halt
+		resultRegister := self scratchRegister: 0 for: resultPhysical
 	].
 
 	operand isFloatRegister ifTrue: [ 
 		streamBuilder x86: SQRTSS dst: resultRegister src: operandPhysical.
+		resultPhysical ~~ resultRegister ifTrue: [
+			streamBuilder x86: MOVSS dst: resultPhysical src: resultRegister
+		]
 	].
 	operand isDoubleFloatRegister ifTrue: [ 
 		streamBuilder x86: SQRTSD dst: resultRegister src: operandPhysical.
+		resultPhysical ~~ resultRegister ifTrue: [
+			streamBuilder x86: MOVSD dst: resultPhysical src: resultRegister
+		]
 	].
 
-	resultPhysical ~~ resultRegister ifTrue: [
-		streamBuilder x86: MOVAPD dst: resultPhysical src: resultRegister
-	]
+	
 ]
 
 { #category : #arithmetic }

@@ -40,7 +40,7 @@ SAsmX86RegisterAddress class >> initialize [
 SAsmX86RegisterAddress >> + displacementOrIndex [
 	| result |
 	result := self copy.
-	displacementOrIndex isInteger ifTrue: [ ^ self copy displacement: displacementOrIndex ].
+	displacementOrIndex isInteger ifTrue: [ ^ self copy displacement: displacement + displacementOrIndex ].
 	self halt.
 ]
 
