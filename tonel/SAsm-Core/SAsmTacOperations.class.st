@@ -18,6 +18,10 @@ Class {
 		'TacContextReplaceFunction',
 		'TacDivide',
 		'TacDoubleToFloat',
+		'TacDoubleToInt32',
+		'TacDoubleToInt64',
+		'TacDoubleToUInt32',
+		'TacDoubleToUInt64',
 		'TacEqual',
 		'TacFloatAdd',
 		'TacFloatDivide',
@@ -32,6 +36,10 @@ Class {
 		'TacFloatSqrt',
 		'TacFloatSubtract',
 		'TacFloatToDouble',
+		'TacFloatToInt32',
+		'TacFloatToInt64',
+		'TacFloatToUInt32',
+		'TacFloatToUInt64',
 		'TacFloatUnorderedEqual',
 		'TacFloatUnorderedGreater',
 		'TacFloatUnorderedGreaterOrEqual',
@@ -192,5 +200,15 @@ SAsmTacOperations class >> initialize [
 	TacUInt32ToDouble := SAsmTacUInt32ToDoubleOperation new.
 	TacUInt64ToFloat := SAsmTacUInt64ToFloatOperation new.
 	TacUInt64ToDouble := SAsmTacUInt64ToDoubleOperation new.
+	
+	TacFloatToInt32 := SAsmTacFloatToInt32Operation new.
+	TacFloatToInt64 := SAsmTacFloatToInt64Operation new.
+	TacFloatToUInt32 := SAsmTacFloatToUInt32Operation new.
+	TacFloatToUInt64 := SAsmTacFloatToUInt64Operation new.
+
+	TacDoubleToInt32 := SAsmTacDoubleToInt32Operation new.
+	TacDoubleToInt64 := SAsmTacDoubleToInt64Operation new.
+	TacDoubleToUInt32 := SAsmTacDoubleToUInt32Operation new.
+	TacDoubleToUInt64 := SAsmTacDoubleToUInt64Operation new.
 	
 ]

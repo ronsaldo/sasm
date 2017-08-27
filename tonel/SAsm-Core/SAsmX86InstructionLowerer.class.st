@@ -195,7 +195,7 @@ SAsmX86InstructionLowerer >> emitComparison: instruction with: comparisonInstruc
 		rightRegister := self movePhysical: rightPhysical toScratchRegister: 1
 	].
 
-	streamBuilder x86: comparisonInstruction with: leftPhysical with: rightRegister..
+	streamBuilder x86: comparisonInstruction with: leftPhysical with: rightRegister.
 
 	falseLabel := streamBuilder findSymbolForObject: falseDestination.
 	trueLabel := streamBuilder findSymbolForObject: trueDestination.
@@ -280,6 +280,25 @@ SAsmX86InstructionLowerer >> emitFloatCast: instruction withInstruction: castIns
 		result isDoubleFloatRegister ifTrue: [
 			streamBuilder x86: MOVSD dst: resultPhysical src: resultRegister
 		].
+	]
+]
+
+{ #category : #casting }
+SAsmX86InstructionLowerer >> emitFloatToIntCast: instruction withInstruction: castInstruction [
+	| operand resultPhysical resultRegister result |
+	operand := self virtualToPhysical: instruction left.
+	result := instruction result.
+	resultPhysical := self virtualToPhysical: instruction result.
+	
+	resultRegister := resultPhysical.
+	resultPhysical isRegisterAddress ifTrue: [ 
+		resultRegister := self scratchRegister: 0 for: resultPhysical
+	].
+
+	streamBuilder x86: castInstruction dst: resultRegister src: operand.
+	
+	resultPhysical ~~ resultRegister ifTrue: [
+		streamBuilder x86: MOV dst: resultPhysical src: resultRegister
 	]
 ]
 
@@ -1299,6 +1318,11 @@ SAsmX86InstructionLowerer >> visitTacDoubleToFloat: instruction [
 	^ self emitFloatCast: instruction withInstruction: CVTSD2SS
 ]
 
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacDoubleToInt32: instruction [
+	^ self emitFloatToIntCast: instruction withInstruction: CVTSD2SI
+]
+
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacEqual: instruction [
 	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
@@ -1370,53 +1394,53 @@ SAsmX86InstructionLowerer >> visitTacFloatOrderedEqual: instruction withBranch: 
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedGreater: instruction [
 	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
-			branchTrue: JG branchFalse: JLE
+			branchTrue: JA branchFalse: JBE
 ]
 
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedGreater: instruction withBranch: branch [
 	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
-			branchTrue: JG destination: branch trueDestination
-			branchFalse: JLE destination: branch falseDestination
+			branchTrue: JA destination: branch trueDestination
+			branchFalse: JBE destination: branch falseDestination
 ]
 
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedGreaterOrEqual: instruction [
 	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
-			branchTrue: JGE branchFalse: JL
+			branchTrue: JAE branchFalse: JB
 ]
 
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedGreaterOrEqual: instruction withBranch: branch [
 	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
-			branchTrue: JGE destination: branch trueDestination
-			branchFalse: JL destination: branch falseDestination
+			branchTrue: JAE destination: branch trueDestination
+			branchFalse: JB destination: branch falseDestination
 ]
 
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedLess: instruction [
 	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right 
-			branchTrue: JL branchFalse: JGE
+			branchTrue: JB branchFalse: JAE
 ]
 
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedLess: instruction withBranch: branch [
 	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
-			branchTrue: JL destination: branch trueDestination
-			branchFalse: JGE destination: branch falseDestination
+			branchTrue: JB destination: branch trueDestination
+			branchFalse: JAE destination: branch falseDestination
 ]
 
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedLessOrEqual: instruction [
 	^ self emitComparisonFloat: true into: instruction result left: instruction left right: instruction right
-			branchTrue: JLE branchFalse: JG
+			branchTrue: JBE branchFalse: JA
 ]
 
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> visitTacFloatOrderedLessOrEqual: instruction withBranch: branch [
 	^ self emitComparisonFloat: branch ordered: true left: instruction left right: instruction right 
-			branchTrue: JLE destination: branch trueDestination
-			branchFalse: JG destination: branch falseDestination
+			branchTrue: JBE destination: branch trueDestination
+			branchFalse: JA destination: branch falseDestination
 ]
 
 { #category : #comparisons }
@@ -1473,18 +1497,9 @@ SAsmX86InstructionLowerer >> visitTacFloatToDouble: instruction [
 	^ self emitFloatCast: instruction withInstruction: CVTSS2SD
 ]
 
-{ #category : #'conditional branchs' }
-SAsmX86InstructionLowerer >> visitTacFloatUnoderedGreater: instruction withBranch: branch [
-	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
-			branchTrue: JG destination: branch trueDestination
-			branchFalse: JLE destination: branch falseDestination
-]
-
-{ #category : #'conditional branchs' }
-SAsmX86InstructionLowerer >> visitTacFloatUnoderedLessOrEqual: instruction withBranch: branch [
-	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
-			branchTrue: JLE destination: branch trueDestination
-			branchFalse: JG destination: branch falseDestination
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacFloatToInt32: instruction [
+	^ self emitFloatToIntCast: instruction withInstruction: CVTSS2SI
 ]
 
 { #category : #comparisons }
@@ -1503,39 +1518,53 @@ SAsmX86InstructionLowerer >> visitTacFloatUnorderedEqual: instruction withBranch
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatUnorderedGreater: instruction [
 	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
-			branchTrue: JG branchFalse: JLE
+			branchTrue: JA branchFalse: JBE
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedGreater: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JA destination: branch trueDestination
+			branchFalse: JBE destination: branch falseDestination
 ]
 
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatUnorderedGreaterOrEqual: instruction [
 	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
-			branchTrue: JGE branchFalse: JL
+			branchTrue: JAE branchFalse: JB
 ]
 
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> visitTacFloatUnorderedGreaterOrEqual: instruction withBranch: branch [
 	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
-			branchTrue: JGE destination: branch trueDestination
-			branchFalse: JL destination: branch falseDestination
+			branchTrue: JAE destination: branch trueDestination
+			branchFalse: JB destination: branch falseDestination
 ]
 
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatUnorderedLess: instruction [
 	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right 
-			branchTrue: JL branchFalse: JGE
+			branchTrue: JB branchFalse: JAE
 ]
 
 { #category : #'conditional branchs' }
 SAsmX86InstructionLowerer >> visitTacFloatUnorderedLess: instruction withBranch: branch [
 	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
-			branchTrue: JL destination: branch trueDestination
-			branchFalse: JGE destination: branch falseDestination
+			branchTrue: JB destination: branch trueDestination
+			branchFalse: JAE destination: branch falseDestination
 ]
 
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacFloatUnorderedLessOrEqual: instruction [
 	^ self emitComparisonFloat: false into: instruction result left: instruction left right: instruction right
-			branchTrue: JLE branchFalse: JG
+			branchTrue: JBE branchFalse: JA
+]
+
+{ #category : #'conditional branchs' }
+SAsmX86InstructionLowerer >> visitTacFloatUnorderedLessOrEqual: instruction withBranch: branch [
+	^ self emitComparisonFloat: branch ordered: false left: instruction left right: instruction right 
+			branchTrue: JBE destination: branch trueDestination
+			branchFalse: JA destination: branch falseDestination
 ]
 
 { #category : #comparisons }
