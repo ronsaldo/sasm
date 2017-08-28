@@ -412,7 +412,7 @@ SAsmX86InstructionLowerer >> emitPrologueLoads [
 					streamBuilder x86: MOV dst: (self virtualRegisterLocationToPhysicalLocation: arg virtualRegisters first) src: arg argumentPassingRegister
 				].
 				arg argumentRegisterClass == #float ifTrue: [ 
-					self halt
+					streamBuilder x86: MOVAPD dst: (self virtualRegisterLocationToPhysicalLocation: arg virtualRegisters first) src: arg argumentPassingRegister
 				].
 			]
 		]
@@ -686,8 +686,8 @@ SAsmX86InstructionLowerer >> pushIntegerToTheStack: valuePhysical scratchIndex: 
 { #category : #'procedure call' }
 SAsmX86InstructionLowerer >> pushValueToTheStack: value scratchIndex: scratchIndex [
 	| valuePhysical |
-	valuePhysical := self virtualToPhysical: value.
-	value isFloatingPointRegister ifTrue: [ 
+	value isFloatingPointRegister ifTrue: [
+		valuePhysical := self virtualToPhysical: value.
 		target pointerSize = 4 ifTrue: [
 			valuePhysical isRegisterAddress ifTrue: [
 				value isDoubleFloatRegister ifTrue: [ 
@@ -706,9 +706,25 @@ SAsmX86InstructionLowerer >> pushValueToTheStack: value scratchIndex: scratchInd
 						x86: MOVSS dst: (target stackPointerRegister asX86PointerOfSize: 4) src: valuePhysical.
 			]
 		] ifFalse: [
-			self halt.
+			valuePhysical isRegisterAddress ifTrue: [
+				value isDoubleFloatRegister ifTrue: [ 
+					^ streamBuilder x86: PUSH with: valuePhysical qword.
+				] ifFalse: [ 
+					self halt
+				]		
+			] ifFalse: [ 
+				value isDoubleFloatRegister ifTrue: [ 
+					^ streamBuilder
+						x86: SUB dst: target stackPointerRegister src: 8;
+						x86: MOVSD dst: (target stackPointerRegister asX86PointerOfSize: 8) src: valuePhysical.
+				].
+				^ streamBuilder
+						x86: SUB dst: target stackPointerRegister src: 8;
+						x86: MOVSS dst: (target stackPointerRegister asX86PointerOfSize: 4) src: valuePhysical.
+			]
 		].
-	] ifFalse: [ 
+	] ifFalse: [
+		valuePhysical := self virtualToPhysical: value.
 		self pushIntegerToTheStack: valuePhysical scratchIndex: scratchIndex
 	]
 	
@@ -773,7 +789,8 @@ SAsmX86InstructionLowerer >> spillRegister: virtualRegister [
 	virtualRegister isVectorRegister ifTrue: [ 
 		self halt
 	] ifFalse: [ 
-		virtualRegister isIntegerRegister ifTrue: [ 
+		virtualRegister isIntegerRegister ifTrue: [
+			self assert: virtualRegister size = target pointerSize.
 			^ streamBuilder x86: MOV dst: (self virtualRegisterLocationToPhysicalLocation: virtualRegister) src: virtualRegister register
 		].
 		virtualRegister isFloatRegister  ifTrue: [
@@ -801,6 +818,7 @@ SAsmX86InstructionLowerer >> unspillRegister: virtualRegister [
 		self halt
 	] ifFalse: [ 
 		virtualRegister isIntegerRegister ifTrue: [ 
+			self assert: virtualRegister size = target pointerSize.
 			^ streamBuilder x86: MOV dst: virtualRegister register src: (self virtualRegisterLocationToPhysicalLocation: virtualRegister)
 		].
 		virtualRegister isFloatRegister  ifTrue: [ 
@@ -1323,6 +1341,15 @@ SAsmX86InstructionLowerer >> visitTacDoubleToInt32: instruction [
 	^ self emitFloatToIntCast: instruction withInstruction: CVTSD2SI
 ]
 
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacDoubleToInt64: instruction [
+	target pointerSize = 8 ifTrue: [ 
+		^ self emitFloatToIntCast: instruction withInstruction: CVTSD2SI
+	].
+	self halt
+
+]
+
 { #category : #comparisons }
 SAsmX86InstructionLowerer >> visitTacEqual: instruction [
 	^ self emitComparisonIntegerInto: instruction result left: instruction left right: instruction right 
@@ -1500,6 +1527,15 @@ SAsmX86InstructionLowerer >> visitTacFloatToDouble: instruction [
 { #category : #casting }
 SAsmX86InstructionLowerer >> visitTacFloatToInt32: instruction [
 	^ self emitFloatToIntCast: instruction withInstruction: CVTSS2SI
+]
+
+{ #category : #casting }
+SAsmX86InstructionLowerer >> visitTacFloatToInt64: instruction [
+	target pointerSize = 8 ifTrue: [ 
+		^ self emitFloatToIntCast: instruction withInstruction: CVTSS2SI
+	].
+	self halt
+
 ]
 
 { #category : #comparisons }
@@ -1764,7 +1800,7 @@ SAsmX86InstructionLowerer >> visitTacLoadZeroExtend16: instruction [
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacLoadZeroExtend32: instruction [
 	target pointerSize = 4 ifTrue: [ ^ self visitTacLoad: instruction ].
-	self emitLoad: instruction withExtension: MOV pointerSize: 4
+	self emitLoad: instruction withExtension: MOVZX pointerSize: 4
 ]
 
 { #category : #memory }
@@ -2030,7 +2066,7 @@ SAsmX86InstructionLowerer >> visitTacZeroExtend8: instruction [
 
 { #category : #visiting }
 SAsmX86InstructionLowerer >> widowThisContextSpilling: activeRegisters [
-	| doReturn widowThisContextFunction |
+	| doReturn widowThisContextFunction widowThisContextConvention registerArguments shadowSpace |
 	doReturn := streamBuilder newPrivateSymbol: #doReturn.
 	widowThisContextFunction := self runtimeProvidedFunction: target objectModel widowThisContextFunction.
 	streamBuilder
@@ -2039,10 +2075,27 @@ SAsmX86InstructionLowerer >> widowThisContextSpilling: activeRegisters [
 	
 	"Call the widowing function"	
 	self spillRegisters: activeRegisters.
-	streamBuilder
-		x86: PUSH with: target framePointerRegister;
-		x86: CALL with: widowThisContextFunction;
-		x86: ADD dst: target stackPointerRegister src: 4.
+	widowThisContextConvention := target callingConventionNamed: #cdecl.
+	registerArguments := widowThisContextConvention integerArgumentRegisters .
+	registerArguments ifEmpty: [ 
+		streamBuilder
+			x86: PUSH with: target framePointerRegister;
+			x86: CALL with: widowThisContextFunction;
+			x86: ADD dst: target stackPointerRegister src: 4.
+	] ifNotEmpty: [
+		shadowSpace := widowThisContextConvention shadowCallSpaceSize.
+		shadowSpace ~= 0 ifTrue: [
+			streamBuilder x86: SUB dst: target stackPointerRegister src: shadowSpace.
+		].
+
+		streamBuilder
+			x86: MOV dst: registerArguments first src: target framePointerRegister;
+			x86: CALL with: widowThisContextFunction.
+	
+		shadowSpace ~= 0 ifTrue: [ 
+			streamBuilder x86: ADD dst: target stackPointerRegister src: shadowSpace.
+		].
+	].
 	self unspillRegisters: activeRegisters.
 	
 	streamBuilder

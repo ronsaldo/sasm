@@ -12,7 +12,8 @@ Class {
 		'spillLocation',
 		'variable',
 		'variableOffset',
-		'dynamicRoot'
+		'dynamicRoot',
+		'debugInformation'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -43,6 +44,16 @@ SAsmVirtualRegister >> alignment [
 { #category : #accessing }
 SAsmVirtualRegister >> alignment: anAlignment [
 	alignment := anAlignment
+]
+
+{ #category : #accessing }
+SAsmVirtualRegister >> debugInformation [
+	^ debugInformation
+]
+
+{ #category : #accessing }
+SAsmVirtualRegister >> debugInformation: anObject [
+	debugInformation := anObject
 ]
 
 { #category : #accessing }
@@ -121,14 +132,20 @@ SAsmVirtualRegister >> markVirtualRegisterLiveRangePosition: position blockIndex
 	]
 ]
 
-{ #category : #accessing }
+{ #category : #printing }
 SAsmVirtualRegister >> prettyPrintOn: aStream [
-	aStream putKeyword: '<'; putKeyword: self typeName; putKeyword: size asString;putKeyword: '>'; print: index
+	aStream putKeyword: '<'; putKeyword: self typeName; putKeyword: size asString;putKeyword: '>'; print: index.
+	debugInformation ifNotNil: [ 
+		aStream space; print: debugInformation
+	]
 ]
 
-{ #category : #accessing }
+{ #category : #printing }
 SAsmVirtualRegister >> printOn: aStream [
-	aStream nextPut: $<; nextPutAll: self typeName; print:size; nextPut: $>; print: index
+	aStream nextPut: $<; nextPutAll: self typeName; print:size; nextPut: $>; print: index.
+	debugInformation ifNotNil: [ 
+		aStream space; print: debugInformation
+	]
 ]
 
 { #category : #accessing }

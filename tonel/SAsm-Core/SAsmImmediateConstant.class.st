@@ -12,6 +12,11 @@ SAsmImmediateConstant >> asSAsmConstantExpression [
 	^ SAsmConstantExpressionConstantInteger new value: value; size: 4
 ]
 
+{ #category : #converting }
+SAsmImmediateConstant >> asX86PointerOfSize: pointerSize withBuilder: streamBuilder [
+	^ SAsmX86RegisterAddress new size: pointerSize; displacement: (self copyWithStreamBuilder: streamBuilder)
+]
+
 { #category : #testing }
 SAsmImmediateConstant >> hasFixedSize [
 	^ true

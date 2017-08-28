@@ -34,7 +34,7 @@ SAsmX86InstructionOpRxRmxI8 >> writeInstruction: instruction with: writer [
 	register := instruction first.
 
 	writer nextPutAll: mandatoryPrefix.
-	self write: writer rexSize: false rm: registerAddress reg: register.
+	self write: writer rexSize: 4 rm: registerAddress reg: register.
 	writer nextPutAll: opcode.
 	self write: writer modRM: registerAddress reg: register valueLow immediate: 1.
 	writer nextPutI8: instruction third.

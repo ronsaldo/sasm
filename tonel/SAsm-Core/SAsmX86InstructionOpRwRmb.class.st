@@ -22,7 +22,7 @@ SAsmX86InstructionOpRwRmb >> writeInstruction: instruction with: writer [
 	self assert: register isRegister.
 	self assert: registerAddress isRegisterOrRegisterAddress.
 	operandSize := register size.
-	self write: writer rexSize: 0 rm: registerAddress reg: register.
+	self write: writer rexSize: operandSize rm: registerAddress reg: register.
 	writer nextPutAll: opcode.
 	self write: writer modRM: registerAddress reg: register
 ]

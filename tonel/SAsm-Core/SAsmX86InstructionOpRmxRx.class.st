@@ -32,7 +32,7 @@ SAsmX86InstructionOpRmxRx >> writeInstruction: instruction with: writer [
 	register := instruction second.
 
 	writer nextPutAll: mandatoryPrefix.
-	self write: writer rexSize: false rm: registerAddress reg: register.
+	self write: writer rexSize: 1 rm: registerAddress reg: register.
 	writer nextPutAll: opcode.
 	self write: writer modRM: registerAddress reg: register
 ]

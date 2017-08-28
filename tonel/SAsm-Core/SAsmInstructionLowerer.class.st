@@ -77,15 +77,15 @@ SAsmInstructionLowerer >> assignRegistersToArguments [
 	| callingConvention  integerArgumentRegisters floatArgumentRegisters intRegisterIndex floatRegisterIndex |
 	callingConvention := function callingConvention.
 	integerArgumentRegisters := callingConvention integerArgumentRegisters.
-	floatArgumentRegisters := callingConvention integerArgumentRegisters.
+	floatArgumentRegisters := callingConvention floatArgumentRegisters.
 	intRegisterIndex := 1.
 	floatRegisterIndex := 1.
 	stackFrameLayout arguments do: [ :arg |
-		(arg argumentRegisterClass == #integer and: [ intRegisterIndex <= integerArgumentRegisters size ]) ifTrue: [ 
+		(arg argumentRegisterClass == #integer and: [ intRegisterIndex <= integerArgumentRegisters size ]) ifTrue: [
 			arg argumentPassingRegister: (integerArgumentRegisters at: intRegisterIndex).
 			intRegisterIndex := intRegisterIndex + 1
 		].
-		(arg argumentRegisterClass == #float and: [ floatRegisterIndex <= floatArgumentRegisters size]) ifTrue: [ 
+		(arg argumentRegisterClass == #float and: [ floatRegisterIndex <= floatArgumentRegisters size]) ifTrue: [
 			arg argumentPassingRegister: (floatArgumentRegisters at: floatRegisterIndex).
 			floatRegisterIndex := floatRegisterIndex + 1
 		].
@@ -221,22 +221,12 @@ SAsmInstructionLowerer >> nilGlobalSymbol [
 
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
-	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange spillingPoints activeRangesAtSpillingPoint |
+	| activeMemoryRanges activeRangeClasses sortedLiveRanges registerClass currentActiveRanges availableRegisters spilledRange |
 	freeSpillLocations := Dictionary new.
 	freeRegisters := Dictionary new.
 	allocatableRegisterClasses keysAndValuesDo: [ :key :value |
 		freeRegisters at: key put: value copy
 	].
-
-	spillingPoints := OrderedCollection new.
-	function basicBlocks do: [ :bb |
-		bb do: [ :instruction |
-			(instruction needsToSpillWith: self) ifTrue: [ 
-				spillingPoints add: instruction
-			]
-		]
-	].
-	spillingPoints sort: [ :a :b |  a index < b index ].
 
 	activeMemoryRanges := SortedCollection sortBlock: [ :a :b | a end < b end ].
 	activeRangeClasses := Dictionary new.
@@ -256,26 +246,6 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 			self mapVirtualRegister: virtualRegister toSpillLocation: virtualRegister spillLocation.
 			activeMemoryRanges add: virtualRegister.
 		].
-
-		"Store the active registers in the mandated spilling points"
-		[spillingPoints isNotEmpty and: [spillingPoints first index < virtualRegister firstUsage]] whileTrue: [
-			|point|
-			point := spillingPoints first.
-			"Do not spill registers that are stil not live"
-			activeRangesAtSpillingPoint := Array streamContents: [:out |
-				activeRangeClasses valuesDo: [ :ranges |
-					ranges do: [ :range |
-						(range firstUsage < point index and: [point index <= range lastUsage]) ifTrue: [ 
-							out nextPut: range
-						]
-					]
-				]
-			].
-		
-			spillingPoints first activeRegisters: activeRangesAtSpillingPoint.
-			activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
-			spillingPoints removeFirst
-		].
 	
 		"Allocate the register"
 		registerClass := virtualRegister registerClass.
@@ -284,7 +254,7 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 				SortedCollection sortBlock: [ :a :b | a end < b end ]
 			].
 			
-		"Allocate the register"
+			"Allocate the register"
 			activeRangeClasses valuesDo: [ :activeRanges |
 				self removeExpiredRangesUntil: virtualRegister firstUsage from: activeRanges do: [:expiredRange |			
 					self freeRegister: expiredRange register.
@@ -311,24 +281,9 @@ SAsmInstructionLowerer >> performLinearScanRegisterAllocation [
 				currentActiveRanges add: virtualRegister.
 			]
 		].
-	
 	].
 
-	activeRangesAtSpillingPoint := Array streamContents: [:out |
-		activeRangeClasses valuesDo: [ :ranges |
-			ranges do: [ :range |  out nextPut: range ]
-		]
-	].
-		
-	activeRangesAtSpillingPoint ifEmpty: [ ^ self ].
-	spillingPoints ifEmpty: [ ^ self ].
-	
-	activeRangesAtSpillingPoint do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
-	spillingPoints do: [ :point |
-		self assert: point activeRegisters isEmptyOrNil.
-		point activeRegisters: (activeRangesAtSpillingPoint select: [:range |
-			range firstUsage < point index and: [point index <= range lastUsage]]).
-	]
+	self storeAllocatedRegistersInSpillingPoints: sortedLiveRanges.
 ]
 
 { #category : #'register allocation' }
@@ -345,10 +300,50 @@ SAsmInstructionLowerer >> runtimeProvidedFunction: aSymbol [
 	self halt.
 ]
 
+{ #category : #'register allocation' }
+SAsmInstructionLowerer >> selectSpillinPoint: point activeRangesFrom: liveRanges [
+	| activeRanges |
+	self flag: 'Use a lower bound binary search'.
+	activeRanges := Array streamContents: [ :out |
+		liveRanges do: [ :range |
+			(range firstUsage < point index and: [point index <= range lastUsage]) ifTrue: [ 
+				out nextPut: range
+			]
+		]
+	].
+
+	point activeRegisters: activeRanges.
+	activeRanges do: [ :spilled | spilled spillLocation markAsSpilledExplicitly ].
+]
+
 { #category : #'runtime functions' }
 SAsmInstructionLowerer >> stackLimitTrapSymbol [
 	^ self runtimeProvidedFunction: #'_slvm_dynrun_stack_limit_trap'
 	
+]
+
+{ #category : #'register allocation' }
+SAsmInstructionLowerer >> storeAllocatedRegistersInSpillingPoints: sortedLiveRanges [
+	| spillingPoints allocatedLiveRanges |
+	sortedLiveRanges ifEmpty: [ ^ self ].
+	
+	spillingPoints := OrderedCollection new.
+	function basicBlocks do: [ :bb |
+		bb do: [ :instruction |
+			(instruction needsToSpillWith: self) ifTrue: [ 
+				spillingPoints add: instruction
+			]
+		]
+	].
+	spillingPoints ifEmpty: [ ^ self ].
+	spillingPoints sort: [ :a :b |  a index < b index ].
+	
+	allocatedLiveRanges := sortedLiveRanges select: [ :range | range register isNotNil ].
+	
+	spillingPoints do: [ :point |
+		self selectSpillinPoint: point activeRangesFrom: allocatedLiveRanges
+	].
+
 ]
 
 { #category : #accessing }

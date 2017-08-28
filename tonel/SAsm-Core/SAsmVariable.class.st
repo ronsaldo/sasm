@@ -15,7 +15,8 @@ Class {
 		'usedDirectly',
 		'argumentPassingRegister',
 		'argumentRegisterClass',
-		'explicitLocalVariable'
+		'explicitLocalVariable',
+		'debugInformation'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -70,6 +71,16 @@ SAsmVariable >> argumentRegisterClass [
 { #category : #accessing }
 SAsmVariable >> argumentRegisterClass: anObject [
 	argumentRegisterClass := anObject
+]
+
+{ #category : #accessing }
+SAsmVariable >> debugInformation [
+	^ debugInformation
+]
+
+{ #category : #accessing }
+SAsmVariable >> debugInformation: anObject [
+	debugInformation := anObject
 ]
 
 { #category : #accessing }
@@ -145,7 +156,11 @@ SAsmVariable >> printOn: aStream [
 	aStream nextPutAll: 'local '.
 	argument ifTrue: [ aStream nextPutAll: 'argument ' ].
 	dynamicRoot ifTrue: [ aStream nextPutAll: 'dynroot ' ].
-	aStream print: offset hex
+	aStream print: offset hex.
+	
+	debugInformation ifNotNil: [ 
+		aStream space; print: debugInformation
+	]
 ]
 
 { #category : #accessing }
