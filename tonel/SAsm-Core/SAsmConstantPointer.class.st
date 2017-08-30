@@ -3,7 +3,8 @@ Class {
 	#superclass : #SAsmInstructionOperand,
 	#instVars : [
 		'address',
-		'size'
+		'size',
+		'floatingPoint'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -31,6 +32,22 @@ SAsmConstantPointer >> asX86PointerWithBuilder: streamBuilder [
 { #category : #copying }
 SAsmConstantPointer >> copyWithStreamBuilder: streamBuilder [
 	self error: 'Cannot copy a constant pointer directly.'
+]
+
+{ #category : #accessing }
+SAsmConstantPointer >> floatingPoint [
+	^ floatingPoint
+]
+
+{ #category : #accessing }
+SAsmConstantPointer >> floatingPoint: anObject [
+	floatingPoint := anObject
+]
+
+{ #category : #initialization }
+SAsmConstantPointer >> initialize [
+	super initialize.
+	floatingPoint := false.
 ]
 
 { #category : #testing }

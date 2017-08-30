@@ -580,6 +580,16 @@ SAsmStreamBuilder >> tacOperation: operation value: value [
 ]
 
 { #category : #'three address code' }
+SAsmStreamBuilder >> tacReinterpretFloat: value asIntegerInto: result [
+	^ self tacOperation: TacReinterpretFloatAsInteger result: result value: value
+]
+
+{ #category : #'three address code' }
+SAsmStreamBuilder >> tacReinterpretInteger: value asFloatInto: result [
+	^ self tacOperation: TacReinterpretIntegerAsFloat result: result value: value
+]
+
+{ #category : #'three address code' }
 SAsmStreamBuilder >> tacReturn: value [
 	^ self tacOperation: TacReturn value: value
 ]

@@ -98,3 +98,8 @@ SAsmX86_64CallingConventionCDecl >> usableRegisters [
 	XMM8 . XMM9 . XMM10 . XMM11 . XMM12 . XMM13 . XMM14 . XMM15 .
 	}
 ]
+
+{ #category : #'as yet unclassified' }
+SAsmX86_64CallingConventionCDecl >> variadicVectorCountRegister [
+	^ RAX
+]

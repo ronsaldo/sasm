@@ -35,6 +35,8 @@ Class {
 		'CVTSI2SS',
 		'CVTSS2SD',
 		'CVTSS2SI',
+		'CVTTSD2SI',
+		'CVTTSS2SI',
 		'DIV',
 		'DIVPD',
 		'DIVPS',
@@ -68,6 +70,7 @@ Class {
 		'MOV',
 		'MOVAPD',
 		'MOVAPS',
+		'MOVD',
 		'MOVSD',
 		'MOVSS',
 		'MOVSX',
@@ -632,7 +635,14 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRxRmx (16r0F 16r5A) (16rF3))
 		)
 		(CVTSS2SI
-			(OpRxRmx (16r0F 16r2D) (16rF3))
+			(OpRwRmx (16r0F 16r2D) (16rF3))
+		)
+
+		(CVTTSS2SI
+			(OpRwRmx (16r0F 16r2C) (16rF3))
+		)
+		(CVTTSD2SI
+			(OpRwRmx (16r0F 16r2C) (16rF2))
 		)
 
 		(DIVPD
@@ -646,6 +656,11 @@ SAsmX86Instructions class >> initializeInstructions [
 		)
 		(DIVSS
 			(OpRxRmx (16r0F 16r5e) (16rf3))
+		)
+		
+		(MOVD
+			(OpRxRmw (16r0F 16r6E) (16r66))
+			(OpRwRmx (16r0F 16r7E) (16r66))
 		)
 		
 		(MOVSD

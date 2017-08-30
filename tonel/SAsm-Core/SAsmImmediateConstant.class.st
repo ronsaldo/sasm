@@ -43,6 +43,11 @@ SAsmImmediateConstant >> isImmediate64 [
 ]
 
 { #category : #testing }
+SAsmImmediateConstant >> isImmediateConstant [
+	^ true
+]
+
+{ #category : #testing }
 SAsmImmediateConstant >> isImmediateS16 [
 	^ value between: -16r8000 and: 16r7fff
 ]

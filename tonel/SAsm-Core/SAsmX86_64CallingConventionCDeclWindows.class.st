@@ -36,3 +36,8 @@ SAsmX86_64CallingConventionCDeclWindows >> name [
 SAsmX86_64CallingConventionCDeclWindows >> shadowCallSpaceSize [
 	^ 32
 ]
+
+{ #category : #'as yet unclassified' }
+SAsmX86_64CallingConventionCDeclWindows >> variadicVectorCountRegister [
+	^ nil
+]

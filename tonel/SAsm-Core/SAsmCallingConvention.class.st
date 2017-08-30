@@ -123,3 +123,8 @@ SAsmCallingConvention >> stackArgumentAlignment [
 SAsmCallingConvention >> usableRegisters [
 	^ #()
 ]
+
+{ #category : #'as yet unclassified' }
+SAsmCallingConvention >> variadicVectorCountRegister [
+	^ nil
+]

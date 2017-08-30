@@ -6,7 +6,8 @@ Class {
 		'called',
 		'arguments',
 		'calledConvention',
-		'activeRegisters'
+		'activeRegisters',
+		'isVarArgs'
 	],
 	#category : #'SAsm-Core-TAC'
 }
@@ -59,7 +60,8 @@ SAsmTacCallInstruction >> calledConvention: anObject [
 { #category : #initialization }
 SAsmTacCallInstruction >> initialize [
 	super initialize.
-	activeRegisters := #()
+	activeRegisters := #().
+	isVarArgs := false.
 ]
 
 { #category : #testing }
@@ -75,6 +77,16 @@ SAsmTacCallInstruction >> isCondition [
 { #category : #testing }
 SAsmTacCallInstruction >> isThreeAddressInstruction [
 	^ true
+]
+
+{ #category : #accessing }
+SAsmTacCallInstruction >> isVarArgs [
+	^ isVarArgs
+]
+
+{ #category : #accessing }
+SAsmTacCallInstruction >> isVarArgs: anObject [
+	isVarArgs := anObject
 ]
 
 { #category : #'linear scan' }

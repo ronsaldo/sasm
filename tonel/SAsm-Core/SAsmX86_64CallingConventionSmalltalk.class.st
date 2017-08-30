@@ -61,3 +61,8 @@ SAsmX86_64CallingConventionSmalltalk >> sendSelectorRegister [
 SAsmX86_64CallingConventionSmalltalk >> stackAlignment [
 	^ 16
 ]
+
+{ #category : #'as yet unclassified' }
+SAsmX86_64CallingConventionSmalltalk >> variadicVectorCountRegister [
+	^ nil
+]

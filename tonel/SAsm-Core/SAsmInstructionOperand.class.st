@@ -50,6 +50,11 @@ SAsmInstructionOperand >> isImmediate32 [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isImmediateConstant [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isImmediateS16 [
 	^ false
 ]

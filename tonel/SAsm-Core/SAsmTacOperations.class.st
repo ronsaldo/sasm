@@ -70,8 +70,12 @@ Class {
 		'TacMultiply',
 		'TacNegate',
 		'TacNotEqual',
+		'TacReinterpretFloatAsInteger',
+		'TacReinterpretIntegerAsFloat',
 		'TacRemainder',
 		'TacReturn',
+		'TacRotateLeft',
+		'TacRotateRight',
 		'TacSignExtend16',
 		'TacSignExtend32',
 		'TacSignExtend8',
@@ -118,6 +122,8 @@ SAsmTacOperations class >> initialize [
 	TacLogicalShiftLeft := SAsmTacLogicalShiftLeft new.
 	TacLogicalShiftRight := SAsmTacLogicalShiftRight new.
 	TacArithmeticShiftRight := SAsmTacArithmeticShiftRight new.
+	TacRotateLeft := SAsmTacRotateLeft new.
+	TacRotateRight := SAsmTacRotateRight new.
 		
 	TacMove := SAsmTacMoveOperation new.
 	TacLoadLocalAddress := SAsmTacLoadLocalAddress new.
@@ -211,4 +217,6 @@ SAsmTacOperations class >> initialize [
 	TacDoubleToUInt32 := SAsmTacDoubleToUInt32Operation new.
 	TacDoubleToUInt64 := SAsmTacDoubleToUInt64Operation new.
 	
+	TacReinterpretFloatAsInteger := SAsmTacReinterpretFloatAsInteger new.
+	TacReinterpretIntegerAsFloat := SAsmTacReinterpretIntegerAsFloat new.
 ]

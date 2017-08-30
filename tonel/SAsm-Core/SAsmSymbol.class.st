@@ -16,7 +16,12 @@ Class {
 
 { #category : #converting }
 SAsmSymbol >> asConstantPointerOfSize: pointerSize [
-	^ (self immediate: pointerSize) asConstantPointerOfSize: pointerSize
+	^ self asConstantPointerOfSize: pointerSize floatingPoint: false
+]
+
+{ #category : #converting }
+SAsmSymbol >> asConstantPointerOfSize: pointerSize floatingPoint: floatingPoint [
+	^ (self immediate: pointerSize) asConstantPointerOfSize: pointerSize floatingPoint: floatingPoint
 ]
 
 { #category : #converting }

@@ -14,7 +14,12 @@ SAsmImmediate >> addend [
 
 { #category : #converting }
 SAsmImmediate >> asConstantPointerOfSize: pointerSize [
-	^ SAsmConstantPointer new address: self; size: pointerSize 
+	^ self asConstantPointerOfSize: pointerSize floatingPoint: false
+]
+
+{ #category : #converting }
+SAsmImmediate >> asConstantPointerOfSize: pointerSize floatingPoint: floatingPoint [
+	^ SAsmConstantPointer new address: self; size: pointerSize; floatingPoint: floatingPoint
 ]
 
 { #category : #'as yet unclassified' }
