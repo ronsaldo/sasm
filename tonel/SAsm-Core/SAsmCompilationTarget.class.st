@@ -61,7 +61,17 @@ SAsmCompilationTarget >> hasPositionIndependentCode [
 { #category : #initialization }
 SAsmCompilationTarget >> initialize [
 	super initialize.
-	operatingSystemName := #linux
+	Smalltalk os isUnix ifTrue: [ 
+		self flag: 'Support other unixes'.
+		operatingSystemName := #linux
+	].
+	Smalltalk os isMacOSX ifTrue: [ 
+		operatingSystemName := #osx
+	].
+	(Smalltalk os isWin32 or: [Smalltalk os isWin64]) ifTrue: [ 
+		operatingSystemName := #win32
+	].
+
 ]
 
 { #category : #testing }
