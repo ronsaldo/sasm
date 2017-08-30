@@ -432,3 +432,8 @@ SAsmBinaryObject >> writeMachOToFileNamed: fileName [
 		self writeMachO32ToFileNamed: fileName
 	]
 ]
+
+{ #category : #'writing elf' }
+SAsmBinaryObject >> writeObjectToFileNamed: fileName [
+	^ compilationTarget writeObject: self toFileNamed: fileName
+]

@@ -75,6 +75,11 @@ SAsmCompilationTarget >> isLittleEndian [
 ]
 
 { #category : #testing }
+SAsmCompilationTarget >> isOSX [
+	^ operatingSystemName = #osx
+]
+
+{ #category : #testing }
 SAsmCompilationTarget >> isWin32 [
 	^ operatingSystemName = #win32
 ]
@@ -137,4 +142,11 @@ SAsmCompilationTarget >> usesMachO64 [
 { #category : #'operating systems' }
 SAsmCompilationTarget >> win32 [
 	self operatingSystemName: #win32
+]
+
+{ #category : #'object files' }
+SAsmCompilationTarget >> writeObject: binaryObject toFileNamed: fileName [
+	self isWin32 ifTrue: [ ^ binaryObject writeCoffToFileNamed: fileName ].
+	self isOSX ifTrue: [ ^ binaryObject writeMachOToFileNamed: fileName ].
+	^ binaryObject writeElfToFileNamed: fileName
 ]
