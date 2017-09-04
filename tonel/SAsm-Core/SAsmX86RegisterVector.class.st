@@ -10,12 +10,27 @@ SAsmX86RegisterVector class >> canHoldVirtualRegisterData: virtualRegister [
 ]
 
 { #category : #testing }
+SAsmX86RegisterVector >> isDoubleFloatOperand [
+	^ true
+]
+
+{ #category : #testing }
 SAsmX86RegisterVector >> isDoubleFloatRegister [
 	^ true
 ]
 
 { #category : #testing }
+SAsmX86RegisterVector >> isFloatOperand [
+	^ true
+]
+
+{ #category : #testing }
 SAsmX86RegisterVector >> isFloatRegister [
+	^ true
+]
+
+{ #category : #testing }
+SAsmX86RegisterVector >> isFloatingPointOperand [
 	^ true
 ]
 

@@ -18,8 +18,13 @@ SAsmImmediate >> asConstantPointerOfSize: pointerSize [
 ]
 
 { #category : #converting }
+SAsmImmediate >> asConstantPointerOfSize: pointerSize alignment: alignment floatingPoint: floatingPoint [
+	^ SAsmConstantPointer new address: self; size: pointerSize; alignment: alignment; floatingPoint: floatingPoint
+]
+
+{ #category : #converting }
 SAsmImmediate >> asConstantPointerOfSize: pointerSize floatingPoint: floatingPoint [
-	^ SAsmConstantPointer new address: self; size: pointerSize; floatingPoint: floatingPoint
+	^ self asConstantPointerOfSize: pointerSize alignment: pointerSize floatingPoint: floatingPoint
 ]
 
 { #category : #'as yet unclassified' }

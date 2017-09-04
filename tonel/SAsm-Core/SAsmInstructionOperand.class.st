@@ -25,12 +25,32 @@ SAsmInstructionOperand >> isConstantPointer [
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isDoubleFloatOperand [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isDoubleFloatRegister [
 	^ false
 ]
 
 { #category : #testing }
+SAsmInstructionOperand >> isFloatOperand [
+	^ false
+]
+
+{ #category : #testing }
 SAsmInstructionOperand >> isFloatRegister [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isFloatingPointConstantPointer [
+	^ false
+]
+
+{ #category : #testing }
+SAsmInstructionOperand >> isFloatingPointOperand [
 	^ false
 ]
 

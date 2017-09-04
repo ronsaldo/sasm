@@ -4,6 +4,7 @@ Class {
 	#instVars : [
 		'address',
 		'size',
+		'alignment',
 		'floatingPoint'
 	],
 	#category : #'SAsm-Core-Generic'
@@ -17,6 +18,16 @@ SAsmConstantPointer >> address [
 { #category : #accessing }
 SAsmConstantPointer >> address: anObject [
 	address := anObject
+]
+
+{ #category : #accessing }
+SAsmConstantPointer >> alignment [
+	^ alignment
+]
+
+{ #category : #accessing }
+SAsmConstantPointer >> alignment: anObject [
+	alignment := anObject
 ]
 
 { #category : #converting }
@@ -53,6 +64,26 @@ SAsmConstantPointer >> initialize [
 { #category : #testing }
 SAsmConstantPointer >> isConstantPointer [
 	^ true
+]
+
+{ #category : #testing }
+SAsmConstantPointer >> isDoubleFloatOperand [
+	^ floatingPoint and: [ size = 8 ]
+]
+
+{ #category : #testing }
+SAsmConstantPointer >> isFloatOperand [
+	^ floatingPoint and: [ size = 4 ]
+]
+
+{ #category : #testing }
+SAsmConstantPointer >> isFloatingPointConstantPointer [
+	^ floatingPoint
+]
+
+{ #category : #testing }
+SAsmConstantPointer >> isFloatingPointOperand [
+	^ floatingPoint
 ]
 
 { #category : #accessing }

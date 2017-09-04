@@ -20,8 +20,13 @@ SAsmSymbol >> asConstantPointerOfSize: pointerSize [
 ]
 
 { #category : #converting }
+SAsmSymbol >> asConstantPointerOfSize: pointerSize alignment: pointerAlignment floatingPoint: floatingPoint [
+	^ (self immediate: pointerSize) asConstantPointerOfSize: pointerSize alignment: pointerAlignment floatingPoint: floatingPoint
+]
+
+{ #category : #converting }
 SAsmSymbol >> asConstantPointerOfSize: pointerSize floatingPoint: floatingPoint [
-	^ (self immediate: pointerSize) asConstantPointerOfSize: pointerSize floatingPoint: floatingPoint
+	^ self asConstantPointerOfSize: pointerSize alignment: pointerSize floatingPoint: floatingPoint
 ]
 
 { #category : #converting }

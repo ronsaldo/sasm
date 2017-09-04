@@ -5,13 +5,28 @@ Class {
 }
 
 { #category : #testing }
+SAsmFloatVirtualRegister >> isDoubleFloatOperand [
+	^ size = 8
+]
+
+{ #category : #testing }
 SAsmFloatVirtualRegister >> isDoubleFloatRegister [
 	^ size = 8
 ]
 
 { #category : #testing }
+SAsmFloatVirtualRegister >> isFloatOperand [
+	^ size = 4
+]
+
+{ #category : #testing }
 SAsmFloatVirtualRegister >> isFloatRegister [
 	^ size = 4
+]
+
+{ #category : #testing }
+SAsmFloatVirtualRegister >> isFloatingPointOperand [
+	^ true
 ]
 
 { #category : #testing }
