@@ -60,6 +60,11 @@ SAsmDWModuleCompilationUnitWriter >> recordAbbreviation: die [
 	]
 ]
 
+{ #category : #accessing }
+SAsmDWModuleCompilationUnitWriter >> streamBuilder [
+	^ streamBuilder
+]
+
 { #category : #writing }
 SAsmDWModuleCompilationUnitWriter >> writeAbbreviations [
 	streamBuilder startSection: #'.debug_abbrev' attributes: [ :section |

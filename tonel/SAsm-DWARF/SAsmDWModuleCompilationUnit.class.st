@@ -22,6 +22,11 @@ SAsmDWModuleCompilationUnit >> compilationUnit: anObject [
 	compilationUnit := anObject
 ]
 
+{ #category : #testing }
+SAsmDWModuleCompilationUnit >> isLastElement [
+	^ true
+]
+
 { #category : #writing }
 SAsmDWModuleCompilationUnit >> prepareWriteToStream: streamBuilder [
 ]

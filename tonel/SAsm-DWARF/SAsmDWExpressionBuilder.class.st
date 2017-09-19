@@ -32,3 +32,13 @@ SAsmDWExpressionBuilder >> build: aBlock [
 		aBlock value: self
 	]
 ]
+
+{ #category : #building }
+SAsmDWExpressionBuilder >> registers: aSetOfRegisters [
+	self add: (SAsmDWExpressionInstructionRegisters new registers: aSetOfRegisters)
+]
+
+{ #category : #building }
+SAsmDWExpressionBuilder >> variable: aVariable [
+	self add: (SAsmDWExpressionInstructionVariable new variable: aVariable)
+]

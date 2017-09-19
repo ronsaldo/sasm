@@ -132,7 +132,7 @@ SAsmDWDebugInfoEntry >> attributesDo: aBlock [
 
 { #category : #building }
 SAsmDWDebugInfoEntry >> build: aBlock [
-	aBlock value: self builder
+	^ aBlock value: self builder
 ]
 
 { #category : #building }

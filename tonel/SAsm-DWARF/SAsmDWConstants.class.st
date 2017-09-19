@@ -314,6 +314,8 @@ Class {
 		'DW_MACRO_undef_strx',
 		'DW_MACRO_undef_sup',
 		'DW_OP_addr',
+		'DW_OP_breg0',
+		'DW_OP_bregx',
 		'DW_OP_const1s',
 		'DW_OP_const1u',
 		'DW_OP_const2s',
@@ -331,11 +333,14 @@ Class {
 		'DW_OP_drop',
 		'DW_OP_dup',
 		'DW_OP_entry_value',
+		'DW_OP_fbreg',
 		'DW_OP_hi_user',
 		'DW_OP_lo_user',
 		'DW_OP_over',
 		'DW_OP_pick',
+		'DW_OP_reg0',
 		'DW_OP_regval_type',
+		'DW_OP_regx',
 		'DW_OP_reinterpret',
 		'DW_OP_swap',
 		'DW_OP_xderef_type',
@@ -721,6 +726,11 @@ SAsmDWConstants class >> dwarfConstantsDescription [
 		(DW_OP_over 20 '0' '')
 		(DW_OP_pick 21 '1' '1-byte stack index')
 		(DW_OP_swap 22 '0' '')
+		(DW_OP_reg0 16r50 '0' '')
+		(DW_OP_breg0 16r70 '1' '')
+		(DW_OP_regx 16r90 '1' '')
+		(DW_OP_fbreg 16r91 '1' '')
+		(DW_OP_bregx 16r92 '1' '')
 		(DW_OP_entry_value  163 '2' '"ULEB128 size' '"')
 		(DW_OP_const_type  164 '3' '"ULEB128 type entry offset' '"')
 		(DW_OP_regval_type  165 '2' '"ULEB128 register number' '"')
