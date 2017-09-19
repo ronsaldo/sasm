@@ -203,6 +203,19 @@ SAsmInstructionLowerer >> lowerInstruction: instruction writeToStream: aStreamBu
 	^ instruction next
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmInstructionLowerer >> mapOriginalVariableToGeneratedVariables [
+	| imported |
+	function stackFrameLayout arguments do: [ :arg |
+		imported := stackFrameLayout importVariable: arg.
+		streamBuilder localVariableToGeneratedMap at: arg put: imported
+	].
+	function stackFrameLayout localVariables do: [ :local |
+		imported := stackFrameLayout importVariable: local.
+		streamBuilder localVariableToGeneratedMap at: local put: imported
+	].
+]
+
 { #category : #'register allocation' }
 SAsmInstructionLowerer >> mapVirtualRegister: virtualRegister toSpillLocation: spillLocation [
 	self flag: 'TODO: add a mapping entry for debugging.'

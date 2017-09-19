@@ -5,7 +5,8 @@ Class {
 		'stream',
 		'localScope',
 		'currentSection',
-		'sectionStack'
+		'sectionStack',
+		'localVariableToGeneratedMap'
 	],
 	#pools : [
 		'SAsmTacOperations'
@@ -203,6 +204,11 @@ SAsmStreamBuilder >> localScope [
 	^ localScope
 ]
 
+{ #category : #accessing }
+SAsmStreamBuilder >> localVariableToGeneratedMap [
+	^ localVariableToGeneratedMap ifNil: [ localVariableToGeneratedMap := IdentityDictionary new ].
+]
+
 { #category : #symbols }
 SAsmStreamBuilder >> newPrivateSymbol: name [
 	^ SAsmSymbol new
@@ -237,6 +243,11 @@ SAsmStreamBuilder >> rodataSection [
 { #category : #constants }
 SAsmStreamBuilder >> sleb128: value [
 	^ self addConstantExpressionValue: (SAsmConstantExpressionConstantIntegerSLEB128 new value: value)
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> sleb128Size: value [
+	^ (SAsmConstantExpressionConstantIntegerSLEB128 new value: value) size
 ]
 
 { #category : #sections }
@@ -735,6 +746,11 @@ SAsmStreamBuilder >> tacZeroExtend8: value into: result [
 	^ self tacOperation: TacZeroExtend8 result: result value: value
 ]
 
+{ #category : #accessing }
+SAsmStreamBuilder >> target [
+	^ stream target
+]
+
 { #category : #sections }
 SAsmStreamBuilder >> textSection [
 	^ self startSection: #'.text' attributes: [ :section |
@@ -754,6 +770,11 @@ SAsmStreamBuilder >> topLocalScope [
 { #category : #constants }
 SAsmStreamBuilder >> uleb128: value [
 	^ self addConstantExpressionValue: (SAsmConstantExpressionConstantIntegerULEB128 new value: value)
+]
+
+{ #category : #constants }
+SAsmStreamBuilder >> uleb128Size: value [
+	^ (SAsmConstantExpressionConstantIntegerULEB128 new value: value) size
 ]
 
 { #category : #symbols }

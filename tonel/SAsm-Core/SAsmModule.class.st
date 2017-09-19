@@ -40,9 +40,11 @@ SAsmModule >> asBinaryObject [
 SAsmModule >> asInstructionStream [
 	| result |
 	result := SAsmStream new target: target.
+
 	result build: [ :streamBuilder |
 		elements do: [ :element | element prepareWriteToStream: streamBuilder ].
-		elements do: [ :element | element writeToStream: streamBuilder ].
+		elements reject: #isLastElement thenDo: [ :element | element writeToStream: streamBuilder ].
+		elements select: #isLastElement thenDo: [ :element | element writeToStream: streamBuilder ].
 	].	
 	^ result
 ]

@@ -13,7 +13,9 @@ Class {
 		'contextMetaData',
 		'debugSourceLocation',
 		'exitPoint',
-		'endingLabel'
+		'endingLabel',
+		'debugFunction',
+		'debugArguments'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -154,6 +156,26 @@ SAsmFunction >> contextMetaData [
 { #category : #accessing }
 SAsmFunction >> contextMetaData: anObject [
 	contextMetaData := anObject
+]
+
+{ #category : #accessing }
+SAsmFunction >> debugArguments [
+	^ debugArguments
+]
+
+{ #category : #accessing }
+SAsmFunction >> debugArguments: anObject [
+	debugArguments := anObject
+]
+
+{ #category : #accessing }
+SAsmFunction >> debugFunction [
+	^ debugFunction
+]
+
+{ #category : #accessing }
+SAsmFunction >> debugFunction: anObject [
+	debugFunction := anObject
 ]
 
 { #category : #accessing }
@@ -426,5 +448,7 @@ SAsmFunction >> writeToStream: aStreamBuilder [
 			aStreamBuilder rodataSection.
 			constantZone writeToStream: aStreamBuilder
 		].
+	
+		instructionLowerer mapOriginalVariableToGeneratedVariables
 	]
 ]

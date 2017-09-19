@@ -35,6 +35,11 @@ SAsmModuleElement >> initialize [
 	self makeExternal.
 ]
 
+{ #category : #testing }
+SAsmModuleElement >> isLastElement [
+	^ false
+]
+
 { #category : #writing }
 SAsmModuleElement >> prepareWriteToStream: streamBuilder [
 	self name isNotNil ifTrue: [
