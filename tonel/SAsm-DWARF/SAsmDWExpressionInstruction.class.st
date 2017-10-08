@@ -26,7 +26,7 @@ SAsmDWExpressionInstruction >> sizeForFramePointerOffset: offset withWriter: wri
 SAsmDWExpressionInstruction >> sizeForRegister: register withWriter: writer [
 	| mappedRegister |
 	mappedRegister := writer streamBuilder target mapRegisterToDwarf: register.
-	^ mappedRegister > 31 ifTrue: [ 1 + (writer uleb128Size: mappedRegister) ] ifFalse: [ 1 ]
+	^ mappedRegister > 31 ifTrue: [ 1 + (writer streamBuilder uleb128Size: mappedRegister) ] ifFalse: [ 1 ]
 ]
 
 { #category : #'as yet unclassified' }
