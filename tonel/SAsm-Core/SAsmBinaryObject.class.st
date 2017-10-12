@@ -300,6 +300,12 @@ SAsmBinaryObject >> symbols: anObject [
 	symbols := anObject
 ]
 
+{ #category : #relocations }
+SAsmBinaryObject >> validateRelocations [
+	sections do: [:sect | sect optimizeRelocations ].
+	sections do: [:sect | sect validateRelocationsForTarget: compilationTarget ]
+]
+
 { #category : #'writing binary' }
 SAsmBinaryObject >> writeBinaryBase: baseAddress toFileNamed: fileName [
 	fileName asFileReference writeStreamDo: [ :out |

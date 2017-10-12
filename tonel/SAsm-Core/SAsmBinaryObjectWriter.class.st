@@ -47,6 +47,12 @@ SAsmBinaryObjectWriter >> addSymbol: aSymbol [
 	]
 ]
 
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> checkNonTextSectionForPIC [
+	compilationTarget hasPositionIndependentCode ifFalse: [ ^ self ].
+	currentSection executable ifTrue: [ self error: 'Adding invalid relocation for PIC code.' ]
+]
+
 { #category : #generation }
 SAsmBinaryObjectWriter >> computeInitialPositionEstimate: someStreams [
 	| sectionSizes sectionName sectionSize |
@@ -241,7 +247,7 @@ SAsmBinaryObjectWriter >> generateUntilSizeConvergence: aCollectionOfStreams [
 		iterationCount := iterationCount + 1.
 	].
 
-	"Transcript show: 'Binary object iterations: ' ; show: iterationCount; cr."
+	Transcript show: 'Binary object iterations: ' ; show: iterationCount; cr.
 	^ newResult
 ]
 
@@ -273,7 +279,26 @@ SAsmBinaryObjectWriter >> generateVariableSizeStreams: aCollectionOfStreams [
 		]
 	].
 
-	^ SAsmBinaryObject new compilationTarget: compilationTarget; sections: sectionList asArray; symbols: symbolList asArray.
+	^ SAsmBinaryObject new
+		compilationTarget: compilationTarget;
+		sections: sectionList asArray;
+		symbols: symbolList asArray.
+]
+
+{ #category : #writing }
+SAsmBinaryObjectWriter >> generateViaConvergence: aStream [
+	| sectionStreams |
+	sectionStreams := aStream splitInSections.
+	self processSectionStreams: sectionStreams.
+	self computeInitialPositionEstimate: sectionStreams.
+	
+	"We conduct multiple passes. We first divide the sections that have a fixed size from the sections with a variable size, for performance reasons"
+	self generateUntilSizeConvergence: sectionStreams.
+	
+	"Then we recompile everything to ensure the evaluation of expressions that depend on the size of some elements are evaluated to the correct value.
+	are evaluate"
+	^ self generateUntilConvergence: sectionStreams
+
 ]
 
 { #category : #'as yet unclassified' }
@@ -464,9 +489,14 @@ SAsmBinaryObjectWriter >> nextPutIPRelativeI32: immediate [
 { #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutIPRelativeI32: immediate extraOffset: extraOffset [
 	| immediateValue |
-	(self needsRelativeRelocation: immediate) ifTrue: [
-		self recordImmediateRelativeReloc32: immediate extraAddend: extraOffset negated.
-		self nextPutC32: 0.
+	((self needsRelativeRelocation: immediate) or: [ immediate got ]) ifTrue: [
+		immediate got ifTrue: [ 
+			self recordImmediateRelativeReloc32AtGOT: immediate extraAddend: extraOffset negated.
+			self nextPutC32: 0.
+		] ifFalse: [ 
+			self recordImmediateRelativeReloc32: immediate extraAddend: extraOffset negated.
+			self nextPutC32: 0.
+		].
 	] ifFalse: [
 		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
 		self nextPutC32: immediateValue.
@@ -521,6 +551,13 @@ SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32: immediate extraAddend:
 ]
 
 { #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32AtGOT: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		relativeSOffset32AtGOT;
+		yourself
+]
+
+{ #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc64: immediate extraAddend: extraAddend [
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		relativeSOffset64;
@@ -543,6 +580,7 @@ SAsmBinaryObjectWriter >> recordImmediateRelativeRelocBranch32: immediate extraA
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateReloc16: immediate extraAddend: extraAddend [
+	self checkNonTextSectionForPIC.
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		absoluteOffset16;
 		yourself
@@ -550,6 +588,7 @@ SAsmBinaryObjectWriter >> recordImmediateReloc16: immediate extraAddend: extraAd
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateReloc32: immediate extraAddend: extraAddend [
+	self checkNonTextSectionForPIC.
 	immediate sectionRelative ifTrue: [ 
 		^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 			sectionRelativeOffset32;
@@ -562,6 +601,7 @@ SAsmBinaryObjectWriter >> recordImmediateReloc32: immediate extraAddend: extraAd
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateReloc64: immediate extraAddend: extraAddend [
+	self checkNonTextSectionForPIC.
 	immediate sectionRelative ifTrue: [ 
 		^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 			sectionRelativeOffset64;
@@ -574,6 +614,7 @@ SAsmBinaryObjectWriter >> recordImmediateReloc64: immediate extraAddend: extraAd
 
 { #category : #relocations }
 SAsmBinaryObjectWriter >> recordImmediateReloc8: immediate extraAddend: extraAddend [
+	self checkNonTextSectionForPIC.
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		absoluteOffset8;
 		yourself
@@ -689,15 +730,9 @@ SAsmBinaryObjectWriter >> writeStream: aStream [
 
 { #category : #writing }
 SAsmBinaryObjectWriter >> writeStreamInstructions: aStream [
-	| sectionStreams |
-	sectionStreams := aStream splitInSections.
-	self processSectionStreams: sectionStreams.
-	self computeInitialPositionEstimate: sectionStreams.
-	
-	"We conduct multiple passes. We first divide the sections that have a fixed size from the sections with a variable size, for performance reasons"
-	self generateUntilSizeConvergence: sectionStreams.
-	
-	"Then we recompile everything to ensure the evaluation of expressions that depend on the size of some elements are evaluated to the correct value.
-	are evaluate"
-	^ self generateUntilConvergence: sectionStreams
+	| result |
+	result := self generateViaConvergence: aStream.
+	result validateRelocations.
+	^ result
+
 ]

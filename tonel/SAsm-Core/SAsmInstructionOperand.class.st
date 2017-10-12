@@ -16,7 +16,7 @@ SAsmInstructionOperand >> copyWithStreamBuilder: streamBuilder [
 
 { #category : #testing }
 SAsmInstructionOperand >> hasFixedSize [
-	^ false
+	^ true
 ]
 
 { #category : #testing }

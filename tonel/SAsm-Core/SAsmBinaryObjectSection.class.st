@@ -140,6 +140,11 @@ SAsmBinaryObjectSection >> nextPutZeros: count [
 	1 to: count do: [ :i | data nextPut: 0 ]
 ]
 
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSection >> optimizeRelocations [
+	relocations do: #optimize
+]
+
 { #category : #printing }
 SAsmBinaryObjectSection >> printOn: aStream [
 	aStream nextPutAll: 'section '; nextPutAll: name
@@ -168,6 +173,17 @@ SAsmBinaryObjectSection >> size [
 { #category : #accessing }
 SAsmBinaryObjectSection >> size: aSize [
 	size := aSize
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSection >> validatePIC [
+	executable ifFalse: [ ^ self ].
+	relocations do: #checkPICInText
+]
+
+{ #category : #'as yet unclassified' }
+SAsmBinaryObjectSection >> validateRelocationsForTarget: aCompilationTarget [
+	aCompilationTarget hasPositionIndependentCode ifTrue: [ self validatePIC ]
 ]
 
 { #category : #writing }

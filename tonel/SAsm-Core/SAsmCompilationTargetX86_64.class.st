@@ -171,7 +171,16 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section el
 	(relocation isAbsoluteOffset32 or: [ relocation isSectionRelativeOffset32 ]) ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_32
 	].
-	relocation isRelativeSOffset32OrBranch32 ifTrue: [
+	relocation isRelativeBranch32 ifTrue: [
+		relocation symbol ifNotNil: [ 
+			^ elfReloc symbol: symbolIndex type: R_X86_64_PLT32
+		].
+		^ elfReloc symbol: symbolIndex type: R_X86_64_PC32
+	].
+	relocation isRelativeSOffset32AtGOT ifTrue: [
+		^ elfReloc symbol: symbolIndex type: R_X86_64_GOTPCREL
+	].
+	relocation isRelativeSOffset32 ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_X86_64_PC32
 	].
 	(relocation isAbsoluteOffset64 or: [ relocation isSectionRelativeOffset64 ]) ifTrue: [
@@ -264,9 +273,9 @@ SAsmCompilationTargetX86_64 >> framePointerRegister [
 	^ RBP
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SAsmCompilationTargetX86_64 >> gotBaseRegister [
-	^ RBX
+	^ R15
 ]
 
 { #category : #testing }
@@ -336,6 +345,11 @@ SAsmCompilationTargetX86_64 >> newIntegerVirtualRegistersForSize: size dynamicRo
 { #category : #accessing }
 SAsmCompilationTargetX86_64 >> pointerSize [
 	^ 8
+]
+
+{ #category : #accessing }
+SAsmCompilationTargetX86_64 >> positionIndependentCode: anObject [
+	positionIndependentCode := anObject
 ]
 
 { #category : #'as yet unclassified' }

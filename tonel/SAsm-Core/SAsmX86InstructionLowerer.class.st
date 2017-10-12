@@ -544,13 +544,21 @@ SAsmX86InstructionLowerer >> immediateConstant64ToConstantZone: immediateConstan
 
 { #category : #'as yet unclassified' }
 SAsmX86InstructionLowerer >> immediateConstant64ToConstantZone: immediateConstant orToScratchRegister: scratchIndex [
-	| scratchRegister |
-	self assert: target pointerSize = 8.
+	| scratchRegister symbol |
+	symbol := streamBuilder newPrivateSymbol: #constantI64.
+	streamBuilder withNewSection: [
+		streamBuilder rodataSection;
+			label: symbol;
+			constI64: (immediateConstant copyWithStreamBuilder: streamBuilder).
+	].
+
+	^ (symbol immediate: 8) asX86PointerOfSize: 8 withBuilder: streamBuilder
+"	self assert: target pointerSize = 8.
 	self assert: target hasPositionIndependentCode not.
 	scratchRegister := self scratchRegister: scratchIndex for: SAsmX86RegisterInt64.
 	streamBuilder x86: MOV dst: scratchRegister src: immediateConstant.
 	^ scratchRegister
-
+"
 ]
 
 { #category : #'abstract instruction generation' }
@@ -574,6 +582,24 @@ SAsmX86InstructionLowerer >> leaveFramefullMethod [
 	streamBuilder
 		x86: MOV dst: target stackPointerRegister src: target framePointerRegister;
 		x86: POP with: target framePointerRegister.
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> loadSymbolWithAddend: symbolWithAddend viaGOTInto: destination [
+	| register |
+	register := destination.
+	destination isRegister ifFalse: [ 
+		register := self scratchRegister: 0 for: destination.
+	].
+	
+	streamBuilder x86: MOV dst: register src: (symbolWithAddend symbol asGOTReference asX86PointerOfSize: 8 withBuilder: streamBuilder).
+	symbolWithAddend addend ~= 0 ifTrue: [
+		streamBuilder x86: ADD dst: register src: symbolWithAddend addend.
+	].
+
+	register ~~ destination ifTrue: [ 
+		streamBuilder x86: MOV dst: destination src: register
+	]
 ]
 
 { #category : #'conditional branchs' }
@@ -682,6 +708,22 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 		register isFloatingPointRegister ifTrue: [
 			self error: 'Cannot move an immediate toward a float register directly.'		
 		].
+	
+		(value isImmediateSymbolWithAddend and: [ target hasPositionIndependentCode ]) ifTrue: [ 
+			target pointerSize = 8 ifTrue: [
+				(self shouldSymbolBeLoadedThroughGOT: value symbol) ifTrue: [ 
+					^ self loadSymbolWithAddend: value viaGOTInto: physical
+				].
+				physical isRegister ifTrue: [ 
+					^ streamBuilder x86: LEA dst: physical src: (value asX86PointerOfSize: target pointerSize withBuilder: streamBuilder)
+				] ifFalse: [ 
+					self halt.
+				].
+				] ifFalse: [ 
+			].
+			self halt
+		].
+	
 		^ streamBuilder x86: MOV dst: physical src: (value copyWithStreamBuilder: streamBuilder)
 	].
 
@@ -842,6 +884,14 @@ SAsmX86InstructionLowerer >> scratchRegister: scratchIndex for: value [
 	^ (scratchRegisterClases at: value registerClass)  at: scratchIndex + 1
 ]
 
+{ #category : #spilling }
+SAsmX86InstructionLowerer >> shouldSymbolBeLoadedThroughGOT: symbol [
+	target hasPositionIndependentCode ifFalse: [ ^ false ].
+	symbol isExternal ifTrue: [ ^ true ].
+	(symbol isPublic and: [ target executable not ]) ifTrue: [ ^ true ].
+	^ false
+]
+
 { #category : #'procedure call' }
 SAsmX86InstructionLowerer >> sizeOfValuePushedToTheStack: value calledConvention: calledConvention [
 	^ (value isImmediate ifTrue: [target pointerSize] ifFalse: [value size]) max: calledConvention stackArgumentAlignment
@@ -929,14 +979,21 @@ SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister [
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister pointerOfSize: pointerSize scratchIndex: scratchIndex [
 	| physicalRegister |
-	self flag: 'TODO: Handle the Position Independent Code.'.
+	self assert: virtualRegister isVariable not.
 	virtualRegister isImmediateSymbolWithAddend ifTrue: [
+		target hasPositionIndependentCode ifTrue: [ 
+			target pointerSize = 8 ifTrue: [
+				(self shouldSymbolBeLoadedThroughGOT: virtualRegister symbol) ifTrue: [ 
+					physicalRegister := self scratchRegister: scratchIndex for: target framePointerRegister.
+					self loadSymbolWithAddend: virtualRegister viaGOTInto: physicalRegister.
+					^ physicalRegister asX86PointerOfSize: pointerSize withBuilder: streamBuilder
+				]
+			] ifFalse: [ 
+				self halt.
+			].
+		].
+	
 		^ virtualRegister asX86PointerOfSize: pointerSize withBuilder: streamBuilder
-	].
-
-	virtualRegister isVariable ifTrue: [
-		physicalRegister := self scratchRegister: scratchIndex for: target framePointerRegister.
-		self halt.
 	].
 
 	physicalRegister := self virtualToPhysical: virtualRegister.
@@ -981,12 +1038,19 @@ SAsmX86InstructionLowerer >> virtualToPhysical: register scratchRegisterIndex: s
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> virtualToPhysical: register scratchRegisterIndex: scratchRegisterIndex signExtendedImmediate: signExtendedImmediate notImmediate: notImmediate [
 	| scratchRegister |
-	target hasPositionIndependentCode ifTrue: [ 
-		self halt
-	].
-
-	(notImmediate or: [target pointerSize = 8]) ifTrue: [
-		register isImmediateSymbolWithAddend ifTrue: [ 
+	(notImmediate or: [target pointerSize = 8 or: [target hasPositionIndependentCode]]) ifTrue: [
+		register isImmediateSymbolWithAddend ifTrue: [
+			target hasPositionIndependentCode ifTrue: [
+				target pointerSize = 4 ifTrue: [ 
+					self halt.
+				] ifFalse: [ 
+					(self shouldSymbolBeLoadedThroughGOT: register symbol) ifTrue: [ 
+						scratchRegister := self scratchRegister: scratchRegisterIndex for: target stackPointerRegister.
+						self loadSymbolWithAddend: register viaGOTInto: scratchRegister.
+						^ scratchRegister
+					]
+				].
+			].
 			scratchRegister := self scratchRegister: scratchRegisterIndex for: target stackPointerRegister.
 			streamBuilder x86: LEA dst: scratchRegister src: (register asX86PointerOfSize: target pointerSize withBuilder: streamBuilder).
 			^ scratchRegister
@@ -999,7 +1063,7 @@ SAsmX86InstructionLowerer >> virtualToPhysical: register scratchRegisterIndex: s
 			scratchRegister := self scratchRegister: scratchRegisterIndex for: target stackPointerRegister.
 			streamBuilder x86: MOV dst: scratchRegister src: register.
 			^ scratchRegister
-		]
+		].
 	].
 
 	^ self virtualToPhysical: register

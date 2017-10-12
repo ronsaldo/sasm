@@ -17,11 +17,6 @@ SAsmImmediateConstant >> asX86PointerOfSize: pointerSize withBuilder: streamBuil
 	^ SAsmX86RegisterAddress new size: pointerSize; displacement: (self copyWithStreamBuilder: streamBuilder)
 ]
 
-{ #category : #testing }
-SAsmImmediateConstant >> hasFixedSize [
-	^ true
-]
-
 { #category : #accessing }
 SAsmImmediateConstant >> immediateValue [
 	^ self value

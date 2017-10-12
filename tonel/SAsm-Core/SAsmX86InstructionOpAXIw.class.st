@@ -15,13 +15,13 @@ SAsmX86InstructionOpAXIw >> canWriteInstruction: anInstruction [
 		and: [ anInstruction second isImmediate32 ] ] ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SAsmX86InstructionOpAXIw >> writeInstruction: instruction with: writer [
+	self write: writer rexSize: instruction first size.
 	writer nextPutAll: opcode.
 	writer isShortMode ifTrue: [ 
 		writer nextPutI16: instruction second first
 	] ifFalse: [
-		self write: writer rexSize: instruction first size .
 		writer nextPutI32: instruction arguments second
 	]
 ]

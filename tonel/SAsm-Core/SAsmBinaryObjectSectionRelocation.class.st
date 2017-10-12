@@ -14,9 +14,13 @@ Class {
 		'AbsoluteOffset32',
 		'AbsoluteOffset64',
 		'AbsoluteOffset8',
+		'AbsoluteRelocations',
+		'GOTRelocations',
+		'PLTRelocations',
 		'RelativeBranch32',
 		'RelativeSOffset16',
 		'RelativeSOffset32',
+		'RelativeSOffset32AtGOT',
 		'RelativeSOffset64',
 		'RelativeSOffset8',
 		'SectionRelativeOffset32',
@@ -33,6 +37,8 @@ SAsmBinaryObjectSectionRelocation class >> initialize [
 	AbsoluteOffset16 := #'absolute-offset16'.
 	AbsoluteOffset32 := #'absolute-offset32'.
 	AbsoluteOffset64 := #'absolute-offset64'.
+	
+	AbsoluteRelocations := { AbsoluteOffset8 . AbsoluteOffset16 . AbsoluteOffset32 . AbsoluteOffset64 }.
 
 	SectionRelativeOffset32 := #'section-relative-offset32'.
 	SectionRelativeOffset64 := #'section-relative-offset64'.
@@ -42,7 +48,11 @@ SAsmBinaryObjectSectionRelocation class >> initialize [
 	RelativeSOffset32 := #'relative-soffset32'.
 	RelativeSOffset64 := #'relative-soffset64'.
 	
+	RelativeSOffset32AtGOT := #'relative-soffset32-at-got'.
 	RelativeBranch32 := #'relative-branch32'.
+	
+	GOTRelocations := {RelativeSOffset32AtGOT}.
+	PLTRelocations := {RelativeBranch32}.
 ]
 
 { #category : #comparing }
@@ -146,6 +156,17 @@ SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection relati
 	self applyImplicitAddendIn: targetSection absoluteWithExtraAddend: 0 relativeWithExtraAddend: extraRelativeAddend
 ]
 
+{ #category : #validation }
+SAsmBinaryObjectSectionRelocation >> checkPICInText [
+	self isAbsolute ifTrue: [ self error: 'Absolute relocation in PIC code.' ].
+	symbol ifNotNil: [
+		symbol section ifNil: [ 
+			self isGOTOrPLT ifFalse: [ self error: 'Accessing external symbol without using the GOT or the PLT.' ]
+		].
+	].
+	
+]
+
 { #category : #'as yet unclassified' }
 SAsmBinaryObjectSectionRelocation >> clearImplicitAddendIn: targetSection [
 	| data |	
@@ -179,6 +200,11 @@ SAsmBinaryObjectSectionRelocation >> initialize [
 ]
 
 { #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isAbsolute [
+	^ AbsoluteRelocations includes: type
+]
+
+{ #category : #testing }
 SAsmBinaryObjectSectionRelocation >> isAbsoluteOffset16 [
 	^ type == AbsoluteOffset16
 ]
@@ -199,6 +225,21 @@ SAsmBinaryObjectSectionRelocation >> isAbsoluteOffset8 [
 ]
 
 { #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isGOT [
+	^ GOTRelocations includes: type
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isGOTOrPLT [
+	^ self isGOT or: [ self isPLT ]
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isPLT [
+	^ PLTRelocations includes: type
+]
+
+{ #category : #testing }
 SAsmBinaryObjectSectionRelocation >> isRelativeBranch32 [
 	^ type == RelativeBranch32
 ]
@@ -211,6 +252,11 @@ SAsmBinaryObjectSectionRelocation >> isRelativeSOffset16 [
 { #category : #testing }
 SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32 [
 	^ type == RelativeSOffset32
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32AtGOT [
+	^ type == RelativeSOffset32AtGOT
 ]
 
 { #category : #testing }
@@ -248,6 +294,11 @@ SAsmBinaryObjectSectionRelocation >> offset: anObject [
 	offset := anObject
 ]
 
+{ #category : #optimization }
+SAsmBinaryObjectSectionRelocation >> optimize [
+
+]
+
 { #category : #accessing }
 SAsmBinaryObjectSectionRelocation >> pendingSymbol [
 	^ pendingSymbol
@@ -280,6 +331,11 @@ SAsmBinaryObjectSectionRelocation >> relativeSOffset16 [
 { #category : #testing }
 SAsmBinaryObjectSectionRelocation >> relativeSOffset32 [
 	type := RelativeSOffset32
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> relativeSOffset32AtGOT [
+	type := RelativeSOffset32AtGOT
 ]
 
 { #category : #testing }

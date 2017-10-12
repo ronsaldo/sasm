@@ -53,11 +53,20 @@ SAsmSymbol >> immediate: immediateSize [
 ]
 
 { #category : #immediates }
+SAsmSymbol >> immediateGOT: immediateSize [
+	^ SAsmImmediateSymbolWithAddend new
+		symbol: self;
+		size: immediateSize;
+		makeGOT;
+		yourself
+]
+
+{ #category : #immediates }
 SAsmSymbol >> immediateSectionRelative: immediateSize [
 	^ SAsmImmediateSymbolWithAddend new
 		symbol: self;
 		size: immediateSize;
-		sectionRelative: true;
+		makeSectionRelative;
 		yourself
 ]
 

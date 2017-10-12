@@ -5,7 +5,7 @@ Class {
 		'size',
 		'symbol',
 		'addend',
-		'sectionRelative'
+		'relocationKind'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -50,6 +50,16 @@ SAsmImmediateSymbolWithAddend >> asX86PointerOfSize: pointerSize withBuilder: st
 { #category : #'as yet unclassified' }
 SAsmImmediateSymbolWithAddend >> copyWithStreamBuilder: streamBuilder [
 	^ self copy symbol: (streamBuilder findSymbolForObject: symbol)
+]
+
+{ #category : #'as yet unclassified' }
+SAsmImmediateSymbolWithAddend >> got [
+	^ relocationKind == #got
+]
+
+{ #category : #testing }
+SAsmImmediateSymbolWithAddend >> hasFixedSize [
+	^ false
 ]
 
 { #category : #accessing }
@@ -144,6 +154,16 @@ SAsmImmediateSymbolWithAddend >> isImmediateU8 [
 	^ self isImmediate8
 ]
 
+{ #category : #accessing }
+SAsmImmediateSymbolWithAddend >> makeGOT [
+	relocationKind := #got
+]
+
+{ #category : #accessing }
+SAsmImmediateSymbolWithAddend >> makeSectionRelative [
+	relocationKind := #sectionRelative
+]
+
 { #category : #'as yet unclassified' }
 SAsmImmediateSymbolWithAddend >> positionValue [
 	^ symbol positionValue ifNil: [addend] ifNotNil: [:pos | pos + addend]
@@ -163,12 +183,7 @@ SAsmImmediateSymbolWithAddend >> printOn: aStream [
 
 { #category : #accessing }
 SAsmImmediateSymbolWithAddend >> sectionRelative [
-	^ sectionRelative
-]
-
-{ #category : #accessing }
-SAsmImmediateSymbolWithAddend >> sectionRelative: anObject [
-	sectionRelative := anObject
+	^ relocationKind == #sectionRelative
 ]
 
 { #category : #accessing }

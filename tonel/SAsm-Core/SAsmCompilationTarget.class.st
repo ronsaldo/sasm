@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'operatingSystemName',
-		'objectModel'
+		'objectModel',
+		'executable'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -38,6 +39,16 @@ SAsmCompilationTarget >> emitNopOfSize: paddingSize with: writer [
 	self subclassResponsibility
 ]
 
+{ #category : #accessing }
+SAsmCompilationTarget >> executable [
+	^ executable
+]
+
+{ #category : #accessing }
+SAsmCompilationTarget >> executable: anObject [
+	executable := anObject
+]
+
 { #category : #'operating systems' }
 SAsmCompilationTarget >> freebsd [
 	self operatingSystemName: #freebsd
@@ -61,6 +72,7 @@ SAsmCompilationTarget >> hasPositionIndependentCode [
 { #category : #initialization }
 SAsmCompilationTarget >> initialize [
 	super initialize.
+	executable := false.
 	Smalltalk os isUnix ifTrue: [ 
 		self flag: 'Support other unixes'.
 		operatingSystemName := #linux

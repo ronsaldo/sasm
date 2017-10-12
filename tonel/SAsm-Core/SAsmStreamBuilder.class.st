@@ -221,7 +221,7 @@ SAsmStreamBuilder >> newPrivateSymbol: name [
 SAsmStreamBuilder >> popSection [
 	| oldSection |
 	oldSection := sectionStack pop.
-	^ self startSection: oldSection attributes: [ :sec | ]
+	^ self startSection: oldSection name attributes: [ :sec | ]
 ]
 
 { #category : #sections }

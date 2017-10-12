@@ -29,11 +29,6 @@ SAsmX86Register >> fullPrintOn: aStream [
 ]
 
 { #category : #testing }
-SAsmX86Register >> hasFixedSize [
-	^ true
-]
-
-{ #category : #testing }
 SAsmX86Register >> isHighRegister [
 	^ value > 7
 ]

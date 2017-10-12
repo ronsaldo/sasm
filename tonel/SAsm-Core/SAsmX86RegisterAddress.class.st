@@ -58,8 +58,9 @@ SAsmX86RegisterAddress >> base [
 ]
 
 { #category : #accessing }
-SAsmX86RegisterAddress >> base: anObject [
-	base := anObject
+SAsmX86RegisterAddress >> base: aBaseRegister [
+	self assert: aBaseRegister isRegister.
+	base := aBaseRegister.
 ]
 
 { #category : #'as yet unclassified' }
@@ -145,16 +146,6 @@ SAsmX86RegisterAddress >> encodeModRMWithOpcode: opcode immediate: immediateSize
 ]
 
 { #category : #testing }
-SAsmX86RegisterAddress >> hasFixedSize [
-	| result |
-	result := true.
-	base ifNotNil: [ result := result and: [ base hasFixedSize ] ].
-	index ifNotNil: [ result := result and: [ index hasFixedSize ] ].
-	displacement ifNotNil: [ result := result and: [ displacement sasmOperandHasFixedSize ] ].
-	^ result
-]
-
-{ #category : #testing }
 SAsmX86RegisterAddress >> hasSmallDisplacement [
 	^ displacement isInteger and: [ displacement between: -128 and: 128 ]
 ]
@@ -165,8 +156,10 @@ SAsmX86RegisterAddress >> index [
 ]
 
 { #category : #accessing }
-SAsmX86RegisterAddress >> index: anObject [
-	index := anObject
+SAsmX86RegisterAddress >> index: anIndexRegister [
+	self assert: anIndexRegister isRegister.
+	index := anIndexRegister.
+	
 ]
 
 { #category : #initialization }
@@ -273,8 +266,10 @@ SAsmX86RegisterAddress >> scale [
 ]
 
 { #category : #accessing }
-SAsmX86RegisterAddress >> scale: anObject [
-	scale := anObject
+SAsmX86RegisterAddress >> scale: anInteger [
+	self assert: anInteger isInteger.
+	scale := anInteger
+	
 ]
 
 { #category : #accessing }
