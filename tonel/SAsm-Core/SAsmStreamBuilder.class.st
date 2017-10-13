@@ -6,7 +6,8 @@ Class {
 		'localScope',
 		'currentSection',
 		'sectionStack',
-		'localVariableToGeneratedMap'
+		'localVariableToGeneratedMap',
+		'gotTableSymbol'
 	],
 	#pools : [
 		'SAsmTacOperations'
@@ -180,6 +181,16 @@ SAsmStreamBuilder >> findSymbolWithName: aName [
 { #category : #symbols }
 SAsmStreamBuilder >> findSymbolWithName: aName ifAbsent: aBlock [
 	^ localScope findNamedSymbolRecursively: aName ifAbsent: aBlock
+]
+
+{ #category : #symbols }
+SAsmStreamBuilder >> globalOffsetTableSymbol [
+	^ gotTableSymbol ifNil: [gotTableSymbol :=
+		SAsmSymbol new
+			name: #_GLOBAL_OFFSET_TABLE_;
+			makeExternal;
+			yourself
+		]
 ]
 
 { #category : #initialization }

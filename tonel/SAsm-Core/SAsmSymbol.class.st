@@ -62,6 +62,24 @@ SAsmSymbol >> immediateGOT: immediateSize [
 ]
 
 { #category : #immediates }
+SAsmSymbol >> immediateGOTOffset: immediateSize [
+	^ SAsmImmediateSymbolWithAddend new
+		symbol: self;
+		size: immediateSize;
+		makeGOTOffset;
+		yourself
+]
+
+{ #category : #immediates }
+SAsmSymbol >> immediateRelativeGlobalOffsetTable: immediateSize [
+	^ SAsmImmediateSymbolWithAddend new
+		symbol: self;
+		size: immediateSize;
+		makeRelativeGlobalOffsetTable;
+		yourself
+]
+
+{ #category : #immediates }
 SAsmSymbol >> immediateSectionRelative: immediateSize [
 	^ SAsmImmediateSymbolWithAddend new
 		symbol: self;

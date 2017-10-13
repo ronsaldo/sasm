@@ -12,6 +12,15 @@ Class {
 }
 
 { #category : #converting }
+SAsmModuleElement >> asGOTOffsetReference [
+	^ SAsmImmediateSymbolWithAddend new
+		symbol: self;
+		size: target pointerSize;
+		makeGOTOffset;
+		yourself
+]
+
+{ #category : #converting }
 SAsmModuleElement >> asGOTReference [
 	^ SAsmImmediateSymbolWithAddend new
 		symbol: self;

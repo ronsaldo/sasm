@@ -27,14 +27,19 @@ SAsmImmediate >> asConstantPointerOfSize: pointerSize floatingPoint: floatingPoi
 	^ self asConstantPointerOfSize: pointerSize alignment: pointerSize floatingPoint: floatingPoint
 ]
 
-{ #category : #testing }
-SAsmImmediate >> got [
-	^ false
-]
-
 { #category : #'as yet unclassified' }
 SAsmImmediate >> immediateValueRelativeTo: section position: immediateWritePosition offset: relativeCheckOffset [
 	self subclassResponsibility
+]
+
+{ #category : #testing }
+SAsmImmediate >> isAtGOT [
+	^ false
+]
+
+{ #category : #testing }
+SAsmImmediate >> isGOTOffset [
+	^ false
 ]
 
 { #category : #testing }
@@ -49,6 +54,11 @@ SAsmImmediate >> isImmediateS8RelativeTo: anInstruction position: immediateWrite
 	relValue := self immediateValueRelativeTo: anInstruction section position: immediateWritePosition offset: relativeCheck.
 	^ relValue between: -128 and: 127
 	
+]
+
+{ #category : #testing }
+SAsmImmediate >> isRelativeGlobalOffsetTable [
+	^ false
 ]
 
 { #category : #accessing }

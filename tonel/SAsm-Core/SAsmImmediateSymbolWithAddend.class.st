@@ -33,6 +33,11 @@ SAsmImmediateSymbolWithAddend >> addend: anObject [
 ]
 
 { #category : #converting }
+SAsmImmediateSymbolWithAddend >> asGOTReference [
+	^ self copy addend: 0; makeGOT
+]
+
+{ #category : #converting }
 SAsmImmediateSymbolWithAddend >> asSAsmConstantExpression [
 	^ SAsmConstantExpressionSymbolValue new size: self size; symbol: self 
 ]
@@ -50,11 +55,6 @@ SAsmImmediateSymbolWithAddend >> asX86PointerOfSize: pointerSize withBuilder: st
 { #category : #'as yet unclassified' }
 SAsmImmediateSymbolWithAddend >> copyWithStreamBuilder: streamBuilder [
 	^ self copy symbol: (streamBuilder findSymbolForObject: symbol)
-]
-
-{ #category : #'as yet unclassified' }
-SAsmImmediateSymbolWithAddend >> got [
-	^ relocationKind == #got
 ]
 
 { #category : #testing }
@@ -81,6 +81,16 @@ SAsmImmediateSymbolWithAddend >> initialize [
 	super initialize.
 	addend := 0.
 	sectionRelative := false.
+]
+
+{ #category : #testing }
+SAsmImmediateSymbolWithAddend >> isAtGOT [
+	^ relocationKind == #got
+]
+
+{ #category : #testing }
+SAsmImmediateSymbolWithAddend >> isGOTOffset [
+	^ relocationKind == #'got-offset'
 ]
 
 { #category : #accessing }
@@ -154,9 +164,24 @@ SAsmImmediateSymbolWithAddend >> isImmediateU8 [
 	^ self isImmediate8
 ]
 
+{ #category : #testing }
+SAsmImmediateSymbolWithAddend >> isRelativeGlobalOffsetTable [
+	^ relocationKind == #'relative-global-offset-table'
+]
+
 { #category : #accessing }
 SAsmImmediateSymbolWithAddend >> makeGOT [
 	relocationKind := #got
+]
+
+{ #category : #accessing }
+SAsmImmediateSymbolWithAddend >> makeGOTOffset [
+	relocationKind := #'got-offset'
+]
+
+{ #category : #accessing }
+SAsmImmediateSymbolWithAddend >> makeRelativeGlobalOffsetTable [
+	relocationKind := #'relative-global-offset-table'
 ]
 
 { #category : #accessing }

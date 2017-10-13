@@ -116,6 +116,11 @@ SAsmCompilationTarget >> nakedCallingConvention [
 	^ self callingConventionNamed: #naked
 ]
 
+{ #category : #testing }
+SAsmCompilationTarget >> needsSlotForGOTPointer [
+	^ false
+]
+
 { #category : #accessing }
 SAsmCompilationTarget >> objectModel [
 	^ objectModel

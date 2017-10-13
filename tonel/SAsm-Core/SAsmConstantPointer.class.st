@@ -40,6 +40,13 @@ SAsmConstantPointer >> asX86PointerWithBuilder: streamBuilder [
 	^ SAsmX86RegisterAddress new size: size; displacement: (address copyWithStreamBuilder: streamBuilder)
 ]
 
+{ #category : #converting }
+SAsmConstantPointer >> asX86PointerWithBuilder: streamBuilder gotPointer: gotRegister [
+	^ SAsmX86RegisterAddress new size: size;
+		base: gotRegister;
+		displacement: (address copyWithStreamBuilder: streamBuilder) makeGOTOffset
+]
+
 { #category : #copying }
 SAsmConstantPointer >> copyWithStreamBuilder: streamBuilder [
 	self error: 'Cannot copy a constant pointer directly.'

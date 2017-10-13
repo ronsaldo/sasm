@@ -172,12 +172,13 @@ SAsmCompilationTargetX86_64 >> convertRelocation: relocation section: section el
 		^ elfReloc symbol: symbolIndex type: R_X86_64_32
 	].
 	relocation isRelativeBranch32 ifTrue: [
-		relocation symbol ifNotNil: [ 
+		(self hasPositionIndependentCode and: [relocation symbol isNotNil]) ifTrue: [ 
 			^ elfReloc symbol: symbolIndex type: R_X86_64_PLT32
 		].
 		^ elfReloc symbol: symbolIndex type: R_X86_64_PC32
 	].
 	relocation isRelativeSOffset32AtGOT ifTrue: [
+		self assert: self hasPositionIndependentCode.
 		^ elfReloc symbol: symbolIndex type: R_X86_64_GOTPCREL
 	].
 	relocation isRelativeSOffset32 ifTrue: [

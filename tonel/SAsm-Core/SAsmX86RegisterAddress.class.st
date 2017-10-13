@@ -41,6 +41,7 @@ SAsmX86RegisterAddress >> + displacementOrIndex [
 	| result |
 	result := self copy.
 	displacementOrIndex isInteger ifTrue: [ ^ self copy displacement: displacement + displacementOrIndex ].
+	displacementOrIndex isImmediateSymbolWithAddend ifTrue: [ ^ self copy displacement: displacementOrIndex + displacement ].
 	self halt.
 ]
 

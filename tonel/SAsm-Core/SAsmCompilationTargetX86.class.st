@@ -117,8 +117,27 @@ SAsmCompilationTargetX86 >> convertRelocation: relocation section: section elfBu
 	(relocation isAbsoluteOffset32 or: [ relocation isSectionRelativeOffset32 ]) ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_386_32
 	].
-	relocation isRelativeSOffset32OrBranch32 ifTrue: [
+	relocation isRelativeBranch32 ifTrue: [
+		(self hasPositionIndependentCode and: [relocation symbol isNotNil]) ifTrue: [ 
+			^ elfReloc symbol: symbolIndex type: R_386_PLT32
+		].
+
 		^ elfReloc symbol: symbolIndex type: R_386_PC32
+	].
+	relocation isRelativeSOffset32 ifTrue: [
+		^ elfReloc symbol: symbolIndex type: R_386_PC32
+	].
+	relocation isRelativeSOffset32GlobalOffsetTable ifTrue: [
+		self assert: self hasPositionIndependentCode.
+		^ elfReloc symbol: symbolIndex type: R_386_GOTPC
+	].
+	relocation isRelativeSOffset32AtGOT ifTrue: [
+		self assert: self hasPositionIndependentCode.
+		^ elfReloc symbol: symbolIndex type: R_386_GOT32
+	].
+	relocation isRelativeSOffset32GOTOffset ifTrue: [
+		self assert: self hasPositionIndependentCode.
+		^ elfReloc symbol: symbolIndex type: R_386_GOTOFF
 	].
 
 	self error: 'Unsupported relocation type.'
@@ -215,6 +234,11 @@ SAsmCompilationTargetX86 >> machCPUSubType [
 { #category : #'mach-o' }
 SAsmCompilationTargetX86 >> machCPUType [
 	^ SAsmMachConstants CPU_TYPE_X86
+]
+
+{ #category : #testing }
+SAsmCompilationTargetX86 >> needsSlotForGOTPointer [
+	^ self isWin32 not
 ]
 
 { #category : #'virtual registers' }

@@ -2,7 +2,9 @@ Class {
 	#name : #SAsmX86InstructionLowerer,
 	#superclass : #SAsmInstructionLowerer,
 	#instVars : [
-		'stackSizeToRestoreBeforeReturn'
+		'stackSizeToRestoreBeforeReturn',
+		'gotBaseRegister',
+		'contextMetadataOffset'
 	],
 	#pools : [
 		'SAsmX86Constants',
@@ -452,7 +454,7 @@ SAsmX86InstructionLowerer >> enterFrame [
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> enterFramefullMethod [
 	"Compute some sizes."
-	| pointerSize dynamicObjectSize callingConvention totalFrameSize nativeSizeToAllocate argumentDescriptor scratchRegister stackSizeRequirement stackCheckedEntry stackLimitTrap nilPointerRegister nilPointer |
+	| pointerSize dynamicObjectSize callingConvention totalFrameSize nativeSizeToAllocate argumentDescriptor scratchRegister stackSizeRequirement stackCheckedEntry stackLimitTrap nilPointerRegister nilPointer stackDescriptorRegisterCount |
 	pointerSize := target pointerSize.
 	callingConvention := function callingConvention.
 	
@@ -499,27 +501,57 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 		]
 	].
 
+	gotBaseRegister := nil.
+	contextMetadataOffset := 0.
+	(target needsSlotForGOTPointer and: [target hasPositionIndependentCode]) ifTrue: [
+		gotBaseRegister := target gotBaseRegister.
+		streamBuilder
+			x86: PUSH with: gotBaseRegister.
+			
+		self fetchGOTPointerInto: gotBaseRegister.
+		contextMetadataOffset := target pointerSize negated.
+	].
+
 	"Context meta data"
 	(callingConvention hasContextMetadata or: [function contextMetaData isNotNil]) ifTrue: [
 		self assert: totalFrameSize <= 16rFFFF.
 		self assert: stackFrameLayout dynamicRootCount <= 16rfff.
 		
+		"Save the GOT base register on its slot, even if it is not used for PIC code."
+		(target needsSlotForGOTPointer and: [gotBaseRegister isNil]) ifTrue: [ 
+			self assert: gotBaseRegister isNil.
+			gotBaseRegister := target gotBaseRegister.
+			streamBuilder
+				x86: PUSH with: gotBaseRegister.
+			contextMetadataOffset := target pointerSize negated.
+		].
+		
 		self pushPhysicalIntegerToTheStack: self compiledMethodMetaData scratchIndex: 0.
 		streamBuilder
 			x86: PUSH with: nilPointerRegister; "Context object"
 			x86: PUSH with: argumentDescriptor.
+
+		stackDescriptorRegisterCount := registersToPreserve size.
+		target needsSlotForGOTPointer ifTrue: [
+			"Do not count the mandatory GOT pointer register."
+			self assert: (registersToPreserve includes: gotBaseRegister).
+			stackDescriptorRegisterCount := stackDescriptorRegisterCount - 1.
+		].
+	
 		target objectModel isReferenceCounted ifTrue: [
 			streamBuilder
-				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout explicitDynamicRootCount) | (registersToPreserve size << 12)).
+				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout explicitDynamicRootCount) | (stackDescriptorRegisterCount << 12)).
 		] ifFalse: [ 
 			streamBuilder
-				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (registersToPreserve size << 12))
+				x86: PUSH with: ((totalFrameSize << 16) | (stackFrameLayout dynamicRootCount) | (stackDescriptorRegisterCount << 12))
 		].
 	].
 
 	"Store the registers that have to be preserved."
 	registersToPreserve do: [ :register |
-		streamBuilder x86: PUSH with: register
+		register ~~ gotBaseRegister ifTrue: [ 
+			streamBuilder x86: PUSH with: register
+		]
 	].
 
 	"Initialize the object variables with nil."
@@ -537,9 +569,12 @@ SAsmX86InstructionLowerer >> enterFramefullMethod [
 	self emitPrologueLoads
 ]
 
-{ #category : #'as yet unclassified' }
-SAsmX86InstructionLowerer >> immediateConstant64ToConstantZone: immediateConstant [
-	self halt
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> fetchGOTPointerInto: targetRegister [
+	| extraOffset |
+	self assert: target pointerSize = 4.
+	extraOffset := self moveInstructionPointerInto: targetRegister.
+	streamBuilder x86: ADD dst: targetRegister src: (streamBuilder globalOffsetTableSymbol immediateRelativeGlobalOffsetTable: 4) + "ADD EBX size" 2 + "POP EBX" extraOffset
 ]
 
 { #category : #'as yet unclassified' }
@@ -569,14 +604,27 @@ SAsmX86InstructionLowerer >> leaveFrame [
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> leaveFramefullMethod [
+	| pointerSize |
 	registersToPreserve ifNotEmpty: [
 		stackSizeToRestoreBeforeReturn ~= 0 ifTrue: [ 
 			streamBuilder x86: ADD dst: target stackPointerRegister src: stackSizeToRestoreBeforeReturn
 		].
 	
 		registersToPreserve reverseDo: [ :reg |
-			streamBuilder x86: POP with: reg
+			reg ~~ gotBaseRegister ifTrue: [ 
+				streamBuilder x86: POP with: reg
+			]
 		]
+	].
+
+	gotBaseRegister ifNotNil: [
+		(function callingConvention hasContextMetadata or: [function contextMetaData isNotNil]) ifTrue: [
+			pointerSize := target pointerSize.
+			streamBuilder x86: MOV dst: gotBaseRegister src: (target framePointerRegister asX86PointerOfSize: pointerSize) - pointerSize
+		 ] ifFalse: [ 
+			streamBuilder x86: POP with: gotBaseRegister
+		].
+		
 	].
 	
 	streamBuilder
@@ -585,16 +633,67 @@ SAsmX86InstructionLowerer >> leaveFramefullMethod [
 ]
 
 { #category : #'abstract instruction generation' }
-SAsmX86InstructionLowerer >> loadSymbolWithAddend: symbolWithAddend viaGOTInto: destination [
-	| register |
+SAsmX86InstructionLowerer >> loadI386SymbolWithAddend: symbolWithAddend viaGOTInto: destination [
+	| register convertedSymbol |
 	register := destination.
 	destination isRegister ifFalse: [ 
 		register := self scratchRegister: 0 for: destination.
 	].
-	
-	streamBuilder x86: MOV dst: register src: (symbolWithAddend symbol asGOTReference asX86PointerOfSize: 8 withBuilder: streamBuilder).
-	symbolWithAddend addend ~= 0 ifTrue: [
-		streamBuilder x86: ADD dst: register src: symbolWithAddend addend.
+
+	convertedSymbol := symbolWithAddend copyWithStreamBuilder: streamBuilder.	
+	(self shouldSymbolBeLoadedThroughLoadFromGOT: symbolWithAddend symbol) ifTrue: [
+		streamBuilder x86: MOV dst: register src: (gotBaseRegister asX86PointerOfSize: target pointerSize) + convertedSymbol asGOTReference.
+		convertedSymbol addend ~= 0 ifTrue: [
+			streamBuilder x86: ADD dst: register src: convertedSymbol addend.
+		]
+	] ifFalse: [
+		streamBuilder x86: LEA dst: register src: (gotBaseRegister asX86PointerOfSize: target pointerSize) + convertedSymbol makeGOTOffset.
+	].
+
+	register ~~ destination ifTrue: [ 
+		streamBuilder x86: MOV dst: destination src: register
+	]
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> loadSymbolWithAddend: symbolWithAddend viaGOTAsPointerOfSize: pointerSize scratchIndex: scratchIndex [
+	| scratchRegister |
+	target hasPositionIndependentCode ifFalse: [
+		^ symbolWithAddend asX86PointerOfSize: pointerSize withBuilder: streamBuilder
+	].
+
+	(target pointerSize = 8 and: [(self shouldSymbolBeLoadedThroughLoadFromGOT: symbolWithAddend symbol) not]) ifTrue: [
+		^ symbolWithAddend asX86PointerOfSize: pointerSize withBuilder: streamBuilder
+	].
+
+	scratchRegister := self scratchRegister: scratchIndex for: target framePointerRegister.
+	self loadSymbolWithAddend: symbolWithAddend viaGOTInto: scratchRegister.
+	^ scratchRegister asX86PointerOfSize: pointerSize withBuilder: streamBuilder
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> loadSymbolWithAddend: symbolWithAddend viaGOTInto: destination [
+	^ target pointerSize = 4
+		ifTrue: [self loadI386SymbolWithAddend: symbolWithAddend viaGOTInto: destination]
+		ifFalse: [self loadX86_64SymbolWithAddend: symbolWithAddend viaGOTInto: destination]
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> loadX86_64SymbolWithAddend: symbolWithAddend viaGOTInto: destination [
+	| register convertedSymbol |
+	register := destination.
+	destination isRegister ifFalse: [ 
+		register := self scratchRegister: 0 for: destination.
+	].
+
+	convertedSymbol := symbolWithAddend copyWithStreamBuilder: streamBuilder.	
+	(self shouldSymbolBeLoadedThroughLoadFromGOT: symbolWithAddend symbol) ifTrue: [
+		streamBuilder x86: MOV dst: register src: (convertedSymbol asGOTReference asX86PointerOfSize: 8 withBuilder: streamBuilder).
+		symbolWithAddend addend ~= 0 ifTrue: [
+			streamBuilder x86: ADD dst: register src: convertedSymbol addend.
+		]
+	] ifFalse: [
+		streamBuilder x86: LEA dst: register src: (convertedSymbol asX86PointerOfSize: 8 withBuilder: streamBuilder).
 	].
 
 	register ~~ destination ifTrue: [ 
@@ -610,6 +709,21 @@ SAsmX86InstructionLowerer >> lowerConditional: condition branch: branch [
 { #category : #'as yet unclassified' }
 SAsmX86InstructionLowerer >> moveImmediateConstant64: immediate toScratchRegister: scratchRegisterIndex [
 	self halt
+]
+
+{ #category : #'abstract instruction generation' }
+SAsmX86InstructionLowerer >> moveInstructionPointerInto: targetRegister [
+	| label |
+	target pointerSize = 8 ifTrue: [ 
+		self halt
+	] ifFalse: [
+		label := streamBuilder newPrivateSymbol: #'.getEIP'.
+		streamBuilder
+			x86: CALL with: label;
+			label: label;
+			x86: POP with: targetRegister.
+		^ 1
+	]
 ]
 
 { #category : #memory }
@@ -710,18 +824,7 @@ SAsmX86InstructionLowerer >> moveValue: value toRegister: register [
 		].
 	
 		(value isImmediateSymbolWithAddend and: [ target hasPositionIndependentCode ]) ifTrue: [ 
-			target pointerSize = 8 ifTrue: [
-				(self shouldSymbolBeLoadedThroughGOT: value symbol) ifTrue: [ 
-					^ self loadSymbolWithAddend: value viaGOTInto: physical
-				].
-				physical isRegister ifTrue: [ 
-					^ streamBuilder x86: LEA dst: physical src: (value asX86PointerOfSize: target pointerSize withBuilder: streamBuilder)
-				] ifFalse: [ 
-					self halt.
-				].
-				] ifFalse: [ 
-			].
-			self halt
+			^ self loadSymbolWithAddend: value viaGOTInto: physical
 		].
 	
 		^ streamBuilder x86: MOV dst: physical src: (value copyWithStreamBuilder: streamBuilder)
@@ -820,9 +923,16 @@ SAsmX86InstructionLowerer >> pushIntegerToTheStack: value scratchIndex: scratchI
 
 { #category : #'procedure call' }
 SAsmX86InstructionLowerer >> pushPhysicalIntegerToTheStack: valuePhysical scratchIndex: scratchIndex [
+	| register |
+	(valuePhysical isImmediateSymbolWithAddend and: [ target hasPositionIndependentCode or: [ target pointerSize = 8] ]) ifTrue: [ 
+		register := self scratchRegister: scratchIndex for: target stackPointerRegister.
+		self loadSymbolWithAddend: valuePhysical viaGOTInto: register.
+		^ streamBuilder x86: PUSH with: register.
+	].
+
 	(target pointerSize = 8 and: [valuePhysical isImmediate and: [valuePhysical isImmediateS32 not]]) ifTrue: [
 		^ streamBuilder x86: PUSH with: (self immediateConstant64ToConstantZone: valuePhysical orToScratchRegister: scratchIndex)
-		].
+	].
 		
 	streamBuilder x86: PUSH with: valuePhysical.
 	
@@ -839,16 +949,10 @@ SAsmX86InstructionLowerer >> pushValueToTheStack: value scratchIndex: scratchInd
 ]
 
 { #category : #'abstract instruction generation' }
-SAsmX86InstructionLowerer >> returnValue: value [
-	value ifNil: [ ^ self ].
-	self moveValue: value toRegister: function callingConvention resultIntRegister secondRegister: function callingConvention resultInt2Register
-]
-
-{ #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 	| valuePhysical |
 	value ifNil: [ ^ self ].
-	value isFloatingPointRegister ifTrue: [ 
+	value isFloatingPointOperand ifTrue: [ 
 		function callingConvention resultFloatRegister ifNil: [ 
 			valuePhysical := self virtualToPhysical: value.
 			valuePhysical isRegisterAddress ifTrue: [ 
@@ -870,7 +974,7 @@ SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 	].
 
 	valueHigh ifNotNil: [ 
-		valueHigh isFloatingPointRegister ifTrue: [ 
+		valueHigh isFloatingPointOperand ifTrue: [ 
 			self error: 'Not yet supported.'.
 		] ifFalse: [ 
 			self moveValue: value toRegister: function callingConvention resultInt2Register
@@ -885,7 +989,7 @@ SAsmX86InstructionLowerer >> scratchRegister: scratchIndex for: value [
 ]
 
 { #category : #spilling }
-SAsmX86InstructionLowerer >> shouldSymbolBeLoadedThroughGOT: symbol [
+SAsmX86InstructionLowerer >> shouldSymbolBeLoadedThroughLoadFromGOT: symbol [
 	target hasPositionIndependentCode ifFalse: [ ^ false ].
 	symbol isExternal ifTrue: [ ^ true ].
 	(symbol isPublic and: [ target executable not ]) ifTrue: [ ^ true ].
@@ -958,13 +1062,19 @@ SAsmX86InstructionLowerer >> virtualRegisterLocationToPhysicalLocation: virtualR
 	| variable |
 	virtualRegister isVariable ifTrue: [
 		variable := stackFrameLayout importVariable: virtualRegister.
-		^ (target framePointerRegister asX86PointerOfSize: virtualRegister size vectorRegister: virtualRegister isFloatingPointRegister) + (variable offset)
+		^ (target framePointerRegister asX86PointerOfSize: virtualRegister size vectorRegister: virtualRegister isFloatingPointOperand) + (variable offset)
 	].
-	^ (target framePointerRegister asX86PointerOfSize: virtualRegister size vectorRegister: virtualRegister isFloatingPointRegister) + (virtualRegister spillLocation offset + virtualRegister variableOffset)
+	^ (target framePointerRegister asX86PointerOfSize: virtualRegister size vectorRegister: virtualRegister isFloatingPointOperand) + (virtualRegister spillLocation offset + virtualRegister variableOffset)
 ]
 
 { #category : #'abstract instruction generation' }
 SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister [
+	virtualRegister isConstantPointer ifTrue: [
+		(target hasPositionIndependentCode and: [target pointerSize = 4]) ifTrue: [ 
+			^ virtualRegister asX86PointerWithBuilder: streamBuilder gotPointer: gotBaseRegister
+		].
+	].
+
 	target pointerSize = 8 ifTrue: [ 
 		virtualRegister isImmediateSymbolWithAddend ifTrue: [ 
 			self error: 'Cannot access directly to immediate symbol with addend in position independent code.'
@@ -981,19 +1091,7 @@ SAsmX86InstructionLowerer >> virtualToPhysical: virtualRegister pointerOfSize: p
 	| physicalRegister |
 	self assert: virtualRegister isVariable not.
 	virtualRegister isImmediateSymbolWithAddend ifTrue: [
-		target hasPositionIndependentCode ifTrue: [ 
-			target pointerSize = 8 ifTrue: [
-				(self shouldSymbolBeLoadedThroughGOT: virtualRegister symbol) ifTrue: [ 
-					physicalRegister := self scratchRegister: scratchIndex for: target framePointerRegister.
-					self loadSymbolWithAddend: virtualRegister viaGOTInto: physicalRegister.
-					^ physicalRegister asX86PointerOfSize: pointerSize withBuilder: streamBuilder
-				]
-			] ifFalse: [ 
-				self halt.
-			].
-		].
-	
-		^ virtualRegister asX86PointerOfSize: pointerSize withBuilder: streamBuilder
+		^ self loadSymbolWithAddend: virtualRegister viaGOTAsPointerOfSize: pointerSize scratchIndex: scratchIndex
 	].
 
 	physicalRegister := self virtualToPhysical: virtualRegister.
@@ -1040,19 +1138,8 @@ SAsmX86InstructionLowerer >> virtualToPhysical: register scratchRegisterIndex: s
 	| scratchRegister |
 	(notImmediate or: [target pointerSize = 8 or: [target hasPositionIndependentCode]]) ifTrue: [
 		register isImmediateSymbolWithAddend ifTrue: [
-			target hasPositionIndependentCode ifTrue: [
-				target pointerSize = 4 ifTrue: [ 
-					self halt.
-				] ifFalse: [ 
-					(self shouldSymbolBeLoadedThroughGOT: register symbol) ifTrue: [ 
-						scratchRegister := self scratchRegister: scratchRegisterIndex for: target stackPointerRegister.
-						self loadSymbolWithAddend: register viaGOTInto: scratchRegister.
-						^ scratchRegister
-					]
-				].
-			].
 			scratchRegister := self scratchRegister: scratchRegisterIndex for: target stackPointerRegister.
-			streamBuilder x86: LEA dst: scratchRegister src: (register asX86PointerOfSize: target pointerSize withBuilder: streamBuilder).
+			self loadSymbolWithAddend: register viaGOTInto: scratchRegister.
 			^ scratchRegister
 		].
 	
@@ -1256,7 +1343,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 				stackArguments add: arg.
 			]
 		] ifFalse: [
-			(arg isFloatingPointRegister or: [arg isConstantPointer and: [arg floatingPoint]]) ifTrue: [ 
+			arg isFloatingPointOperand ifTrue: [ 
 				remainingFloatRegisters > 0 ifTrue: [
 					registerArguments add: arg.
 					remainingFloatRegisters := remainingFloatRegisters - 1
@@ -1314,7 +1401,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 			].
 			integerRegisterIndex := integerRegisterIndex + 1
 		] ifFalse: [
-			(arg isFloatingPointRegister or: [arg isConstantPointer and: [arg floatingPoint]]) ifTrue: [
+			arg isFloatingPointOperand ifTrue: [
 				(registersToSpill includes: arg) ifTrue: [ 
 					self moveSpilledValue: arg toFloatRegister: (calledConvention floatArgumentRegisters at: floatRegisterIndex)
 				] ifFalse: [
@@ -1353,7 +1440,7 @@ SAsmX86InstructionLowerer >> visitTacCallInstruction: callInstruction [
 			result isIntegerRegister ifTrue: [
 				streamBuilder x86: MOV dst: resultPhysical src: (index = 1 ifTrue: [calledConvention resultIntRegister] ifFalse: [ calledConvention resultInt2Register ])
 			] ifFalse: [
-				result isFloatingPointRegister ifTrue: [ 
+				result isFloatingPointOperand ifTrue: [ 
 					calledConvention resultFloatRegister ifNotNil: [ :resultFloatRegister |
 						resultPhysical isRegisterAddress ifTrue: [ 
 							result size = 4 ifTrue: [
@@ -2305,7 +2392,7 @@ SAsmX86InstructionLowerer >> widowThisContextSpilling: activeRegisters [
 	doReturn := streamBuilder newPrivateSymbol: #doReturn.
 	widowThisContextFunction := self runtimeProvidedFunction: target objectModel widowThisContextFunction.
 	streamBuilder
-		x86: CMP dst: (target framePointerRegister asX86PointerOfSize: target pointerSize) + (ThisContextPointerIndex * target pointerSize) src: 0;
+		x86: CMP dst: (target framePointerRegister asX86PointerOfSize: target pointerSize) + (ThisContextPointerIndex * target pointerSize) + contextMetadataOffset src: 0;
 		x86: JZ with: doReturn.
 	
 	"Call the widowing function"	

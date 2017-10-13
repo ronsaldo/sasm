@@ -52,7 +52,14 @@ SAsmInstructionLowerer >> allocateRegisters [
 		assignRegistersToArguments;
 		performLinearScanRegisterAllocation.
 
+	"Ensure the GOT base register is preserved when required."
 	registersToPreserve := callingConvention callerRegisters select: [ :reg | usedRegisters includes: reg ].
+	(target needsSlotForGOTPointer and: [(registersToPreserve includes: target gotBaseRegister) not]) ifTrue: [
+		(target hasPositionIndependentCode or: [callingConvention hasContextMetadata or: [function contextMetaData isNotNil]]) ifTrue: [
+			registersToPreserve := {target gotBaseRegister} , registersToPreserve
+		]
+	].
+
 	self buildStackFrameLayout	
 ]
 

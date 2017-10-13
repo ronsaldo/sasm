@@ -6,7 +6,7 @@ Class {
 
 { #category : #'as yet unclassified' }
 SAsmX86RegisterVector class >> canHoldVirtualRegisterData: virtualRegister [
-	^ virtualRegister isFloatingPointRegister and: [ virtualRegister size <= 16 ]
+	^ virtualRegister isFloatingPointOperand and: [ virtualRegister size <= 16 ]
 ]
 
 { #category : #testing }

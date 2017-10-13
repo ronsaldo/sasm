@@ -17,10 +17,13 @@ Class {
 		'AbsoluteRelocations',
 		'GOTRelocations',
 		'PLTRelocations',
+		'Relative32Relocations',
 		'RelativeBranch32',
 		'RelativeSOffset16',
 		'RelativeSOffset32',
 		'RelativeSOffset32AtGOT',
+		'RelativeSOffset32GOTOffset',
+		'RelativeSOffset32GlobalOffsetTable',
 		'RelativeSOffset64',
 		'RelativeSOffset8',
 		'SectionRelativeOffset32',
@@ -49,9 +52,13 @@ SAsmBinaryObjectSectionRelocation class >> initialize [
 	RelativeSOffset64 := #'relative-soffset64'.
 	
 	RelativeSOffset32AtGOT := #'relative-soffset32-at-got'.
+	RelativeSOffset32GOTOffset := #'relative-soffset32-got-offset'.
+	RelativeSOffset32GlobalOffsetTable := #'relative-soffset32-global-offset-table'.
 	RelativeBranch32 := #'relative-branch32'.
 	
-	GOTRelocations := {RelativeSOffset32AtGOT}.
+	Relative32Relocations := { RelativeSOffset32 . RelativeSOffset32AtGOT . RelativeSOffset32GOTOffset . RelativeSOffset32GlobalOffsetTable . RelativeBranch32 }.
+	
+	GOTRelocations := {RelativeSOffset32AtGOT . RelativeSOffset32GOTOffset . RelativeSOffset32GlobalOffsetTable}.
 	PLTRelocations := {RelativeBranch32}.
 ]
 
@@ -136,7 +143,7 @@ SAsmBinaryObjectSectionRelocation >> applyImplicitAddendIn: targetSection absolu
 		^ data unsignedLongLongAt: offset + 1 put: (addend + extraRelativeAddend bitAnd: 16rFFFFFFFFFFFFFFFF)
 	].
 
-	self isRelativeSOffset32OrBranch32 ifTrue: [ 
+	self isAnyRelative32Relocation ifTrue: [ 
 		^ data unsignedLongAt: offset + 1 put: (addend + extraRelativeAddend bitAnd: 16rFFFFFFFF)
 	].
 
@@ -175,7 +182,7 @@ SAsmBinaryObjectSectionRelocation >> clearImplicitAddendIn: targetSection [
 		data unsignedLongLongAt: offset + 1 put: 0
 	].
 
-	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 or: [self isSectionRelativeOffset32 or: [self isRelativeBranch32] ]]) ifTrue: [
+	(self isAbsoluteOffset32 or: [ self isSectionRelativeOffset32 or: [self isAnyRelative32Relocation] ]) ifTrue: [
 		data unsignedLongAt: offset + 1 put: 0
 	].
 
@@ -225,6 +232,11 @@ SAsmBinaryObjectSectionRelocation >> isAbsoluteOffset8 [
 ]
 
 { #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isAnyRelative32Relocation [
+	^ Relative32Relocations includes: type
+]
+
+{ #category : #testing }
 SAsmBinaryObjectSectionRelocation >> isGOT [
 	^ GOTRelocations includes: type
 ]
@@ -257,6 +269,16 @@ SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32 [
 { #category : #testing }
 SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32AtGOT [
 	^ type == RelativeSOffset32AtGOT
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32GOTOffset [
+	^ type == RelativeSOffset32GOTOffset
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> isRelativeSOffset32GlobalOffsetTable [
+	^ type == RelativeSOffset32GlobalOffsetTable
 ]
 
 { #category : #testing }
@@ -336,6 +358,16 @@ SAsmBinaryObjectSectionRelocation >> relativeSOffset32 [
 { #category : #testing }
 SAsmBinaryObjectSectionRelocation >> relativeSOffset32AtGOT [
 	type := RelativeSOffset32AtGOT
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> relativeSOffset32GOTOffset [
+	type := RelativeSOffset32GOTOffset
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> relativeSOffset32GlobalOffsetTable [
+	type := RelativeSOffset32GlobalOffsetTable
 ]
 
 { #category : #testing }

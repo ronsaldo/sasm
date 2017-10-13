@@ -325,6 +325,8 @@ SAsmBinaryObjectWriter >> isShortMode [
 { #category : #'byte writing' }
 SAsmBinaryObjectWriter >> needsRelativeRelocation: immediate [
 	| symbol |
+	immediate isAtGOT ifTrue: [ ^ true ].
+	
 	symbol := immediate symbol.
 	symbol ifNil: [ ^ false ].
 	symbol isUndefined ifTrue: [ ^ true ].
@@ -399,7 +401,20 @@ SAsmBinaryObjectWriter >> nextPutI32: anImmediate [
 	| value |
 	anImmediate isInteger ifTrue: [ ^ self nextPutC32: anImmediate ].
 	
-	(self needsRelocation: anImmediate) ifTrue: [ 
+	(self needsRelocation: anImmediate) ifTrue: [
+		anImmediate isAtGOT ifTrue: [
+			self recordImmediateRelativeReloc32AtGOT: anImmediate extraAddend: 0.
+			^ self nextPutC32: 0.
+		].
+		anImmediate isRelativeGlobalOffsetTable ifTrue: [
+			self recordImmediateRelativeReloc32GlobalOffsetTable: anImmediate extraAddend: 0.
+			^ self nextPutC32: 0.
+		].
+		anImmediate isGOTOffset ifTrue: [
+			self recordImmediateRelativeReloc32GOTOffset: anImmediate extraAddend: 0.
+			^ self nextPutC32: 0.
+		].
+	
 		self recordImmediateReloc32: anImmediate extraAddend: 0.
 		self nextPutC32: 0
 	] ifFalse: [ 
@@ -489,8 +504,8 @@ SAsmBinaryObjectWriter >> nextPutIPRelativeI32: immediate [
 { #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutIPRelativeI32: immediate extraOffset: extraOffset [
 	| immediateValue |
-	((self needsRelativeRelocation: immediate) or: [ immediate got ]) ifTrue: [
-		immediate got ifTrue: [ 
+	(self needsRelativeRelocation: immediate) ifTrue: [
+		immediate isAtGOT ifTrue: [ 
 			self recordImmediateRelativeReloc32AtGOT: immediate extraAddend: extraOffset negated.
 			self nextPutC32: 0.
 		] ifFalse: [ 
@@ -554,6 +569,20 @@ SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32: immediate extraAddend:
 SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32AtGOT: immediate extraAddend: extraAddend [
 	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
 		relativeSOffset32AtGOT;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32GOTOffset: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		relativeSOffset32GOTOffset;
+		yourself
+]
+
+{ #category : #relocations }
+SAsmBinaryObjectWriter >> recordImmediateRelativeReloc32GlobalOffsetTable: immediate extraAddend: extraAddend [
+	^ (self recordImmediateReloc: immediate extraAddend: extraAddend)
+		relativeSOffset32GlobalOffsetTable;
 		yourself
 ]
 
