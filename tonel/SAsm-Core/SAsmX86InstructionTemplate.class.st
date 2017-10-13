@@ -26,19 +26,23 @@ SAsmX86InstructionTemplate >> computeMaximalSizeFor: anInstruction [
 ]
 
 { #category : #'as yet unclassified' }
-SAsmX86InstructionTemplate >> findBestAlternativeFor: anInstruction [
-	anInstruction bestTemplateAlternative ifNotNil: [ :alt | ^ alt ].
-	
+SAsmX86InstructionTemplate >> findBestLongAlternativeFor: anInstruction [
 	alternatives do: [ :alternative |
-		(alternative canWriteInstruction: anInstruction) ifTrue: [
-			anInstruction argumentsHaveFixedSize ifTrue: [
-				anInstruction bestTemplateAlternative: alternative
-			].
+		(alternative canWriteLongInstruction: anInstruction) ifTrue: [
 			^ alternative
 		].
 	].
-	
-	self error: 'No encoding alternative found for instruction: ' , anInstruction printString.
+
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86InstructionTemplate >> findBestShortAlternativeFor: anInstruction [
+	alternatives do: [ :alternative |
+		(alternative canWriteShortInstruction: anInstruction) ifTrue: [
+			^ alternative
+		].
+	].
+
 ]
 
 { #category : #'as yet unclassified' }

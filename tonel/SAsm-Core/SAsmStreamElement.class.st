@@ -30,8 +30,13 @@ SAsmStreamElement >> childrenNodes [
 	^ #()
 ]
 
-{ #category : #'as yet unclassified' }
-SAsmStreamElement >> computeMaximalSize [
+{ #category : #size }
+SAsmStreamElement >> computeShortAndLongAlternativesWith: aWriter [
+]
+
+{ #category : #testing }
+SAsmStreamElement >> hasDifferentAlternatives [
+	^ false
 ]
 
 { #category : #testing }
@@ -111,6 +116,11 @@ SAsmStreamElement >> isThreeAddressInstruction [
 	^ false
 ]
 
+{ #category : #size }
+SAsmStreamElement >> longAlternativeSize [
+	^ self size
+]
+
 { #category : #'linear scan' }
 SAsmStreamElement >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
 ]
@@ -188,6 +198,11 @@ SAsmStreamElement >> section: anObject [
 { #category : #accessing }
 SAsmStreamElement >> sectionName [
 	^ section ifNotNil: [ section name ]
+]
+
+{ #category : #size }
+SAsmStreamElement >> shortAlternativeSize [
+	^ self size
 ]
 
 { #category : #accessing }

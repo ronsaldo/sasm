@@ -118,25 +118,6 @@ SAsmStream >> gtInspectorAssemblyStreamText: composite [
 ]
 
 { #category : #testing }
-SAsmStream >> hasFixedSize [
-	hasFixedSize ifNotNil: [ ^ hasFixedSize ].
-	(#('.debug_line') includes: self splitedSectionName) ifTrue: [ 
-		^ hasFixedSize := false.
-	].
-
-	hasFixedSize := true.
-	self do: [:instruction |
-		(instruction isDebugInstruction or: [instruction hasFixedSize]) ifFalse: [
-			hasFixedSize := false.
-			^ false
-		].
-	].
-
-	^ hasFixedSize
-
-]
-
-{ #category : #testing }
 SAsmStream >> isEmpty [
 	^ first isNil
 ]

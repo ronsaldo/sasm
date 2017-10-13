@@ -13,8 +13,8 @@ SAsmLabel >> accept: aVisitor [
 ]
 
 { #category : #accessing }
-SAsmLabel >> computeMaximalSize [
-	symbol value: position 
+SAsmLabel >> applyPosition [
+	symbol value: position.
 
 ]
 

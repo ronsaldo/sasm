@@ -5,8 +5,12 @@ Class {
 		'size',
 		'template',
 		'arguments',
-		'bestTemplateAlternative',
-		'argumentsHaveFixedSize'
+		'argumentsHaveFixedSize',
+		'selectedAlternative',
+		'shortAlternative',
+		'longAlternative',
+		'longAlternativeSize',
+		'shortAlternativeSize'
 	],
 	#category : #'SAsm-Core-Generic'
 }
@@ -31,29 +35,23 @@ SAsmInstruction >> arguments: anObject [
 	arguments := anObject
 ]
 
-{ #category : #accessing }
-SAsmInstruction >> argumentsHaveFixedSize [
-	argumentsHaveFixedSize ifNotNil: [ ^ argumentsHaveFixedSize ].
-	arguments do: [ :arg |
-		arg hasFixedSize ifFalse: [ ^ argumentsHaveFixedSize := false ]
-	].
-
-	^ argumentsHaveFixedSize := true
-]
-
-{ #category : #accessing }
-SAsmInstruction >> bestTemplateAlternative [
-	^ bestTemplateAlternative
-]
-
-{ #category : #accessing }
-SAsmInstruction >> bestTemplateAlternative: anObject [
-	bestTemplateAlternative := anObject
-]
-
 { #category : #'as yet unclassified' }
 SAsmInstruction >> computeMaximalSize [
 	size := template computeMaximalSizeFor: self
+]
+
+{ #category : #size }
+SAsmInstruction >> computeShortAndLongAlternativesWith: aWriter [
+	shortAlternative := template findBestShortAlternativeFor: self.
+	longAlternative := template findBestLongAlternativeFor: self.
+	
+	selectedAlternative := shortAlternative.
+	shortAlternative == longAlternative ifTrue: [
+		size := shortAlternativeSize := longAlternativeSize := shortAlternative computeSizeForInstruction: self with: aWriter
+	] ifFalse: [
+		size := shortAlternativeSize := shortAlternative computeSizeForInstruction: self.
+		longAlternativeSize := longAlternative computeSizeForInstruction: self.
+	]
 ]
 
 { #category : #accessing }
@@ -69,6 +67,11 @@ SAsmInstruction >> fullPrintOn: aStream [
 		aStream space.
 		arg prettyPrintOn: aStream
 	]
+]
+
+{ #category : #testing }
+SAsmInstruction >> hasDifferentAlternatives [
+	^ shortAlternative ~~ longAlternative
 ]
 
 { #category : #testing }
@@ -121,6 +124,11 @@ SAsmInstruction >> template: anObject [
 { #category : #accessing }
 SAsmInstruction >> third [
 	^ arguments third
+]
+
+{ #category : #visiting }
+SAsmInstruction >> writeBinaryWith: binaryWriter [
+	^ selectedAlternative writeInstruction: self with: binaryWriter
 ]
 
 { #category : #'as yet unclassified' }

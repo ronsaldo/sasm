@@ -15,6 +15,24 @@ SAsmX86InstructionTemplateAlternative >> canWriteInstruction: anInstruction [
 	^ self subclassResponsibility
 ]
 
+{ #category : #testing }
+SAsmX86InstructionTemplateAlternative >> canWriteLongInstruction: anInstruction [
+	^ self canWriteInstruction: anInstruction
+]
+
+{ #category : #testing }
+SAsmX86InstructionTemplateAlternative >> canWriteShortInstruction: anInstruction [
+	^ self canWriteInstruction: anInstruction
+]
+
+{ #category : #'as yet unclassified' }
+SAsmX86InstructionTemplateAlternative >> computeSizeForInstruction: anInstruction with: aWriter [
+	| dummyWriter |
+	dummyWriter := aWriter dummy.
+	self writeInstruction: anInstruction with: dummyWriter.
+	^ dummyWriter size
+]
+
 { #category : #accessing }
 SAsmX86InstructionTemplateAlternative >> maxSize [
 	^ 16

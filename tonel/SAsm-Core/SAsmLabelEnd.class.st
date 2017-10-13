@@ -12,6 +12,13 @@ SAsmLabelEnd >> accept: aVisitor [
 	^ aVisitor visitLabelEnd: self
 ]
 
+{ #category : #printing }
+SAsmLabelEnd >> fullPrintOn: aStream [
+	aStream withLessIndentationLevel: [
+		aStream putKeyword: #endof; space. symbol fullPrintOn: aStream.
+	]
+]
+
 { #category : #testing }
 SAsmLabelEnd >> hasFixedSize [
 	^ true

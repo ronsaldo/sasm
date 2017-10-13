@@ -8,14 +8,10 @@ Class {
 		'cpuMode',
 		'symbolList',
 		'symbolSet',
-		'pendingLocalSymbolRelocations',
 		'compilationTarget',
 		'debugSourceLocationsList',
-		'fixedSectionDictionary',
-		'fixedSectionList',
-		'fixedSymbolList',
-		'fixedSymbolSet',
-		'fixedDebugSourceLolcationList'
+		'dummyWriter',
+		'labelInstructions'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -53,28 +49,34 @@ SAsmBinaryObjectWriter >> checkNonTextSectionForPIC [
 	currentSection executable ifTrue: [ self error: 'Adding invalid relocation for PIC code.' ]
 ]
 
-{ #category : #generation }
-SAsmBinaryObjectWriter >> computeInitialPositionEstimate: someStreams [
-	| sectionSizes sectionName sectionSize |
-	sectionSizes := IdentityDictionary new.
-	sectionName := #'..nil..'.
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> computeStreamSizes: aStream [
+	| sectionSize |
 	sectionSize := 0.
+	aStream do: [ :element |
+		element isSection ifTrue: [ 
+			currentSection := sectionDictionary at: element name
+		].
+		element isLabel ifTrue: [
+			element symbol section: currentSection.
+			labelInstructions add: (SAsmBinaryObjectWriterLabel new label: element)
+		].
 	
-	someStreams do: [ :aStream |
-		aStream do: [ :element |
-			element isSection ifTrue: [ 
-				sectionSize ~= 0 ifTrue: [ 
-					sectionSizes at: sectionName put: sectionSize 
-				].
-				sectionName := element name.
-				sectionSize := 0.
-			] ifFalse: [ 
-				element position: sectionSize.
-				element computeMaximalSize.
-				sectionSize := sectionSize + element size
-			].
-		]
+		element position: sectionSize.
+		element computeShortAndLongAlternativesWith: self.
+		element hasDifferentAlternatives ifTrue: [ 
+			self halt
+		] ifFalse: [ 
+			sectionSize := sectionSize + element size
+		].
 	].
+]
+
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> computeStreamsSizes: aCollectionOfStreams [
+	aCollectionOfStreams do: [ :stream |
+		self computeStreamSizes: stream
+	]
 
 ]
 
@@ -118,48 +120,40 @@ SAsmBinaryObjectWriter >> currentSectionPosition [
 	^ currentSection data position
 ]
 
+{ #category : #accessing }
+SAsmBinaryObjectWriter >> dummy [
+	^ (dummyWriter ifNil: [ dummyWriter := SAsmBinaryObjectDummyWriter new target: self ]) reset
+]
+
 { #category : #generation }
 SAsmBinaryObjectWriter >> generateDebugLines [
 	currentSection := sectionDictionary at: #'.debug_line' ifAbsent: [ ^ self ].
 	self writeDWDebugLines.
 ]
 
-{ #category : #generation }
-SAsmBinaryObjectWriter >> generateFixedSizeStreams: aCollectionOfStreams [
-	sectionDictionary := Dictionary new.
-	sectionList := OrderedCollection new.
-	symbolList := OrderedCollection new.
-	symbolSet := Set new.
-	debugSourceLocationsList := OrderedCollection new.
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> generateInTwoPasses: aStream [
+	| sectionStreams result |
+	sectionStreams := aStream splitInSections.
+
+	"Setup the generation of the streams"
+	self setupStreams: sectionStreams.
 	
-	compilationTarget setupBinaryObjectWriter: self.
-
-	"Create the sections."
-	currentSection := nil.	
-	aCollectionOfStreams do: [ :stream | 
-		self assert: stream first isSection.
-		stream first accept: self.
-	].
-
-	aCollectionOfStreams do: [ :stream | self generateStream: stream].
+	"First pass: compute sizes"
+	self computeStreamsSizes: sectionStreams.
 	
-	aCollectionOfStreams do: [ :stream |
-		|section|
-		section := sectionDictionary at: stream first name.
-		section size: section currentDataSize.
-		section data: section data contents
-	].
-
-	fixedSectionDictionary := sectionDictionary.
-	fixedSectionList := sectionList.
-	fixedSymbolList := symbolList.
-	fixedSymbolSet := symbolSet.
-	fixedDebugSourceLolcationList := debugSourceLocationsList.
-
+	"Optimize the stream sizes"
+	self optimizeVariableSizes.
+	
+	"Second pass: generate streams."
+	result := self generateStreams: sectionStreams.
+	result concretizePendingSymbolWith: self.
+	^ result
 ]
 
 { #category : #generation }
 SAsmBinaryObjectWriter >> generateStream: aStream [
+	| expectedNewSize |
 	aStream target setupBinaryObjectWriter: self.
 	
 	currentSection := nil.
@@ -174,28 +168,15 @@ SAsmBinaryObjectWriter >> generateStream: aStream [
 				section: currentSection.
 		].
 		
-		instruction accept: self
+		expectedNewSize := instruction position + instruction size.
+		instruction accept: self.
+		self assert: currentSection currentDataSize = expectedNewSize
 	].
 
 ]
 
 { #category : #generation }
 SAsmBinaryObjectWriter >> generateStreams: aCollectionOfStreams [
-	sectionDictionary := Dictionary new.
-	sectionList := OrderedCollection new.
-	symbolList := OrderedCollection new.
-	symbolSet := Set new.
-	debugSourceLocationsList := OrderedCollection new.
-	
-	aCollectionOfStreams first target setupBinaryObjectWriter: self.
-
-	"Create the sections."
-	currentSection := nil.	
-	aCollectionOfStreams do: [ :stream | 
-		self assert: stream first isSection.
-		stream first accept: self.
-	].
-
 	aCollectionOfStreams do: [ :stream | self generateStream: stream].
 
 	self postProcessStreamGeneration.
@@ -209,96 +190,6 @@ SAsmBinaryObjectWriter >> generateStreams: aCollectionOfStreams [
 		sections: sectionList asArray;
 		symbols: symbolList asArray;
 		sortSections
-]
-
-{ #category : #generation }
-SAsmBinaryObjectWriter >> generateUntilConvergence: aCollectionOfStreams [
-	| oldResult newResult iterationCount |
-	
-	oldResult := 1.
-	newResult := nil.
-	iterationCount := 0.
-	[ newResult ~= oldResult ] whileTrue: [ 
-		oldResult := newResult.
-		newResult := self generateStreams: aCollectionOfStreams.
-		iterationCount := iterationCount + 1.
-	].
-
-	"Transcript show: 'Binary object iterations: ' ; show: iterationCount; cr."
-	newResult concretizePendingSymbolWith: self.
-	^ newResult
-]
-
-{ #category : #generation }
-SAsmBinaryObjectWriter >> generateUntilSizeConvergence: aCollectionOfStreams [
-	| oldResult newResult iterationCount fixedSizeStreams variableSizeStreams |
-	fixedSizeStreams := aCollectionOfStreams select: #hasFixedSize.
-	variableSizeStreams := aCollectionOfStreams reject: #hasFixedSize.
-	self generateFixedSizeStreams: fixedSizeStreams.
-	
-	oldResult := 1.
-	newResult := nil.
-	iterationCount := 0.
-	[ newResult ~= oldResult ] whileTrue: [ 
-		oldResult := newResult.
-		newResult := self generateVariableSizeStreams: variableSizeStreams.
-		"newResult showSectionSizesInTranscript.
-		Transcript show: newResult fullCodeSize; cr."
-		iterationCount := iterationCount + 1.
-	].
-
-	Transcript show: 'Binary object iterations: ' ; show: iterationCount; cr.
-	^ newResult
-]
-
-{ #category : #generation }
-SAsmBinaryObjectWriter >> generateVariableSizeStreams: aCollectionOfStreams [
-	sectionDictionary := fixedSectionDictionary copy.
-	sectionList := fixedSectionList copy.
-	symbolList := fixedSymbolList copy.
-	symbolSet := fixedSymbolSet copy.
-	debugSourceLocationsList := fixedDebugSourceLolcationList copy.
-
-	aCollectionOfStreams first target setupBinaryObjectWriter: self.
-
-	"Create the sections."
-	currentSection := nil.
-	aCollectionOfStreams do: [ :stream | 
-		self assert: stream first isSection.
-		stream first accept: self.
-	].
-
-	aCollectionOfStreams do: [ :stream | self generateStream: stream].
-
-	self postProcessStreamGeneration.
-	
-	sectionList do: [ :section |
-		section data class == ByteArray ifFalse: [ 
-			section size: section currentDataSize.
-			section data: section data contents
-		]
-	].
-
-	^ SAsmBinaryObject new
-		compilationTarget: compilationTarget;
-		sections: sectionList asArray;
-		symbols: symbolList asArray.
-]
-
-{ #category : #writing }
-SAsmBinaryObjectWriter >> generateViaConvergence: aStream [
-	| sectionStreams |
-	sectionStreams := aStream splitInSections.
-	self processSectionStreams: sectionStreams.
-	self computeInitialPositionEstimate: sectionStreams.
-	
-	"We conduct multiple passes. We first divide the sections that have a fixed size from the sections with a variable size, for performance reasons"
-	self generateUntilSizeConvergence: sectionStreams.
-	
-	"Then we recompile everything to ensure the evaluation of expressions that depend on the size of some elements are evaluated to the correct value.
-	are evaluate"
-	^ self generateUntilConvergence: sectionStreams
-
 ]
 
 { #category : #'as yet unclassified' }
@@ -540,15 +431,14 @@ SAsmBinaryObjectWriter >> nextPutZeros: size [
 	currentSection nextPutZeros: size
 ]
 
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> optimizeVariableSizes [
+	labelInstructions do: [ :l | l label applyPosition ]
+]
+
 { #category : #generation }
 SAsmBinaryObjectWriter >> postProcessStreamGeneration [
 	self generateDebugLines
-]
-
-{ #category : #writing }
-SAsmBinaryObjectWriter >> processSectionStreams: streams [
-	streams sort: [ :a :b | a hasFixedSize asBit >= b hasFixedSize asBit].
-
 ]
 
 { #category : #relocations }
@@ -671,6 +561,26 @@ SAsmBinaryObjectWriter >> recordImmediateReloc: immediate extraAddend: extraAdde
 
 ]
 
+{ #category : #generation }
+SAsmBinaryObjectWriter >> setupStreams: aCollectionOfStreams [
+	sectionDictionary := Dictionary new.
+	sectionList := OrderedCollection new.
+	symbolList := OrderedCollection new.
+	symbolSet := Set new.
+	debugSourceLocationsList := OrderedCollection new.
+	labelInstructions := OrderedCollection new.
+	
+	aCollectionOfStreams first target setupBinaryObjectWriter: self.
+
+	"Create the sections."
+	currentSection := nil.	
+	aCollectionOfStreams do: [ :stream | 
+		self assert: stream first isSection.
+		stream first accept: self.
+	].
+
+]
+
 { #category : #accessing }
 SAsmBinaryObjectWriter >> target [
 	^ compilationTarget
@@ -717,16 +627,14 @@ SAsmBinaryObjectWriter >> visitDebugSourceLocation: aDebugLocation [
 
 { #category : #visiting }
 SAsmBinaryObjectWriter >> visitInstruction: anInstruction [
-	anInstruction template writeInstruction: anInstruction with: self
+	anInstruction writeBinaryWith: self.
+
 ]
 
 { #category : #visiting }
 SAsmBinaryObjectWriter >> visitLabel: aLabel [
-	self addSymbol: aLabel symbol.
-	aLabel symbol
-		section: currentSection;
-		value: aLabel position;
-		yourself.
+	self assert: aLabel symbol value == aLabel position.
+	self assert: aLabel symbol section == currentSection.
 
 ]
 
@@ -760,7 +668,7 @@ SAsmBinaryObjectWriter >> writeStream: aStream [
 { #category : #writing }
 SAsmBinaryObjectWriter >> writeStreamInstructions: aStream [
 	| result |
-	result := self generateViaConvergence: aStream.
+	result := self generateInTwoPasses: aStream.
 	result validateRelocations.
 	^ result
 

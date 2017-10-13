@@ -242,8 +242,3 @@ SAsmInstructionOperand >> markVirtualRegisterLiveRangePosition: liveRangePositio
 { #category : #'live ranges' }
 SAsmInstructionOperand >> markVirtualRegisterLiveRangePosition: liveRangePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
 ]
-
-{ #category : #testing }
-SAsmInstructionOperand >> sasmOperandHasFixedSize [
-	^ self hasFixedSize
-]
