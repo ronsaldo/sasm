@@ -1,3 +1,10 @@
+"
+I am a generic two pass assembler.
+
+For selecting between short and long forms of branch instructions, I use the  algorithm in the following paper:
+
+Thomas G. Szymanski. 1978. Assembling code for machines with span-dependent instructions. Commun. ACM 21, 4 (April 1978), 300-308. DOI=http://dx.doi.org/10.1145/359460.359474
+"
 Class {
 	#name : #SAsmBinaryObjectWriter,
 	#superclass : #Object,
@@ -11,7 +18,9 @@ Class {
 		'compilationTarget',
 		'debugSourceLocationsList',
 		'dummyWriter',
-		'labelInstructions'
+		'labelInstructions',
+		'shortLongBranches',
+		'labelInstructionDictionary'
 	],
 	#category : #'SAsm-Core-Binary'
 }
@@ -43,6 +52,37 @@ SAsmBinaryObjectWriter >> addSymbol: aSymbol [
 	]
 ]
 
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> buildBranchDependencies: branch [
+	| destination label |
+	(self hasToBeALongBranch: branch) ifTrue: [ ^ self ].
+	
+	destination := branch destination.
+	self assert: destination isImmediateSymbolWithAddend.
+	label := labelInstructionDictionary at: destination symbol ifAbsent: [^ self ].
+	
+	branch span: branch instruction computeBranchSpan.
+	branch index <= label shortLongBranchesPrecedingCount ifTrue: [ 
+		"Forward branch"
+		branch index + 1 to: label shortLongBranchesPrecedingCount do: [ :depIndex |
+			branch addDependency: (shortLongBranches at: depIndex)
+		]. 
+	] ifFalse: [
+		"Backward branch"
+		label shortLongBranchesPrecedingCount to: branch index - 1 do: [ :depIndex |
+			branch addDependency: (shortLongBranches at: depIndex)
+		]. 
+	].
+
+]
+
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> buildShortLongBranchDependencyGraph [
+	shortLongBranches do: [ :branch |
+		self buildBranchDependencies: branch
+	]
+]
+
 { #category : #relocations }
 SAsmBinaryObjectWriter >> checkNonTextSectionForPIC [
 	compilationTarget hasPositionIndependentCode ifFalse: [ ^ self ].
@@ -51,7 +91,7 @@ SAsmBinaryObjectWriter >> checkNonTextSectionForPIC [
 
 { #category : #'two pass assembler' }
 SAsmBinaryObjectWriter >> computeStreamSizes: aStream [
-	| sectionSize |
+	| sectionSize branchDestination |
 	sectionSize := 0.
 	aStream do: [ :element |
 		element isSection ifTrue: [ 
@@ -59,16 +99,29 @@ SAsmBinaryObjectWriter >> computeStreamSizes: aStream [
 		].
 		element isLabel ifTrue: [
 			element symbol section: currentSection.
-			labelInstructions add: (SAsmBinaryObjectWriterLabel new label: element)
+			labelInstructions add: (SAsmBinaryObjectWriterLabel new
+				label: element;
+				shortLongBranchesPrecedingCount: shortLongBranches size).
+			labelInstructionDictionary at: element symbol put: labelInstructions last
 		].
 	
-		element position: sectionSize.
+		element section: currentSection;
+			position: sectionSize.
 		element computeShortAndLongAlternativesWith: self.
-		element hasDifferentAlternatives ifTrue: [ 
-			self halt
-		] ifFalse: [ 
-			sectionSize := sectionSize + element size
+		element hasDifferentAlternatives ifTrue: [
+			branchDestination := element branchDestination.
+			branchDestination isImmediateSymbolWithAddend ifFalse: [
+				element selectLongAlternative
+			] ifTrue: [
+				shortLongBranches add: (SAsmBinaryObjectWriterShortLongBranch new
+					index: shortLongBranches size + 1;
+					instruction: element;
+					destination: branchDestination;
+					yourself)
+			].
 		].
+	
+		sectionSize := sectionSize + element size
 	].
 ]
 
@@ -143,7 +196,7 @@ SAsmBinaryObjectWriter >> generateInTwoPasses: aStream [
 	self computeStreamsSizes: sectionStreams.
 	
 	"Optimize the stream sizes"
-	self optimizeVariableSizes.
+	self optimizeBranches: sectionStreams.
 	
 	"Second pass: generate streams."
 	result := self generateStreams: sectionStreams.
@@ -195,6 +248,12 @@ SAsmBinaryObjectWriter >> generateStreams: aCollectionOfStreams [
 { #category : #'as yet unclassified' }
 SAsmBinaryObjectWriter >> getSectionNamed: name [
 	^ sectionDictionary at: name
+]
+
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> hasToBeALongBranch: branch [
+	branch destination symbol section ~~ branch instruction section ifTrue: [ ^ true ].
+	^ false
 ]
 
 { #category : #initialization }
@@ -417,13 +476,11 @@ SAsmBinaryObjectWriter >> nextPutIPRelativeI8: immediate [
 { #category : #'byte writing' }
 SAsmBinaryObjectWriter >> nextPutIPRelativeI8: immediate extraOffset: extraOffset [
 	| immediateValue |
-	(self needsRelativeRelocation: immediate) ifTrue: [
-		self recordImmediateRelativeReloc8: immediate extraAddend: extraOffset negated.
-		self nextPutC8: 0.
-	] ifFalse: [
-		immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
-		self nextPutC8: immediateValue.
-	]
+	self assert: (self needsRelativeRelocation: immediate) not.
+	immediateValue := immediate immediateValueRelativeTo: currentSection position: currentSection currentDataSize offset: extraOffset.
+	self assert: (-128 <= immediateValue and: [immediateValue <= 127]).
+	self nextPutC8: immediateValue.
+
 ]
 
 { #category : #'byte writing' }
@@ -432,13 +489,63 @@ SAsmBinaryObjectWriter >> nextPutZeros: size [
 ]
 
 { #category : #'two pass assembler' }
-SAsmBinaryObjectWriter >> optimizeVariableSizes [
-	labelInstructions do: [ :l | l label applyPosition ]
+SAsmBinaryObjectWriter >> optimizeBranches: sectionStreams [
+	labelInstructions do: [ :l | l label applyPosition ].
+	shortLongBranches ifEmpty: [ ^ self ].
+
+	"Build the dependency graph."	
+	self buildShortLongBranchDependencyGraph.
+	self promoteImpossibleLongBranches.
+	
+	"At the end, recompute "	
+	self recomputeStreamsAddresses: sectionStreams.
+	labelInstructions do: [ :l | l label applyPosition ].
+
 ]
 
 { #category : #generation }
 SAsmBinaryObjectWriter >> postProcessStreamGeneration [
 	self generateDebugLines
+]
+
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> promoteImpossibleLongBranches [
+	| pendingElements branch |
+	pendingElements := IdentitySet new.
+	pendingElements addAll: shortLongBranches.
+	
+	[ pendingElements isNotEmpty ] whileTrue: [
+		branch := pendingElements anyOne.
+		pendingElements remove: branch.
+		
+		((self hasToBeALongBranch: branch) or: [ branch hasShortSpan not ]) ifTrue: [
+			branch promoteToLongBranch.
+			branch parents do: [ :parent |
+				parent promotedToLong ifFalse: [ 
+					pendingElements add: parent
+				].
+			].	
+		].
+	].
+
+]
+
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> recomputeStreamAddresses: aStream [
+	| sectionSize |
+	sectionSize := 0.
+	aStream do: [ :element |
+		element position: sectionSize.
+		sectionSize := sectionSize + element size
+	].
+
+]
+
+{ #category : #'two pass assembler' }
+SAsmBinaryObjectWriter >> recomputeStreamsAddresses: aCollectionOfStreams [
+	aCollectionOfStreams do: [ :stream |
+		self recomputeStreamAddresses: stream
+	]
 ]
 
 { #category : #relocations }
@@ -569,6 +676,8 @@ SAsmBinaryObjectWriter >> setupStreams: aCollectionOfStreams [
 	symbolSet := Set new.
 	debugSourceLocationsList := OrderedCollection new.
 	labelInstructions := OrderedCollection new.
+	labelInstructionDictionary := IdentityDictionary new.
+	shortLongBranches := OrderedCollection new.
 	
 	aCollectionOfStreams first target setupBinaryObjectWriter: self.
 

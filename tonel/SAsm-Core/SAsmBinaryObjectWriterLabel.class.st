@@ -3,20 +3,10 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'label',
-		'dependencies'
+		'shortLongBranchesPrecedingCount'
 	],
 	#category : #'SAsm-Core-Binary'
 }
-
-{ #category : #accessing }
-SAsmBinaryObjectWriterLabel >> dependencies [
-	^ dependencies
-]
-
-{ #category : #accessing }
-SAsmBinaryObjectWriterLabel >> dependencies: anObject [
-	dependencies := anObject
-]
 
 { #category : #accessing }
 SAsmBinaryObjectWriterLabel >> label [
@@ -26,4 +16,14 @@ SAsmBinaryObjectWriterLabel >> label [
 { #category : #accessing }
 SAsmBinaryObjectWriterLabel >> label: anObject [
 	label := anObject
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectWriterLabel >> shortLongBranchesPrecedingCount [
+	^ shortLongBranchesPrecedingCount
+]
+
+{ #category : #accessing }
+SAsmBinaryObjectWriterLabel >> shortLongBranchesPrecedingCount: anObject [
+	shortLongBranchesPrecedingCount := anObject
 ]

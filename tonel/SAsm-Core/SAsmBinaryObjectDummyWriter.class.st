@@ -72,6 +72,11 @@ SAsmBinaryObjectDummyWriter >> nextPutIPRelativeI32: displacement extraOffset: e
 ]
 
 { #category : #stream }
+SAsmBinaryObjectDummyWriter >> nextPutIPRelativeI8: immediate [
+	size := size + 1
+]
+
+{ #category : #stream }
 SAsmBinaryObjectDummyWriter >> reset [
 	size := 0
 ]

@@ -52,6 +52,7 @@ SAsmImmediate >> isImmediateS8RelativeTo: anInstruction position: immediateWrite
 	| relValue |
 	anInstruction section ifNil: [ ^ false ].
 	relValue := self immediateValueRelativeTo: anInstruction section position: immediateWritePosition offset: relativeCheck.
+	relValue ifNil: [ ^ false ].
 	^ relValue between: -128 and: 127
 	
 ]

@@ -72,7 +72,8 @@ SAsmImmediateSymbolWithAddend >> immediateValueRelativeTo: section position: imm
 	section name ~~ symbol sectionName ifTrue: [
 		^ relativeCheckOffset negated.
 	].
-
+	symbol value ifNil: [ ^ nil ].
+	
 	^ symbol value - (immediateWritePosition + relativeCheckOffset)
 ]
 

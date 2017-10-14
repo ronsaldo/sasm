@@ -35,6 +35,16 @@ SAsmInstruction >> arguments: anObject [
 	arguments := anObject
 ]
 
+{ #category : #accessing }
+SAsmInstruction >> branchDestination [
+	^ selectedAlternative branchDestinationOfInstruction: self
+]
+
+{ #category : #accessing }
+SAsmInstruction >> computeBranchSpan [
+	^ selectedAlternative branchSpanOfInstruction: self
+]
+
 { #category : #'as yet unclassified' }
 SAsmInstruction >> computeMaximalSize [
 	size := template computeMaximalSizeFor: self
@@ -49,8 +59,8 @@ SAsmInstruction >> computeShortAndLongAlternativesWith: aWriter [
 	shortAlternative == longAlternative ifTrue: [
 		size := shortAlternativeSize := longAlternativeSize := shortAlternative computeSizeForInstruction: self with: aWriter
 	] ifFalse: [
-		size := shortAlternativeSize := shortAlternative computeSizeForInstruction: self.
-		longAlternativeSize := longAlternative computeSizeForInstruction: self.
+		size := shortAlternativeSize := shortAlternative computeSizeForInstruction: self with: aWriter.
+		longAlternativeSize := longAlternative computeSizeForInstruction: self with: aWriter.
 	]
 ]
 
@@ -91,6 +101,21 @@ SAsmInstruction >> isInstruction [
 	^ true
 ]
 
+{ #category : #testing }
+SAsmInstruction >> isShortBranchSpan: aBranchSpan [
+	^ shortAlternative isShortBranchSpan: aBranchSpan
+]
+
+{ #category : #accessing }
+SAsmInstruction >> isValidShortSpan: span [
+	^ shortAlternative isValidShortSpan: span
+]
+
+{ #category : #size }
+SAsmInstruction >> longAlternativeSize [
+	^ longAlternativeSize
+]
+
 { #category : #'linear scan' }
 SAsmInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex [
 	arguments do: [ :arg | arg markVirtualRegisterLiveRangePosition: livePosition blockIndex: blockIndex predecessorBlockIndex: predecessorBlockIndex]
@@ -99,6 +124,17 @@ SAsmInstruction >> markVirtualRegisterLiveAt: livePosition blockIndex: blockInde
 { #category : #accessing }
 SAsmInstruction >> second [
 	^ arguments second
+]
+
+{ #category : #'as yet unclassified' }
+SAsmInstruction >> selectLongAlternative [
+	selectedAlternative := longAlternative.
+	size := longAlternativeSize
+]
+
+{ #category : #size }
+SAsmInstruction >> shortAlternativeSize [
+	^ shortAlternativeSize
 ]
 
 { #category : #accessing }
