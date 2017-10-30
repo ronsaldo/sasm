@@ -852,6 +852,7 @@ SAsmStreamBuilder >> x86: operation withOperands: operands [
 		SAsmInstruction new
 			template: operation;
 			arguments: operands;
+			validate;
 			yourself)
 ]
 

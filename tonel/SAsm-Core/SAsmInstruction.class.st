@@ -52,9 +52,6 @@ SAsmInstruction >> computeMaximalSize [
 
 { #category : #size }
 SAsmInstruction >> computeShortAndLongAlternativesWith: aWriter [
-	shortAlternative := template findBestShortAlternativeFor: self.
-	longAlternative := template findBestLongAlternativeFor: self.
-	
 	selectedAlternative := shortAlternative.
 	shortAlternative == longAlternative ifTrue: [
 		size := shortAlternativeSize := longAlternativeSize := shortAlternative computeSizeForInstruction: self with: aWriter
@@ -160,6 +157,13 @@ SAsmInstruction >> template: anObject [
 { #category : #accessing }
 SAsmInstruction >> third [
 	^ arguments third
+]
+
+{ #category : #'development support' }
+SAsmInstruction >> validate [
+	shortAlternative := template findBestShortAlternativeFor: self.
+	longAlternative := template findBestLongAlternativeFor: self.
+
 ]
 
 { #category : #visiting }

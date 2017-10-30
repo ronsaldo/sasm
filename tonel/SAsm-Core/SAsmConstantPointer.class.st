@@ -37,14 +37,16 @@ SAsmConstantPointer >> asX86PointerOfSize: pointerSize withBuilder: streamBuilde
 
 { #category : #converting }
 SAsmConstantPointer >> asX86PointerWithBuilder: streamBuilder [
-	^ SAsmX86RegisterAddress new size: size; displacement: (address copyWithStreamBuilder: streamBuilder)
+	^ SAsmX86RegisterAddress new size: size; displacement: (address copyWithStreamBuilder: streamBuilder); vectorRegister: floatingPoint
 ]
 
 { #category : #converting }
 SAsmConstantPointer >> asX86PointerWithBuilder: streamBuilder gotPointer: gotRegister [
 	^ SAsmX86RegisterAddress new size: size;
 		base: gotRegister;
-		displacement: (address copyWithStreamBuilder: streamBuilder) makeGOTOffset
+		displacement: (address copyWithStreamBuilder: streamBuilder) makeGOTOffset;
+		vectorRegister: floatingPoint;
+		yourself
 ]
 
 { #category : #copying }

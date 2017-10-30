@@ -743,7 +743,19 @@ SAsmX86InstructionLowerer >> movePhysical: physicalValue toScratchRegister: scra
 	| scratchRegister |
 	scratchRegister := self scratchRegister: scratchIndex for: registerClassSource.
 	scratchRegister isVectorRegister ifTrue: [
-		self halt
+		physicalValue size = 4 ifTrue: [
+			streamBuilder x86: MOVSS dst: scratchRegister src: physicalValue.
+			^ scratchRegister
+		].
+		physicalValue size = 8 ifTrue: [ 
+			streamBuilder x86: MOVSD dst: scratchRegister src: physicalValue.
+			^ scratchRegister
+		].
+		physicalValue size = 16 ifTrue: [ 
+			streamBuilder x86: MOVAPS dst: scratchRegister src: physicalValue.
+			^ scratchRegister
+		].
+		self error: 'Unsupported vector register.'
 	] ifFalse: [ 
 		scratchRegister isIntegerRegister ifTrue: [ 
 			streamBuilder x86: MOV dst: scratchRegister src: physicalValue.
@@ -985,7 +997,7 @@ SAsmX86InstructionLowerer >> returnValue: value valueHigh: valueHigh [
 
 { #category : #spilling }
 SAsmX86InstructionLowerer >> scratchRegister: scratchIndex for: value [
-	^ (scratchRegisterClases at: value registerClass)  at: scratchIndex + 1
+	^ (scratchRegisterClases at: value registerClass) at: scratchIndex + 1
 ]
 
 { #category : #spilling }

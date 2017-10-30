@@ -33,6 +33,8 @@ SAsmX86InstructionTemplate >> findBestLongAlternativeFor: anInstruction [
 		].
 	].
 
+	self error: 'Failed to find an instruction encoding alternative.'
+
 ]
 
 { #category : #'as yet unclassified' }
@@ -42,7 +44,7 @@ SAsmX86InstructionTemplate >> findBestShortAlternativeFor: anInstruction [
 			^ alternative
 		].
 	].
-
+	^ self findBestLongAlternativeFor: anInstruction
 ]
 
 { #category : #'as yet unclassified' }
