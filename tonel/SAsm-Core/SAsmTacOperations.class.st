@@ -64,6 +64,7 @@ Class {
 		'TacLoadZeroExtend16',
 		'TacLoadZeroExtend32',
 		'TacLoadZeroExtend8',
+		'TacLogicalNot',
 		'TacLogicalShiftLeft',
 		'TacLogicalShiftRight',
 		'TacMove',
@@ -119,6 +120,7 @@ SAsmTacOperations class >> initialize [
 	TacBitOr := SAsmTacBitOr new.
 	TacBitXor := SAsmTacBitXor new.
 	TacBitNot := SAsmTacBitNot new.
+	TacLogicalNot := SAsmTacLogicalNot new.
 	TacLogicalShiftLeft := SAsmTacLogicalShiftLeft new.
 	TacLogicalShiftRight := SAsmTacLogicalShiftRight new.
 	TacArithmeticShiftRight := SAsmTacArithmeticShiftRight new.

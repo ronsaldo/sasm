@@ -71,35 +71,36 @@ SAsmX86InstructionLowerer >> emitArithmeticInto: result left: left right: right 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> emitArithmeticUnaryInto: result value: value float: floatInstruction double: doubleInstruction [
 	| resultPhysical |
-	self assert: result isRegisterOrRegisterAddress.
-
 	value ~= result ifTrue: [
 		self moveValue: value toRegister: result.
 	].
 	resultPhysical := self virtualToPhysical: result.
+	self assert: resultPhysical isRegisterOrRegisterAddress.
 
 	result isDoubleFloatRegister ifTrue: [
-		streamBuilder x86: doubleInstruction with: resultPhysical
+		^ streamBuilder x86: doubleInstruction with: resultPhysical
 	].
 	result isFloatRegister ifTrue: [ 
-		streamBuilder x86: floatInstruction with: resultPhysical
-	]
+		^ streamBuilder x86: floatInstruction with: resultPhysical
+	].
+
+	self error: 'Not yet supported'
 
 ]
 
 { #category : #arithmetic }
 SAsmX86InstructionLowerer >> emitArithmeticUnaryInto: result value: value integer: integerInstruction [
 	| resultPhysical |
-	self assert: result isRegisterOrRegisterAddress.
-
 	value ~= result ifTrue: [
 		self moveValue: value toRegister: result.
 	].
-	resultPhysical := self virtualToPhysical: result.
 
+	resultPhysical := self virtualToPhysical: result.
+	self assert: resultPhysical isRegisterOrRegisterAddress.
 	result isIntegerRegister ifTrue: [
-		streamBuilder x86: integerInstruction with: resultPhysical
+		^ streamBuilder x86: integerInstruction with: resultPhysical
 	].
+	self error: 'Not yet supported'
 
 ]
 
@@ -1294,6 +1295,11 @@ SAsmX86InstructionLowerer >> visitTacBitAnd: instruction [
 ]
 
 { #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacBitNot: instruction [
+	^ self emitArithmeticUnaryInto: instruction result value: instruction value integer: NOT
+]
+
+{ #category : #'bitwise operations' }
 SAsmX86InstructionLowerer >> visitTacBitOr: instruction [
 	^ self emitBitwiseInto: instruction result left: instruction left right: instruction right 
 			integer: OR float: ORPS double: ORPD
@@ -2066,6 +2072,36 @@ SAsmX86InstructionLowerer >> visitTacLoadZeroExtend32: instruction [
 { #category : #memory }
 SAsmX86InstructionLowerer >> visitTacLoadZeroExtend8: instruction [
 	self emitLoad: instruction withExtension: MOVZX pointerSize: 1
+]
+
+{ #category : #'bitwise operations' }
+SAsmX86InstructionLowerer >> visitTacLogicalNot: instruction [
+	| resultPhysical tempRegister |
+	instruction value ~= instruction result ifTrue: [
+		self moveValue: instruction value toRegister: instruction result.
+	].
+
+	resultPhysical := self virtualToPhysical: instruction result.
+	self assert: resultPhysical isRegisterOrRegisterAddress.
+
+	instruction result isIntegerRegister ifTrue: [
+		tempRegister := resultPhysical.
+		resultPhysical isRegisterAddress ifTrue: [
+			tempRegister := target pointerSize = 4 ifTrue: [ EAX ] ifFalse: [ RAX ].
+			streamBuilder x86: MOV dst: tempRegister src: resultPhysical.
+		].
+		
+		streamBuilder
+			x86: NEG with: tempRegister;
+			x86: SBB dst: tempRegister src: tempRegister;
+			x86: INC with: tempRegister.
+		resultPhysical isRegisterAddress ifTrue: [
+			streamBuilder x86: MOV dst: resultPhysical src: tempRegister.
+		].
+		^ self
+	].
+	self error: 'Not yet supported'
+
 ]
 
 { #category : #'bitwise operations' }

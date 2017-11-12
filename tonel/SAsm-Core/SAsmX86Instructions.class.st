@@ -47,6 +47,7 @@ Class {
 		'FSTP',
 		'IDIV',
 		'IMUL',
+		'INC',
 		'IRET',
 		'JA',
 		'JAE',
@@ -99,6 +100,7 @@ Class {
 		'ROR',
 		'SAL',
 		'SAR',
+		'SBB',
 		'SHL',
 		'SHR',
 		'SHUFPD',
@@ -216,6 +218,11 @@ SAsmX86Instructions class >> initializeInstructions [
 		(IDIV
 			(OpRmbOp 16rF6 7)
 			(OpRmwOp 16rF7 7)
+		)
+
+		(INC
+			(OpRmbOp 16rFE 0)
+			(OpRmwOp 16rFF 0)
 		)
 		
 		(IMUL
@@ -488,6 +495,21 @@ SAsmX86Instructions class >> initializeInstructions [
 			(OpRmwRw 16r29)
 			(OpRbRmb 16r2A)
 			(OpRwRmw 16r2B)
+		)
+
+		(SBB
+			(OpALI8 16r1C)
+			(OpAXIw 16r1D)
+
+			(OpRmbIb 16r80 3)
+			
+			(OpRmwS8 16r83 3)
+			(OpRmwIw 16r81 3)
+			
+			(OpRmbRb 16r18)
+			(OpRmwRw 16r19)
+			(OpRbRmb 16r1A)
+			(OpRwRmw 16r1B)
 		)
 		
 		(TEST
