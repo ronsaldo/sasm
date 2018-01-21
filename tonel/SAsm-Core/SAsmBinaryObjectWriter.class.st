@@ -744,7 +744,7 @@ SAsmBinaryObjectWriter >> visitInstruction: anInstruction [
 SAsmBinaryObjectWriter >> visitLabel: aLabel [
 	self assert: aLabel symbol value == aLabel position.
 	self assert: aLabel symbol section == currentSection.
-
+	self addSymbol: aLabel symbol
 ]
 
 { #category : #visiting }
