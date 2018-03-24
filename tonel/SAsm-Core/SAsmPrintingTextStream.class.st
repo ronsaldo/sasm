@@ -1,28 +1,49 @@
 Class {
 	#name : #SAsmPrintingTextStream,
 	#superclass : #SAsmPrintingStream,
+	#instVars : [
+		'runs'
+	],
 	#classVars : [
-		'IdentifierColor',
-		'KeywordColor'
+		'IdentifierAttributes',
+		'KeywordAttributes'
 	],
 	#category : #'SAsm-Core-Generic'
 }
 
 { #category : #'as yet unclassified' }
 SAsmPrintingTextStream class >> fullPrintString: anObject [
-	^ Text streamContents: [ :out | anObject fullPrintOn: (self on: out) ]
+	| stream resultString |
+	resultString := ByteString streamContents: [ :out |
+		stream := self on: out.
+		anObject fullPrintOn: stream.
+	].
+	stream fillWithDefaultAttributes.
+	self assert: resultString size = stream runs size.
+	^ Text string: resultString runs: stream runs
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #initialization }
 SAsmPrintingTextStream class >> initialize [
 	super initialize.
-	IdentifierColor := TextColor color: Color orange.
-	KeywordColor := TextColor blue.
+	IdentifierAttributes := {TextColor color: Color orange}.
+	KeywordAttributes := {TextColor blue}.
+]
+
+{ #category : #'syntax highlighting' }
+SAsmPrintingTextStream >> fillWithDefaultAttributes [
+	runs add: #() withOccurrences: decoratedStream position - runs size
+]
+
+{ #category : #initialization }
+SAsmPrintingTextStream >> initialize [
+	super initialize.
+	runs := RunArray new.
 ]
 
 { #category : #'syntax highlighting' }
 SAsmPrintingTextStream >> putIdentifier: aString [
-	decoratedStream withAttribute: IdentifierColor do: [
+	self withAttributes: IdentifierAttributes do: [
 		self nextPutAll: aString
 	]
 	
@@ -30,8 +51,25 @@ SAsmPrintingTextStream >> putIdentifier: aString [
 
 { #category : #'syntax highlighting' }
 SAsmPrintingTextStream >> putKeyword: aString [
-	decoratedStream withAttribute: KeywordColor do: [
+	self withAttributes: KeywordAttributes do: [
 		self nextPutAll: aString
 	]
 	
+]
+
+{ #category : #accessing }
+SAsmPrintingTextStream >> runs [
+	^ runs
+]
+
+{ #category : #'syntax highlighting' }
+SAsmPrintingTextStream >> withAttributes: attributes do: aBlock [
+	| startPosition endPosition usedCount |
+	self fillWithDefaultAttributes.
+	startPosition := decoratedStream position.
+	aBlock value.
+	endPosition := decoratedStream position.
+	
+	usedCount := endPosition - startPosition.
+	runs add: attributes withOccurrences: usedCount
 ]
