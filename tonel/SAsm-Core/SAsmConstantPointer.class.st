@@ -95,6 +95,11 @@ SAsmConstantPointer >> isFloatingPointOperand [
 	^ floatingPoint
 ]
 
+{ #category : #printing }
+SAsmConstantPointer >> printOn: aStream [
+	aStream nextPutAll: ('ptr{1} {2}' format: { size printString . address printString })
+]
+
 { #category : #accessing }
 SAsmConstantPointer >> size [
 	^ size
