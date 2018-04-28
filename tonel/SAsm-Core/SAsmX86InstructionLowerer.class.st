@@ -270,8 +270,8 @@ SAsmX86InstructionLowerer >> emitFloatCast: instruction withInstruction: castIns
 	resultPhysical := self virtualToPhysical: instruction result.
 	
 	resultRegister := resultPhysical.
-	resultPhysical isRegisterAddress ifTrue: [ 
-		resultRegister := self scratchRegister: 0 for: resultPhysical
+	resultPhysical isRegisterAddress ifTrue: [
+		resultRegister := self scratchRegister: 0 for: resultPhysical.
 	].
 
 	streamBuilder x86: castInstruction dst: resultRegister src: operand.

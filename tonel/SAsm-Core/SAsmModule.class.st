@@ -152,3 +152,8 @@ SAsmModule >> target [
 SAsmModule >> target: anObject [
 	target := anObject
 ]
+
+{ #category : #writing }
+SAsmModule >> writeObjectToFileNamed: outputFileName [
+	^ self asBinaryObject writeObjectToFileNamed: outputFileName
+]
