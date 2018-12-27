@@ -22,7 +22,14 @@ SAsmElf64RelocationAddendEntry >> addend: anObject [
 	addend := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #reading }
+SAsmElf64RelocationAddendEntry >> readFrom: in [
+	offset := in uint64.
+	info := in uint64.
+	addend := in int64.
+]
+
+{ #category : #writing }
 SAsmElf64RelocationAddendEntry >> writeOn: aStream [
 	aStream
 		nextPutInt64: offset;

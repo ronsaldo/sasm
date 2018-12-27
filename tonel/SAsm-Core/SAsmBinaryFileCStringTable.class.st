@@ -24,12 +24,32 @@ SAsmBinaryFileCStringTable >> contents [
 	^ content contents
 ]
 
+{ #category : #accessing }
+SAsmBinaryFileCStringTable >> getString: stringIndex [
+	| oldPosition |
+	oldPosition := content position.
+	^ [ 
+		content position: stringIndex.
+		ByteString streamContents: [ :out |
+			[content peek ~= 0] whileTrue: [ 
+				out nextPut: content next asCharacter
+			]
+		].
+	] ensure: [ content position: oldPosition ]
+]
+
 { #category : #initialization }
 SAsmBinaryFileCStringTable >> initialize [
 	super initialize.
-	content := WriteStream on: (ByteArray new: 100).
+	content := ReadWriteStream on: (ByteArray new: 100).
 	stringDictionary := Dictionary new.
 	self addString: ''.
+]
+
+{ #category : #initialization }
+SAsmBinaryFileCStringTable >> setBytes: bytes [
+	content := ReadWriteStream with: bytes.
+	stringDictionary := Dictionary new
 ]
 
 { #category : #accessing }

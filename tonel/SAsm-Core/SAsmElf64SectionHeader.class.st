@@ -10,6 +10,21 @@ SAsmElf64SectionHeader >> dynsym [
 	entrySize := 24.
 ]
 
+{ #category : #writing }
+SAsmElf64SectionHeader >> readFrom: in [
+	name := in uint32.
+	type := in uint32.
+	flags := in uint64.
+	address := in uint64.
+	offset := in uint64.
+	size := in uint64.
+	link := in uint32.
+	info := in uint32.
+	addressAlign := in uint64.
+	entrySize := in uint64.
+
+]
+
 { #category : #types }
 SAsmElf64SectionHeader >> rel [
 	type := 9.

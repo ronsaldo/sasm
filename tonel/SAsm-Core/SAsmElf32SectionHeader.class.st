@@ -42,6 +42,11 @@ SAsmElf32SectionHeader >> allocated [
 ]
 
 { #category : #accessing }
+SAsmElf32SectionHeader >> contentSize [
+	^ size
+]
+
+{ #category : #accessing }
 SAsmElf32SectionHeader >> contentSize: anObject [
 	size := anObject
 ]
@@ -57,6 +62,11 @@ SAsmElf32SectionHeader >> dynsym [
 	entrySize := 16.
 ]
 
+{ #category : #accessing }
+SAsmElf32SectionHeader >> entrySize [
+	^ entrySize
+]
+
 { #category : #flags }
 SAsmElf32SectionHeader >> executableInstructions [
 	flags := flags | 4
@@ -70,6 +80,11 @@ SAsmElf32SectionHeader >> flags [
 { #category : #accessing }
 SAsmElf32SectionHeader >> flags: anObject [
 	flags := anObject
+]
+
+{ #category : #flags }
+SAsmElf32SectionHeader >> hasExecutableInstructions [
+	^ flags anyMask: 4
 ]
 
 { #category : #types }
@@ -105,6 +120,11 @@ SAsmElf32SectionHeader >> initialize [
 { #category : #flags }
 SAsmElf32SectionHeader >> isAllocated [
 	^ flags anyMask: 2
+]
+
+{ #category : #flags }
+SAsmElf32SectionHeader >> isWriteable [
+	^ flags anyMask: 1
 ]
 
 { #category : #accessing }
@@ -150,6 +170,20 @@ SAsmElf32SectionHeader >> offset: anObject [
 { #category : #types }
 SAsmElf32SectionHeader >> programBits [
 	type := 1
+]
+
+{ #category : #reading }
+SAsmElf32SectionHeader >> readFrom: in [
+	name := in uint32.
+	type := in uint32.
+	flags := in uint32.
+	address := in uint32.
+	offset := in uint32.
+	size := in uint32.
+	link := in uint32.
+	info := in uint32.
+	addressAlign := in uint32.
+	entrySize := in uint32.
 ]
 
 { #category : #types }

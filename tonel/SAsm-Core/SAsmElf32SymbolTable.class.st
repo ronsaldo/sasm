@@ -66,6 +66,40 @@ SAsmElf32SymbolTable >> prepareForWritingToFile [
 	sectionHeader info: localEntries size.
 ]
 
+{ #category : #reading }
+SAsmElf32SymbolTable >> readEntryFrom: in [
+	| entry startPosition |
+	startPosition := in position.
+	entry := self symbolEntryClass new
+		readFrom: in;
+		yourself.
+	in position: startPosition + sectionHeader entrySize.
+	^ entry
+	
+]
+
+{ #category : #reading }
+SAsmElf32SymbolTable >> readFrom: aStream [
+	| entryCount localEntryCount nonLocalEntryCount |
+	entryCount := sectionHeader contentSize // sectionHeader entrySize.
+	localEntryCount := sectionHeader info.
+	nonLocalEntryCount := entryCount - localEntryCount.
+
+	aStream position: sectionHeader offset.
+	1 to: localEntryCount do: [ :i |
+		localEntries add: ((self readEntryFrom: aStream)
+			index: i - 1;
+			yourself)
+	].
+
+	1 to: nonLocalEntryCount do: [ :i |
+		entries add: ((self readEntryFrom: aStream)
+			index: localEntryCount + i - 1;
+			yourself)
+	].
+
+]
+
 { #category : #accessing }
 SAsmElf32SymbolTable >> sectionHeader [
 	^ sectionHeader
@@ -79,6 +113,15 @@ SAsmElf32SymbolTable >> sectionHeader: anObject [
 { #category : #accessing }
 SAsmElf32SymbolTable >> size [
 	^ self symbolEntryClass entrySize * (localEntries size + entries size)
+]
+
+{ #category : #accessing }
+SAsmElf32SymbolTable >> symbolAt: index [
+	index < localEntries size ifTrue: [ 
+		^ localEntries at: index + 1
+	].
+
+	^ entries at: index + 1 - localEntries size 
 ]
 
 { #category : #factory }

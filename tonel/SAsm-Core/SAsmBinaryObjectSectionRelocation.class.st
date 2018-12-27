@@ -15,6 +15,7 @@ Class {
 		'AbsoluteOffset64',
 		'AbsoluteOffset8',
 		'AbsoluteRelocations',
+		'AbsoluteSOffset32',
 		'GOTRelocations',
 		'PLTRelocations',
 		'Relative32Relocations',
@@ -39,9 +40,10 @@ SAsmBinaryObjectSectionRelocation class >> initialize [
 	AbsoluteOffset8 := #'absolute-offset8'.
 	AbsoluteOffset16 := #'absolute-offset16'.
 	AbsoluteOffset32 := #'absolute-offset32'.
+	AbsoluteSOffset32 := #'absolute-soffset32'.
 	AbsoluteOffset64 := #'absolute-offset64'.
 	
-	AbsoluteRelocations := { AbsoluteOffset8 . AbsoluteOffset16 . AbsoluteOffset32 . AbsoluteOffset64 }.
+	AbsoluteRelocations := { AbsoluteOffset8 . AbsoluteOffset16 . AbsoluteSOffset32 . AbsoluteOffset32 . AbsoluteOffset64 }.
 
 	SectionRelativeOffset32 := #'section-relative-offset32'.
 	SectionRelativeOffset64 := #'section-relative-offset64'.
@@ -97,6 +99,11 @@ SAsmBinaryObjectSectionRelocation >> absoluteOffsetOfSize: offsetSize [
 	offsetSize = 4 ifTrue: [ self absoluteOffset32 ].
 	offsetSize = 2 ifTrue: [ self absoluteOffset16 ].	
 	offsetSize = 1 ifTrue: [ self absoluteOffset8 ].	
+]
+
+{ #category : #testing }
+SAsmBinaryObjectSectionRelocation >> absoluteSOffset32 [
+	type := AbsoluteSOffset32
 ]
 
 { #category : #accessing }
@@ -329,6 +336,11 @@ SAsmBinaryObjectSectionRelocation >> pendingSymbol [
 { #category : #accessing }
 SAsmBinaryObjectSectionRelocation >> pendingSymbol: anObject [
 	pendingSymbol := anObject
+]
+
+{ #category : #printing }
+SAsmBinaryObjectSectionRelocation >> printOn: aStream [
+	aStream print: offset; space; nextPutAll: type; space; print: addend.
 ]
 
 { #category : #testing }

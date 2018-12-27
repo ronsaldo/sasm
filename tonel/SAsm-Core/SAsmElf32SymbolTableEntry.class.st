@@ -19,6 +19,11 @@ SAsmElf32SymbolTableEntry class >> entrySize [
 ]
 
 { #category : #accessing }
+SAsmElf32SymbolTableEntry >> binding [
+	^ info >> 4 bitAnd: 16rf
+]
+
+{ #category : #accessing }
 SAsmElf32SymbolTableEntry >> index [
 	^ index
 ]
@@ -69,6 +74,16 @@ SAsmElf32SymbolTableEntry >> other: anObject [
 	other := anObject
 ]
 
+{ #category : #reading }
+SAsmElf32SymbolTableEntry >> readFrom: in [
+	name := in uint32.
+	value := in uint32.
+	size := in uint32.
+	info := in uint8.
+	other := in uint8.
+	sectionHeaderIndex := in uint16.
+]
+
 { #category : #accessing }
 SAsmElf32SymbolTableEntry >> sectionHeaderIndex [
 	^ sectionHeaderIndex
@@ -87,6 +102,11 @@ SAsmElf32SymbolTableEntry >> size [
 { #category : #accessing }
 SAsmElf32SymbolTableEntry >> size: anObject [
 	size := anObject
+]
+
+{ #category : #accessing }
+SAsmElf32SymbolTableEntry >> type [
+	^ info bitAnd: 16rf
 ]
 
 { #category : #accessing }

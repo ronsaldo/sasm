@@ -22,7 +22,14 @@ SAsmElf32RelocationAddendEntry >> addend: anObject [
 	addend := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #reading }
+SAsmElf32RelocationAddendEntry >> readFrom: in [
+	offset := in uint32.
+	info := in uint32.
+	addend := in int32.
+]
+
+{ #category : #writing }
 SAsmElf32RelocationAddendEntry >> writeOn: aStream [
 	aStream
 		nextPutInt32: offset;

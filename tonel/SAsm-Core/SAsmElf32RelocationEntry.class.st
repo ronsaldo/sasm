@@ -14,6 +14,11 @@ SAsmElf32RelocationEntry class >> entrySize [
 ]
 
 { #category : #accessing }
+SAsmElf32RelocationEntry >> addend [
+	^ 0
+]
+
+{ #category : #accessing }
 SAsmElf32RelocationEntry >> info [
 	^ info
 ]
@@ -33,7 +38,20 @@ SAsmElf32RelocationEntry >> offset: anObject [
 	offset := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+SAsmElf32RelocationEntry >> printOn: aStream [
+	aStream nextPutAll: 'type: '; print: self type; nextPutAll: ' symbol: '; print: self symbol;
+		nextPutAll: ' addend: '; print: self addend;
+		nextPutAll: ' offset: '; print: offset
+]
+
+{ #category : #reading }
+SAsmElf32RelocationEntry >> readFrom: in [
+	offset := in uint32.
+	info := in uint32.
+]
+
+{ #category : #accessing }
 SAsmElf32RelocationEntry >> symbol [
 	^ info >> 8
 ]
@@ -43,12 +61,12 @@ SAsmElf32RelocationEntry >> symbol: symbol type: type [
 	info := (symbol << 8) | type
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SAsmElf32RelocationEntry >> type [
 	^ info bitAnd: 16rff
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SAsmElf32RelocationEntry >> writeOn: aStream [
 	aStream
 		nextPutInt32: offset;

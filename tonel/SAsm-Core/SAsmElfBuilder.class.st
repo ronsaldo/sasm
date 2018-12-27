@@ -93,7 +93,7 @@ SAsmElfBuilder >> allComponentsDo: aBlock [
 { #category : #'as yet unclassified' }
 SAsmElfBuilder >> binaryData [
 	| stream |
-	stream := SLVMLirBinaryStream on: (ByteArray new: 100).
+	stream := SAsmLirBinaryStream on: (ByteArray new: 100).
 	self writeToStream: stream.
 	^ stream contents
 ]

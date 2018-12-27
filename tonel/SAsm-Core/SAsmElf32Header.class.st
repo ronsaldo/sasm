@@ -13,7 +13,10 @@ Class {
 		'flags',
 		'programHeaderEntries',
 		'sectionHeaderEntries',
-		'sectionNameStringSectionIndex'
+		'sectionNameStringSectionIndex',
+		'elfHeaderSize',
+		'programHeaderEntrySize',
+		'sectionHeaderEntrySize'
 	],
 	#category : #'SAsm-Core-Elf'
 }
@@ -28,9 +31,44 @@ SAsmElf32Header >> abiVersion: anObject [
 	abiVersion := anObject
 ]
 
+{ #category : #reading }
+SAsmElf32Header >> checkIdentificationHeader: in [
+	(in next: 4) = #[127 69 76 70] ifFalse: [ 
+		self error: 'Invalid ELF32 magic number'
+	].
+
+	in next = self elfClass ifFalse: [ 
+		self error: 'Unexpected elf class'
+	].
+
+	endianness := in uint8.
+	in uint8 = 16r01 ifFalse: [
+		self error: 'Unsupported elf version.'
+	].
+
+	osAbi := in uint8.
+	abiVersion := in uint8.
+	"Padding" in next: 7.
+]
+
 { #category : #'elf type' }
 SAsmElf32Header >> core [
 	type := 4.
+]
+
+{ #category : #accessing }
+SAsmElf32Header >> elfClass [
+	^ 16r01
+]
+
+{ #category : #accessing }
+SAsmElf32Header >> elfHeaderSize [
+	^ elfHeaderSize
+]
+
+{ #category : #accessing }
+SAsmElf32Header >> elfHeaderSize: anObject [
+	elfHeaderSize := anObject
 ]
 
 { #category : #accessing }
@@ -82,7 +120,11 @@ SAsmElf32Header >> initialize [
 	flags := 0.
 	programHeaderEntries := 0.
 	sectionHeaderEntries := 0.
-	sectionNameStringSectionIndex := 0
+	sectionNameStringSectionIndex := 0.
+	
+	elfHeaderSize := 16r34.
+	programHeaderEntrySize := 32.
+	sectionHeaderEntrySize := 40.
 ]
 
 { #category : #accessing }
@@ -115,9 +157,14 @@ SAsmElf32Header >> programHeaderEntries: anObject [
 	programHeaderEntries := anObject
 ]
 
-{ #category : #writing }
+{ #category : #accessing }
 SAsmElf32Header >> programHeaderEntrySize [
-	^ 32
+	^ programHeaderEntrySize
+]
+
+{ #category : #accessing }
+SAsmElf32Header >> programHeaderEntrySize: anObject [
+	programHeaderEntrySize := anObject
 ]
 
 { #category : #accessing }
@@ -128,6 +175,24 @@ SAsmElf32Header >> programHeaderOffset [
 { #category : #accessing }
 SAsmElf32Header >> programHeaderOffset: anObject [
 	programHeaderOffset := anObject
+]
+
+{ #category : #reading }
+SAsmElf32Header >> readFrom: in [
+	self checkIdentificationHeader: in.
+	type := in uint16.
+	machine := in uint16.
+	"version" in uint32 = 1 ifFalse: [ self error: 'Unsupported elf version' ].
+	entryPoint := in uint32.
+	programHeaderOffset := in uint32.
+	sectionHeaderOffset := in uint32.
+	flags := in uint32.
+	elfHeaderSize := in uint16.
+	programHeaderEntrySize := in uint16.
+	programHeaderEntries := in uint16.
+	sectionHeaderEntrySize := in uint16.
+	sectionHeaderEntries := in uint16.
+	sectionNameStringSectionIndex := in uint16.
 ]
 
 { #category : #'elf type' }
@@ -145,9 +210,14 @@ SAsmElf32Header >> sectionHeaderEntries: anObject [
 	sectionHeaderEntries := anObject
 ]
 
-{ #category : #writing }
+{ #category : #accessing }
 SAsmElf32Header >> sectionHeaderEntrySize [
-	^ 40
+	^ sectionHeaderEntrySize
+]
+
+{ #category : #accessing }
+SAsmElf32Header >> sectionHeaderEntrySize: anObject [
+	sectionHeaderEntrySize := anObject
 ]
 
 { #category : #accessing }
@@ -173,11 +243,6 @@ SAsmElf32Header >> sectionNameStringSectionIndex: anObject [
 { #category : #'elf type' }
 SAsmElf32Header >> shared [
 	type := 3.
-]
-
-{ #category : #accessing }
-SAsmElf32Header >> size [
-	^ 16r34
 ]
 
 { #category : #accessing }
@@ -222,10 +287,10 @@ SAsmElf32Header >> writeOn: aStream [
 		nextPutInt32: programHeaderOffset;
 		nextPutInt32: sectionHeaderOffset;
 		nextPutInt32: flags;
-		nextPutInt16: self size;
-		nextPutInt16: self programHeaderEntrySize;
+		nextPutInt16: elfHeaderSize ;
+		nextPutInt16: programHeaderEntrySize;
 		nextPutInt16: programHeaderEntries;
-		nextPutInt16: self sectionHeaderEntrySize;
+		nextPutInt16: sectionHeaderEntrySize;
 		nextPutInt16: sectionHeaderEntries;
 		nextPutInt16: sectionNameStringSectionIndex
 ]

@@ -115,6 +115,11 @@ SAsmBinaryObjectSection >> initialize [
 	loaded := false.
 ]
 
+{ #category : #testing }
+SAsmBinaryObjectSection >> isSAsmBinaryObjectSection [
+	^ true
+]
+
 { #category : #accessing }
 SAsmBinaryObjectSection >> loaded [
 	^ loaded
