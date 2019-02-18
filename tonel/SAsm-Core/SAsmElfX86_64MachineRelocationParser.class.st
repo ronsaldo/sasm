@@ -33,7 +33,7 @@ SAsmElfX86_64MachineRelocationParser class >> machineType [
 
 { #category : #'elf relocations' }
 SAsmElfX86_64MachineRelocationParser >> compilationTargetForElfHeader: elfHeader [
-	^ SAsmModule x86_64
+	^ SAsmModule x86_64 target
 
 ]
 
