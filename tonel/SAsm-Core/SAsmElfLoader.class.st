@@ -147,6 +147,9 @@ SAsmElfLoader >> convertRelocationSymbol: symbolIndex withTable: symbolTable [
 			type: (self convertElfSymbolType: elfSymbol);
 			visibility: (self convertElfSymbolVisibility: elfSymbol)
 			yourself.
+		(symbol isUndefined not and: [ symbol isExternal ]) ifTrue: [ 
+			symbol makePublic
+		].
 		sectionAndSymbol := { section . symbol }.
 	].
 
