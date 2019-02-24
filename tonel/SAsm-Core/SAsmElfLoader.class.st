@@ -126,12 +126,13 @@ SAsmElfLoader >> convertElfSymbolVisibility: elfSymbol [
 { #category : #'as yet unclassified' }
 SAsmElfLoader >> convertRelocationSymbol: symbolIndex withTable: symbolTable [
 	| stringTable elfSymbol section symbol sectionAndSymbol |
+
 	convertedSymbols at: symbolIndex ifPresent: [ :cs | ^ cs ].
 	
 	stringTable := (sectionHeaders at: symbolTable link + 1) content.
 	elfSymbol := symbolTable content symbolAt: symbolIndex.
 	section := self sectionForElfSymbol: elfSymbol.
-
+	
 	elfSymbol name = 0 ifTrue: [ 
 		self assert: elfSymbol sectionHeaderIndex ~= 0.
 		self assert: elfSymbol value = 0.
@@ -175,6 +176,19 @@ SAsmElfLoader >> convertRelocationTable: relocationTable [
 			yourself.
 		relocationParser convertElfRelocation: entry typeInto: convertedEntry.
 		relocatedSection addRelocation: convertedEntry
+	].
+]
+
+{ #category : #'as yet unclassified' }
+SAsmElfLoader >> convertSymbolTable [
+	| symbolTable |
+	symbolTable := sectionHeaderDictionary at: #'.symtab' ifAbsent: [ ^ self ].
+	symbolTable content nonLocalSymbols do: [ :symbol |
+		self convertRelocationSymbol: symbol index withTable: symbolTable
+	].
+
+	symbolTable content localSymbols allButFirstDo: [ :symbol |
+		self convertRelocationSymbol: symbol index withTable: symbolTable
 	].
 ]
 
@@ -368,6 +382,7 @@ SAsmElfLoader >> readFrom: in [
 		]
 	].
 	
+	self convertSymbolTable.
 	relocationParserClass := MachineRelocationParsers at: header machine ifAbsent: [ nil ].
 	relocationParserClass ifNotNil: [
 		relocationParser := relocationParserClass new.

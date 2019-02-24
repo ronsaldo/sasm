@@ -60,6 +60,16 @@ SAsmElf32SymbolTable >> initialize [
 	entries := OrderedCollection new.
 ]
 
+{ #category : #accessing }
+SAsmElf32SymbolTable >> localSymbols [
+	^ localEntries
+]
+
+{ #category : #accessing }
+SAsmElf32SymbolTable >> nonLocalSymbols [
+	^ entries
+]
+
 { #category : #writing }
 SAsmElf32SymbolTable >> prepareForWritingToFile [
 	super prepareForWritingToFile.
@@ -85,6 +95,9 @@ SAsmElf32SymbolTable >> readFrom: aStream [
 	localEntryCount := sectionHeader info.
 	nonLocalEntryCount := entryCount - localEntryCount.
 
+	localEntries removeAll.
+	entries removeAll.
+	
 	aStream position: sectionHeader offset.
 	1 to: localEntryCount do: [ :i |
 		localEntries add: ((self readEntryFrom: aStream)
