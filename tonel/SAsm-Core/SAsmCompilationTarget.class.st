@@ -102,8 +102,8 @@ SAsmCompilationTarget >> isOSX [
 ]
 
 { #category : #testing }
-SAsmCompilationTarget >> isWin32 [
-	^ operatingSystemName = #win32
+SAsmCompilationTarget >> isWindows [
+	^ operatingSystemName = #windows
 ]
 
 { #category : #'operating systems' }

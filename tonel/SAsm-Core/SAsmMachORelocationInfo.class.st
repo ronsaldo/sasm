@@ -42,7 +42,7 @@ SAsmMachORelocationInfo >> size [
 ]
 
 { #category : #'as yet unclassified' }
-SAsmMachORelocationInfo >> symbolnum: symbolnum pcrel: pcrel length: length extern: extern type: type. [
+SAsmMachORelocationInfo >> symbolnum: symbolnum pcrel: pcrel length: length extern: extern type: type [.
 	encodedValue := symbolnum | (pcrel asBit << 24) | (length << 25) | (extern asBit << 27) | (type << 28)
 ]
 
