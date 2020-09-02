@@ -206,7 +206,7 @@ SAsmCompilationTargetX86 >> machCPUType [
 
 { #category : #testing }
 SAsmCompilationTargetX86 >> needsSlotForGOTPointer [
-	^ self isWin32 not
+	^ self isWindows not
 ]
 
 { #category : #'virtual registers' }

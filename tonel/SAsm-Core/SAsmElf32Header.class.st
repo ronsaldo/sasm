@@ -97,6 +97,11 @@ SAsmElf32Header >> executable [
 ]
 
 { #category : #accessing }
+SAsmElf32Header >> fileSize [
+	^ elfHeaderSize
+]
+
+{ #category : #accessing }
 SAsmElf32Header >> flags [
 	^ flags
 ]

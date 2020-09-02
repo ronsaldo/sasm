@@ -359,8 +359,8 @@ SAsmBinaryObject >> writeCoffToStream: stream [
 
 { #category : #'writing elf' }
 SAsmBinaryObject >> writeElf32ToFileNamed: fileName [
-	fileName asFileReference writeStreamDo: [ :out |
-		out truncate; binary.
+	fileName asFileReference binaryWriteStreamDo: [ :out |
+		out truncate.
 		out nextPutAll: self generateElf32
 	]
 ]
@@ -375,8 +375,8 @@ SAsmBinaryObject >> writeElf32ToStream: stream [
 
 { #category : #'writing elf' }
 SAsmBinaryObject >> writeElf64ToFileNamed: fileName [
-	fileName asFileReference writeStreamDo: [ :out |
-		out truncate; binary.
+	fileName asFileReference binaryWriteStreamDo: [ :out |
+		out truncate.
 		out nextPutAll: self generateElf64
 	]
 ]

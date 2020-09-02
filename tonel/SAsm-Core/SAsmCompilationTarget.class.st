@@ -146,6 +146,16 @@ SAsmCompilationTarget >> osx [
 	self operatingSystemName: #osx
 ]
 
+{ #category : #accessing }
+SAsmCompilationTarget >> pointerAlignment [
+	^ self pointerSize
+]
+
+{ #category : #accessing }
+SAsmCompilationTarget >> pointerSize [
+	self subclassResponsibility
+]
+
 { #category : #'calling conventions' }
 SAsmCompilationTarget >> smalltalkCallingConvention [
 	^ self callingConventionNamed: #smalltalk
