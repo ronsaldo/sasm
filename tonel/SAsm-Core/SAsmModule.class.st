@@ -143,6 +143,30 @@ SAsmModule >> initialize [
 	target := SAsmCompilationTargetX86 new.
 ]
 
+{ #category : #'gt-inspector-extension' }
+SAsmModule >> inspectionModuleText: composite [
+	<inspectorPresentationOrder: 1 title: 'Assembly Module'>
+	^ SpTextPresenter new 
+		text: (self fullPrintString);
+		yourself
+]
+
+{ #category : #'gt-inspector-extension' }
+SAsmModule >> inspectionOptimizedStreamText: composite [
+	<inspectorPresentationOrder: 3 title: 'Optimized Assembly'>
+	^ SpTextPresenter new 
+		text: (self asOptimizedInstructionStream fullPrintString);
+		yourself
+]
+
+{ #category : #'gt-inspector-extension' }
+SAsmModule >> inspectionStreamText: composite [
+	<inspectorPresentationOrder: 2 title: 'Assembly'>
+	^ SpTextPresenter new 
+		text: (self asInstructionStream fullPrintString);
+		yourself
+]
+
 { #category : #accessing }
 SAsmModule >> target [
 	^ target
